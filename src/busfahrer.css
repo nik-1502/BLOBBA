@@ -276,6 +276,11 @@
   .end-actions .game-button { padding-inline: 8px; font-size: 0.78rem; }
 }
 
+@media (max-width: 600px) and (pointer: coarse) {
+  .busfahrer-page { height: 100dvh; }
+  .question-panel .feedback { position: relative; top: -8px; }
+}
+
 @media (max-height: 650px) and (orientation: landscape) {
   .busfahrer-shell { padding-block: 5px; }
   .busfahrer-header h1 { font-size: 1.35rem; }
