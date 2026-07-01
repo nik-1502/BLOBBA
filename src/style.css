@@ -9,6 +9,7 @@
 
 * {
   box-sizing: border-box;
+  touch-action: manipulation;
 }
 
 html,
@@ -17,6 +18,17 @@ body,
   min-width: 320px;
   min-height: 100%;
   margin: 0;
+}
+
+html,
+body {
+  overscroll-behavior: none;
+  background: #bde7f6;
+}
+
+html.busfahrer-active,
+body.busfahrer-active {
+  background: #171321;
 }
 
 body {
