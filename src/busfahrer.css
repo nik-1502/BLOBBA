@@ -86,9 +86,17 @@
 
 .question-panel,
 .pyramid-panel,
-.bus-panel { height: 100%; min-height: 0; margin: 0; padding: clamp(8px, 2vh, 22px) clamp(10px, 3vw, 28px); text-align: center; overflow: hidden; }
+.bus-panel {
+  --phase-action-height: clamp(44px, 7dvh, 50px);
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: clamp(8px, 2vh, 22px) clamp(10px, 3vw, 28px);
+  text-align: center;
+  overflow: hidden;
+}
 .question-panel {
-  --phase-one-control-height: clamp(44px, 7dvh, 50px);
+  --phase-one-control-height: var(--phase-action-height);
   --phase-one-feedback-height: clamp(40px, 6dvh, 64px);
   display: flex;
   flex-direction: column;
@@ -167,8 +175,8 @@
 .game-button:hover { transform: translateY(-2px); filter: brightness(1.13); }
 .game-button:active { transform: translateY(1px) scale(.98); }
 .game-button.primary { grid-column: 1 / -1; background: linear-gradient(135deg, #8255e8, #536de3); box-shadow: 0 10px 24px rgba(91, 80, 220, .26); }
-.choice-red, .choice-heart, .choice-diamond { background: #b92e4b; }
-.choice-blue, .choice-star, .choice-moon { background: #2862b8; }
+.choice-red, .choice-heart, .choice-diamond { background: #b92e4b; background-image: none; }
+.choice-blue, .choice-star, .choice-moon { background: #2862b8; background-image: none; }
 
 .three-choices { grid-column: 1 / -1; display: flex; flex-wrap: nowrap; justify-content: center; gap: clamp(6px, 1.5vw, 12px); }
 .three-choices .game-button { flex: 1 1 0; min-width: 0; max-width: 170px; }
@@ -260,6 +268,7 @@
 .pyramid { width: min(540px, 100%); min-height: 0; margin: auto; display: grid; place-self: center; align-content: center; gap: clamp(2px, .6vh, 6px); transform: translateY(clamp(-8px, -0.8vh, -3px)); }
 .pyramid-panel > .feedback { position: absolute; z-index: 2; top: clamp(6px, 1.2vh, 12px); right: clamp(8px, 2vw, 18px); max-width: 34%; min-height: 0; margin: 0; padding: 5px 8px; font-size: clamp(0.62rem, 1.5vw, 0.78rem); pointer-events: none; }
 .pyramid-panel > .game-button { width: min(520px, 100%); justify-self: center; }
+.pyramid-panel > .game-button { height: var(--phase-action-height); min-height: var(--phase-action-height); }
 .pyramid-row { position: relative; display: flex; justify-content: center; gap: 7px; }
 .pyramid-row::after { content: attr(data-drinks); position: absolute; left: calc(50% + 226px); top: 50%; color: #9c94aa; font-size: .68rem; transform: translateY(-50%); white-space: nowrap; }
 .pyramid .playing-card { width: clamp(35px, min(10vw, 10vh), 78px); }
@@ -269,7 +278,7 @@
 .bus-panel {
   --bus-edge-gap: clamp(10px, 3vw, 28px);
   --bus-prompt-height: clamp(42px, 7dvh, 64px);
-  --bus-control-height: clamp(44px, 7dvh, 50px);
+  --bus-control-height: var(--phase-action-height);
   display: grid;
   grid-template-rows: auto auto 3px var(--bus-prompt-height) var(--bus-control-height);
   align-content: space-between;
@@ -292,6 +301,16 @@
 .bus-panel > .game-button { height: var(--bus-control-height); min-height: var(--bus-control-height); }
 .bus-panel > .choice-grid { align-content: stretch; }
 .bus-panel > .choice-grid .game-button { height: 100%; min-height: 100%; }
+
+.question-panel > .choice-grid .game-button,
+.pyramid-panel > .game-button,
+.bus-panel > .choice-grid .game-button,
+.bus-panel > .game-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
 .current-card .card-back { box-shadow: 0 0 0 3px #a88aff, 0 0 24px rgba(142, 101, 255, .6); }
 
 .lost-screen h2 { margin-block: clamp(38px, 8vh, 80px); }
@@ -334,8 +353,8 @@
   .responsibility-note { margin: 3px auto; padding-block: 2px; font-size: 0.65rem; }
   .game-stage { gap: 4px; }
   .game-progress { font-size: 0.68rem; }
-  .question-panel, .pyramid-panel, .bus-panel { padding: 5px 10px; }
-  .question-panel { --phase-one-control-height: 38px; --phase-one-feedback-height: 38px; }
+  .question-panel, .pyramid-panel, .bus-panel { --phase-action-height: 38px; padding: 5px 10px; }
+  .question-panel { --phase-one-feedback-height: 38px; }
   .eyebrow { margin-bottom: 1px; font-size: 0.62rem; }
   .question-panel h2, .pyramid-panel h2, .bus-panel h2 { margin-bottom: 3px; font-size: 1.15rem; }
   .question-card-slot .playing-card { width: 58px; }
