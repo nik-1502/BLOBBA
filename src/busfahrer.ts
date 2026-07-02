@@ -1,4 +1,5 @@
 import './busfahrer.css'
+import { defaultProfileIconMarkup } from './profiles.ts'
 
 type CardColor = 'red' | 'blue'
 type SuitId = 'heart' | 'diamond' | 'star' | 'moon'
@@ -121,7 +122,8 @@ function handMarkup() {
 
 function renderPlayerIntro() {
   const player = currentPlayer()
-  const playerImage = `<span class="player-turn-avatar" style="--avatar-ring:${player.avatarColor}"><img src="${player.avatar}" alt="Profilbild von ${escapeHtml(player.name)}"></span>`
+  const avatar = player.avatar ? `<img src="${player.avatar}" alt="Profilbild von ${escapeHtml(player.name)}">` : defaultProfileIconMarkup()
+  const playerImage = `<span class="player-turn-avatar ${player.avatar ? '' : 'is-default'}" style="--avatar-ring:${player.avatarColor}">${avatar}</span>`
   return `<section class="player-turn-screen">${playerImage}<p>Spieler ${currentPlayerIndex + 1} von ${gamePlayers.length}</p><h2><strong class="turn-player-name">${escapeHtml(player.name)}</strong><span>ist dran</span></h2>
     <div class="player-turn-actions"><button class="game-button primary" data-action="start-player-round">Jetzt starten</button></div></section>`
 }

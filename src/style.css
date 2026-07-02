@@ -38,6 +38,7 @@ body {
 }
 
 .home-page {
+  position: relative;
   min-height: 100vh;
   min-height: 100svh;
   display: flex;
@@ -51,6 +52,50 @@ body {
 
 .home-page > * {
   align-self: center;
+}
+
+.home-profile-button {
+  position: absolute;
+  top: clamp(18px, 4vh, 38px);
+  right: clamp(16px, 4vw, 40px);
+  display: grid;
+  width: clamp(50px, 7vw, 58px);
+  height: clamp(50px, 7vw, 58px);
+  padding: 0;
+  overflow: hidden;
+  isolation: isolate;
+  place-items: center;
+  border: 2px solid #17324d;
+  border-radius: 18px;
+  color: #17324d;
+  background: rgba(255, 255, 255, .72);
+  box-shadow: 0 7px 18px rgba(23, 50, 77, .18);
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.home-profile-button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.18);
+}
+
+.home-profile-button .default-profile-icon {
+  width: 70%;
+  height: 70%;
+}
+
+.home-profile-button:hover,
+.home-profile-button:active {
+  transform: translateY(-2px) scale(1.03);
+  background: rgba(255, 255, 255, .9);
+  box-shadow: 0 10px 24px rgba(23, 50, 77, .24);
+}
+
+.home-profile-button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 3px;
 }
 
 .title-frame {
@@ -108,4 +153,9 @@ body {
   min-width: auto;
   color: #3c165f;
   border-color: #3c165f;
+}
+
+@media (max-width: 620px) {
+  .home-page { padding-top: 92px; }
+  .home-profile-button { border-radius: 16px; }
 }

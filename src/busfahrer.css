@@ -480,27 +480,67 @@
 .offline-panel { max-height: 100%; overflow: auto; }
 .offline-panel h2 { margin-bottom: 18px; }
 .player-table { display: grid; margin-bottom: 14px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .12); border-radius: 14px; background: rgba(0, 0, 0, .14); }
-.player-row { display: grid; width: 100%; min-height: 64px; padding: 8px 12px; border: 0; border-bottom: 1px solid rgba(255, 255, 255, .1); color: #fff; background: transparent; grid-template-columns: 46px minmax(0, 1fr) auto; align-items: center; gap: 10px; font: inherit; text-align: left; cursor: pointer; }
+.player-row { display: grid; width: 100%; min-height: 64px; padding: 8px 12px; border: 0; border-bottom: 1px solid rgba(255, 255, 255, .1); color: #fff; background: transparent; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; font: inherit; text-align: left; }
 .player-row:last-child { border-bottom: 0; }
 .player-row:hover { background: rgba(255, 255, 255, .06); }
+.player-row-main { display: grid; min-width: 0; padding: 0; border: 0; color: inherit; background: transparent; grid-template-columns: 46px minmax(0, 1fr) auto; align-items: center; gap: 10px; font: inherit; text-align: left; cursor: pointer; }
 .player-number { color: #9e8bd0; font-weight: 900; }
 .player-avatar { position: relative; display: grid; width: 44px; height: 44px; aspect-ratio: 1; border: 0; border-radius: 50%; clip-path: circle(50% at 50% 50%); place-items: center; flex: 0 0 auto; overflow: hidden; isolation: isolate; background: transparent; }
 .player-avatar img { z-index: 0; display: block; width: 100%; height: 100%; aspect-ratio: 1; border-radius: 50%; clip-path: circle(50% at 50% 50%); object-fit: fill; object-position: 50% 50%; transform: scale(1.22); transform-origin: 50% 50%; }
 .player-avatar::after { content: ''; position: absolute; z-index: 1; inset: 0; border-radius: 50%; box-shadow: inset 0 0 0 1.6px var(--avatar-ring); pointer-events: none; }
+.default-profile-icon { display: block; width: 68%; height: 68%; overflow: visible; fill: currentColor; }
+.default-profile-icon path { stroke: currentColor; stroke-width: 5; stroke-linecap: round; fill: none; }
+.is-default { color: #dce2eb; background: linear-gradient(145deg, #657286, #354052); }
+.player-avatar.is-default::after, .player-turn-avatar.is-default::after { box-shadow: inset 0 0 0 1.6px rgba(255, 255, 255, .35); }
+.player-turn-avatar.is-default::after { box-shadow: inset 0 0 0 4.8px rgba(255, 255, 255, .35); }
 .player-name { overflow: hidden; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
 .player-edit-label { color: #aaa1ba; font-size: .78rem; }
 .player-name-input { width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid #8a5cff; border-radius: 9px; outline: none; color: #fff; background: #211a30; font: inherit; font-weight: 800; }
 .player-name-input:focus { box-shadow: 0 0 0 3px rgba(138, 92, 255, .24); }
 .player-remove { padding: 9px 10px; border: 1px solid rgba(255, 99, 124, .38); border-radius: 9px; color: #ff9bac; background: rgba(228, 54, 82, .12); font: inherit; font-size: .78rem; font-weight: 800; cursor: pointer; }
+.player-remove:disabled { cursor: not-allowed; opacity: .35; }
 .setup-add-player, .setup-start-game { width: 100%; }
 .setup-add-player { margin-bottom: 12px; }
 .setup-start-game:disabled { cursor: not-allowed; opacity: .45; }
 .setup-add-player:disabled { cursor: not-allowed; opacity: .45; }
 
+.profile-editor-panel { max-height: 100%; overflow: auto; text-align: left; }
+.profile-editor-panel h2, .profile-editor-panel > .eyebrow { text-align: center; }
+.profile-preview { position: relative; display: grid; width: 112px; height: 112px; margin: 0 auto 24px; overflow: hidden; isolation: isolate; place-items: center; border-radius: 50%; background: transparent; box-shadow: 0 12px 32px rgba(0, 0, 0, .3); }
+.profile-preview img, .profile-card-avatar img, .avatar-choice-visual img { z-index: 0; width: 100%; height: 100%; border-radius: 50%; object-fit: fill; transform: scale(1.22); }
+.profile-preview::after, .profile-card-avatar::after, .avatar-choice-visual::after { content: ''; position: absolute; z-index: 1; inset: 0; border-radius: 50%; box-shadow: inset 0 0 0 4px var(--avatar-ring); pointer-events: none; }
+.profile-preview.is-default::after, .avatar-choice-visual.is-default::after { box-shadow: inset 0 0 0 3px rgba(255, 255, 255, .35); }
+.profile-name-label { display: block; margin-bottom: 8px; color: #d7d0e4; font-weight: 800; }
+.profile-name-input { width: 100%; min-height: 50px; margin-bottom: 24px; padding: 12px 14px; border: 1px solid rgba(255, 255, 255, .18); border-radius: 12px; outline: none; color: #fff; background: #211a30; font: inherit; font-size: 1rem; font-weight: 750; }
+.profile-name-input:focus { border-color: #9d73ff; box-shadow: 0 0 0 3px rgba(138, 92, 255, .25); }
+.avatar-fieldset { min-width: 0; margin: 0 0 24px; padding: 0; border: 0; }
+.avatar-fieldset legend { margin-bottom: 12px; color: #d7d0e4; font-weight: 800; }
+.avatar-choice-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.avatar-choice { display: grid; min-width: 0; padding: 9px 5px; border: 2px solid transparent; border-radius: 14px; color: #d9d2e7; background: rgba(255, 255, 255, .05); place-items: center; gap: 7px; font: inherit; font-size: .68rem; font-weight: 750; cursor: pointer; transition: border-color 150ms ease, background 150ms ease, transform 150ms ease; }
+.avatar-choice:hover { transform: translateY(-2px); background: rgba(255, 255, 255, .09); }
+.avatar-choice.is-selected { border-color: #a77cff; background: rgba(138, 92, 255, .2); box-shadow: 0 0 0 2px rgba(138, 92, 255, .16); }
+.avatar-choice-visual, .profile-card-avatar { position: relative; display: grid; width: 58px; height: 58px; overflow: hidden; isolation: isolate; border-radius: 50%; place-items: center; }
+.avatar-choice-visual .default-profile-icon, .profile-preview .default-profile-icon, .profile-card-avatar .default-profile-icon { width: 66%; height: 66%; }
+.profile-save-button { width: 100%; }
+.saved-profile-grid { display: grid; max-height: min(48dvh, 430px); margin-bottom: 18px; overflow: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.saved-profile-card { display: grid; min-width: 0; padding: 16px 10px; border: 1px solid rgba(255, 255, 255, .12); border-radius: 16px; color: #fff; background: rgba(255, 255, 255, .05); place-items: center; gap: 7px; font: inherit; cursor: pointer; transition: transform 150ms ease, border-color 150ms ease, background 150ms ease; }
+.saved-profile-card:hover { transform: translateY(-2px); border-color: #9d73ff; background: rgba(138, 92, 255, .14); }
+.saved-profile-card strong { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.saved-profile-card > span:last-child { color: #bdb4d2; font-size: .75rem; }
+.profile-card-avatar::after { box-shadow: inset 0 0 0 2.5px var(--avatar-ring); }
+.profile-empty-copy { grid-column: 1 / -1; margin: 12px 0 20px; color: #bdb4d2; }
+.profile-create-button { width: 100%; }
+
 @media (max-width: 520px) {
   .setup-panel { padding: 20px 14px; }
   .setup-mode-actions { grid-template-columns: 1fr; }
-  .player-row { grid-template-columns: 42px minmax(0, 1fr) auto; padding-inline: 8px; gap: 7px; }
+  .player-row { padding-inline: 8px; gap: 7px; }
+  .player-row-main { grid-template-columns: 42px minmax(0, 1fr); gap: 7px; }
+  .player-edit-label { display: none; }
   .player-avatar { width: 40px; height: 40px; }
   .player-remove { padding-inline: 7px; }
+  .avatar-choice-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+  .avatar-choice { padding-inline: 3px; font-size: .62rem; }
+  .avatar-choice-visual { width: 50px; height: 50px; }
+  .profile-preview { width: 92px; height: 92px; margin-bottom: 18px; }
 }
