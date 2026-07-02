@@ -194,13 +194,15 @@ function nextQuestion() {
 }
 
 function renderPyramid() {
+  if (pyramidDecision?.step === 'target') {
+    return `${phaseHeader(2, `${currentPlayer().name} · Spieler auswählen`)}<section class="pyramid-target-screen"><p class="eyebrow">Pyramide</p><h2>Wer soll ${pyramidDecision.drinks} Schluck${pyramidDecision.drinks === 1 ? '' : 'e'} trinken?</h2>
+      <div class="pyramid-player-list">${gamePlayers.map((player, index) => `<button class="game-button" data-pyramid-target="${index}">${escapeHtml(player.name)}</button>`).join('')}</div></section>`
+  }
   const rows = [[0], [1, 2], [3, 4, 5], [6, 7, 8, 9]]
   const complete = pyramidProgress === 10
   const pyramidAction = pyramidDecision?.step === 'offer'
     ? `<div class="pyramid-decision pyramid-offer"><div class="pyramid-offer-question">Möchtest du deine ${pyramidDecision.label} setzen?</div><button class="game-button choice-red pyramid-side-choice pyramid-choice-no" data-action="keep-pyramid-card">Nein</button><button class="game-button choice-blue pyramid-side-choice pyramid-choice-yes" data-action="use-pyramid-card">Ja</button></div>`
-    : pyramidDecision?.step === 'target'
-      ? `<div class="pyramid-decision"><p>Wer soll ${pyramidDecision.drinks} Schluck${pyramidDecision.drinks === 1 ? '' : 'e'} trinken?</p><div class="pyramid-targets">${gamePlayers.map((player, index) => `<button class="game-button" data-pyramid-target="${index}">${escapeHtml(player.name)}</button>`).join('')}</div></div>`
-      : `<button class="game-button primary" data-action="${complete ? 'finish-player-pyramid' : 'reveal-pyramid'}">${complete ? `${currentPlayer().name} ist fertig` : 'Nächste Karte aufdecken'}</button>`
+    : `<button class="game-button primary" data-action="${complete ? 'finish-player-pyramid' : 'reveal-pyramid'}">${complete ? `${currentPlayer().name} ist fertig` : 'Nächste Karte aufdecken'}</button>`
   return `${phaseHeader(2, `${currentPlayer().name} · ${pyramidProgress} von 10 Karten`)}<section class="pyramid-panel">
     <h2>Pyramide</h2><div class="pyramid">${rows.map((row, rowIndex) =>
       `<div class="pyramid-row" data-drinks="${4 - rowIndex} Schluck${rowIndex === 3 ? '' : 'e'}">${row.map((index) => cardMarkup(pyramidCards[index]!, pyramidOrder.slice(0, pyramidProgress).includes(index), pyramidHits.has(index) ? 'pyramid-hit' : '')).join('')}</div>`).join('')}</div>

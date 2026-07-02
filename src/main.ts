@@ -93,7 +93,9 @@ function renderOfflineMenu() {
     editingPlayerId = button.dataset.editPlayer!
     renderOfflineMenu()
   }))
-  app.querySelector<HTMLInputElement>('[data-player-input]')?.focus()
+  const activePlayerInput = app.querySelector<HTMLInputElement>('[data-player-input]')
+  activePlayerInput?.focus()
+  activePlayerInput?.select()
   app.querySelectorAll<HTMLInputElement>('[data-player-input]').forEach((input) => {
     input.addEventListener('input', () => {
       const player = players.find((item) => item.id === input.dataset.playerInput)
