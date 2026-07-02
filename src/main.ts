@@ -3,7 +3,7 @@ import { mountBusfahrer } from './busfahrer.ts'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 let unmountCurrentPage: (() => void) | undefined
-const profileImages = Object.values(import.meta.glob('./assets/profil-Bilder/*.png', { eager: true, query: '?url', import: 'default' })) as string[]
+const profileImages = Object.values(import.meta.glob('./assets/profil-Bilder-optimiert/*.png', { eager: true, query: '?url', import: 'default' })) as string[]
 type SetupPlayer = { id: string; name: string; avatar: string }
 
 function randomAvailableAvatar(currentPlayers: SetupPlayer[]) {
