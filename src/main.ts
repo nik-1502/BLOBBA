@@ -4,7 +4,21 @@ import { mountBusfahrer } from './busfahrer.ts'
 const app = document.querySelector<HTMLDivElement>('#app')!
 let unmountCurrentPage: (() => void) | undefined
 const profileImages = Object.values(import.meta.glob('./assets/profil-Bilder-optimiert/*.png', { eager: true, query: '?url', import: 'default' })) as string[]
-type SetupPlayer = { id: string; name: string; avatar: string }
+type SetupPlayer = { id: string; name: string; avatar: string; avatarColor: string }
+
+function avatarFrameColor(avatar: string) {
+  const name = decodeURI(avatar).toLowerCase()
+  if (name.includes('bierpong')) return '#16464D'
+  if (name.includes('bier-')) return '#FF8E00'
+  if (name.includes('becher')) return '#4B0746'
+  if (name.includes('captain')) return '#602B08'
+  if (name.includes('champagner')) return '#5D1B01'
+  if (name.includes('cocktail')) return '#046243'
+  if (name.includes('shot')) return '#284C02'
+  if (name.includes('wein')) return '#5F0403'
+  if (name.includes('whisky')) return '#4C1600'
+  return '#19454B'
+}
 
 function randomAvailableAvatar(currentPlayers: SetupPlayer[]) {
   const usedAvatars = new Set(currentPlayers.map((player) => player.avatar))
@@ -13,7 +27,8 @@ function randomAvailableAvatar(currentPlayers: SetupPlayer[]) {
 }
 
 let players: SetupPlayer[] = []
-players = [{ id: crypto.randomUUID(), name: 'Nick', avatar: randomAvailableAvatar(players) }]
+const firstAvatar = randomAvailableAvatar(players)
+players = [{ id: crypto.randomUUID(), name: 'Nick', avatar: firstAvatar, avatarColor: avatarFrameColor(firstAvatar) }]
 let editingPlayerId: string | null = null
 
 const viewportMeta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]')!
@@ -43,7 +58,7 @@ function renderPage() {
 
   if (route === '#busfahrer') {
     app.innerHTML = '<main class="busfahrer-page" id="busfahrer-game"></main>'
-    unmountCurrentPage = mountBusfahrer(app.querySelector<HTMLElement>('#busfahrer-game')!, players.map(({ name, avatar }) => ({ name, avatar })))
+    unmountCurrentPage = mountBusfahrer(app.querySelector<HTMLElement>('#busfahrer-game')!, players.map(({ name, avatar, avatarColor }) => ({ name, avatar, avatarColor })))
     return
   }
 
@@ -93,8 +108,8 @@ function renderOnlineMenu() {
 function renderOfflineMenu() {
   setupShell(`<div class="setup-panel offline-panel"><p class="eyebrow">Offline</p><h2>Spieler</h2>
     <div class="player-table" role="list">${players.map((player, index) => editingPlayerId === player.id
-      ? `<div class="player-row is-editing" role="listitem"><span class="player-avatar"><img src="${player.avatar}" alt=""></span><input class="player-name-input" data-player-input="${player.id}" value="${escapeHtml(player.name)}" maxlength="24" aria-label="Name von Spieler ${index + 1}"><button class="player-remove" type="button" data-remove-player="${player.id}">Entfernen</button></div>`
-      : `<button class="player-row" type="button" role="listitem" data-edit-player="${player.id}"><span class="player-avatar"><img src="${player.avatar}" alt="Profilbild von ${escapeHtml(player.name)}"></span><span class="player-name">${escapeHtml(player.name || `Spieler ${index + 1}`)}</span><span class="player-edit-label">Bearbeiten</span></button>`).join('')}</div>
+      ? `<div class="player-row is-editing" role="listitem"><span class="player-avatar" style="--avatar-ring:${player.avatarColor}"><img src="${player.avatar}" alt=""></span><input class="player-name-input" data-player-input="${player.id}" value="${escapeHtml(player.name)}" maxlength="24" aria-label="Name von Spieler ${index + 1}"><button class="player-remove" type="button" data-remove-player="${player.id}">Entfernen</button></div>`
+      : `<button class="player-row" type="button" role="listitem" data-edit-player="${player.id}"><span class="player-avatar" style="--avatar-ring:${player.avatarColor}"><img src="${player.avatar}" alt="Profilbild von ${escapeHtml(player.name)}"></span><span class="player-name">${escapeHtml(player.name || `Spieler ${index + 1}`)}</span><span class="player-edit-label">Bearbeiten</span></button>`).join('')}</div>
     <button class="game-button setup-add-player" type="button" data-add-player ${players.length >= profileImages.length ? 'disabled' : ''}>+ Spieler hinzufügen</button>
     <button class="game-button primary setup-start-game" type="button" data-start-game ${players.length ? '' : 'disabled'}>Spiel starten</button>
   </div>`, 'busfahrer-menu')
@@ -121,7 +136,8 @@ function renderOfflineMenu() {
     renderOfflineMenu()
   }))
   app.querySelector<HTMLButtonElement>('[data-add-player]')!.addEventListener('click', () => {
-    const player = { id: crypto.randomUUID(), name: `Spieler ${players.length + 1}`, avatar: randomAvailableAvatar(players) }
+    const avatar = randomAvailableAvatar(players)
+    const player = { id: crypto.randomUUID(), name: `Spieler ${players.length + 1}`, avatar, avatarColor: avatarFrameColor(avatar) }
     players.push(player)
     editingPlayerId = player.id
     renderOfflineMenu()
