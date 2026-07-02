@@ -93,8 +93,8 @@ function renderOnlineMenu() {
 function renderOfflineMenu() {
   setupShell(`<div class="setup-panel offline-panel"><p class="eyebrow">Offline</p><h2>Spieler</h2>
     <div class="player-table" role="list">${players.map((player, index) => editingPlayerId === player.id
-      ? `<div class="player-row is-editing" role="listitem"><img class="player-avatar" src="${player.avatar}" alt=""><input class="player-name-input" data-player-input="${player.id}" value="${escapeHtml(player.name)}" maxlength="24" aria-label="Name von Spieler ${index + 1}"><button class="player-remove" type="button" data-remove-player="${player.id}">Entfernen</button></div>`
-      : `<button class="player-row" type="button" role="listitem" data-edit-player="${player.id}"><img class="player-avatar" src="${player.avatar}" alt="Profilbild von ${escapeHtml(player.name)}"><span class="player-name">${escapeHtml(player.name || `Spieler ${index + 1}`)}</span><span class="player-edit-label">Bearbeiten</span></button>`).join('')}</div>
+      ? `<div class="player-row is-editing" role="listitem"><span class="player-avatar"><img src="${player.avatar}" alt=""></span><input class="player-name-input" data-player-input="${player.id}" value="${escapeHtml(player.name)}" maxlength="24" aria-label="Name von Spieler ${index + 1}"><button class="player-remove" type="button" data-remove-player="${player.id}">Entfernen</button></div>`
+      : `<button class="player-row" type="button" role="listitem" data-edit-player="${player.id}"><span class="player-avatar"><img src="${player.avatar}" alt="Profilbild von ${escapeHtml(player.name)}"></span><span class="player-name">${escapeHtml(player.name || `Spieler ${index + 1}`)}</span><span class="player-edit-label">Bearbeiten</span></button>`).join('')}</div>
     <button class="game-button setup-add-player" type="button" data-add-player ${players.length >= profileImages.length ? 'disabled' : ''}>+ Spieler hinzufügen</button>
     <button class="game-button primary setup-start-game" type="button" data-start-game ${players.length ? '' : 'disabled'}>Spiel starten</button>
   </div>`, 'busfahrer-menu')

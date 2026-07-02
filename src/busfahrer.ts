@@ -121,7 +121,7 @@ function handMarkup() {
 
 function renderPlayerIntro() {
   const player = currentPlayer()
-  const playerImage = player.avatar ? `<img class="player-turn-avatar" src="${player.avatar}" alt="Profilbild von ${escapeHtml(player.name)}">` : '<div class="player-turn-icon" aria-hidden="true">♠</div>'
+  const playerImage = `<span class="player-turn-avatar"><img src="${player.avatar}" alt="Profilbild von ${escapeHtml(player.name)}"></span>`
   return `<section class="player-turn-screen">${playerImage}<p>Spieler ${currentPlayerIndex + 1} von ${gamePlayers.length}</p><h2><strong class="turn-player-name">${escapeHtml(player.name)}</strong><span>ist dran</span></h2>
     <div class="player-turn-actions"><button class="game-button primary" data-action="start-player-round">Jetzt starten</button></div></section>`
 }
