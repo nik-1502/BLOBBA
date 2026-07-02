@@ -271,9 +271,17 @@
 .bus-card-row { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: clamp(4px, 2vw, 22px); padding-inline: var(--bus-edge-gap); }
 .bus-dashed-line { width: calc(100% - 2 * var(--bus-edge-gap)); height: 3px; margin: var(--bus-edge-gap) auto 0; flex: 0 0 3px; border-radius: 9px; background: repeating-linear-gradient(90deg, #70687c 0 22px, transparent 22px 38px); }
 .bus-road .playing-card { width: clamp(42px, min(15vw, 17vh), 108px); }
-.bus-prompt-zone { display: flex; width: 100%; min-height: clamp(42px, 7dvh, 64px); flex: 0 0 clamp(42px, 7dvh, 64px); align-items: center; justify-content: center; text-align: center; }
+.bus-prompt-zone {
+  display: grid;
+  width: 100%;
+  height: clamp(42px, 7dvh, 64px);
+  min-height: 0;
+  flex: 0 0 clamp(42px, 7dvh, 64px);
+  place-items: center;
+  text-align: center;
+}
 .bus-prompt-zone > p { width: 100%; margin: 0; color: #d4c8f4; font-weight: 800; }
-.bus-prompt-zone .feedback { margin: 0; }
+.bus-prompt-zone .feedback { min-height: 0; margin: 0 !important; align-self: center; }
 .current-card .card-back { box-shadow: 0 0 0 3px #a88aff, 0 0 24px rgba(142, 101, 255, .6); }
 
 .lost-screen h2 { margin-block: clamp(38px, 8vh, 80px); }
