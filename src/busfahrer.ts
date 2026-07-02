@@ -4,7 +4,8 @@ type CardColor = 'red' | 'blue'
 type SuitId = 'heart' | 'diamond' | 'star' | 'moon'
 type Card = { id: string; value: number; label: string; color: CardColor; suit: SuitId; suitLabel: string; symbol: string; numericValue: number }
 type FeedbackKind = 'success' | 'error' | 'info'
-type GamePlayer = { id: string; name: string; hand: Card[]; questionResults: boolean[]; drinks: number }
+type GamePlayer = { id: string; name: string; avatar: string; hand: Card[]; questionResults: boolean[]; drinks: number }
+type PlayerSetup = { name: string; avatar: string }
 type PyramidDecision = { cardId: string; label: string; drinks: number; step: 'offer' | 'target' }
 
 const suits: Array<Pick<Card, 'suit' | 'suitLabel' | 'symbol' | 'color'>> = [
@@ -36,7 +37,7 @@ const busRoundLength = 5
 
 let deck: Card[] = []
 let phase: 'player-intro' | 'questions' | 'pyramid' | 'summary' | 'bus' | 'final' = 'player-intro'
-let configuredPlayerNames = ['Nick']
+let configuredPlayers: PlayerSetup[] = [{ name: 'Nick', avatar: '' }]
 let gamePlayers: GamePlayer[] = []
 let currentPlayerIndex = 0
 let busDriverIndex = 0
@@ -119,7 +120,9 @@ function handMarkup() {
 }
 
 function renderPlayerIntro() {
-  return `<section class="player-turn-screen"><div class="player-turn-icon" aria-hidden="true">♠</div><p>Spieler ${currentPlayerIndex + 1} von ${gamePlayers.length}</p><h2><strong class="turn-player-name">${escapeHtml(currentPlayer().name)}</strong><span>ist dran</span></h2>
+  const player = currentPlayer()
+  const playerImage = player.avatar ? `<img class="player-turn-avatar" src="${player.avatar}" alt="Profilbild von ${escapeHtml(player.name)}">` : '<div class="player-turn-icon" aria-hidden="true">♠</div>'
+  return `<section class="player-turn-screen">${playerImage}<p>Spieler ${currentPlayerIndex + 1} von ${gamePlayers.length}</p><h2><strong class="turn-player-name">${escapeHtml(player.name)}</strong><span>ist dran</span></h2>
     <div class="player-turn-actions"><button class="game-button primary" data-action="start-player-round">Jetzt starten</button></div></section>`
 }
 
@@ -361,7 +364,7 @@ function answerBus(choice: string) {
 function resetGame() {
   window.clearTimeout(advanceTimer)
   advanceTimer = undefined
-  gamePlayers = configuredPlayerNames.map((name, index) => ({ id: `${index}-${name}`, name, hand: [], questionResults: [], drinks: 0 }))
+  gamePlayers = configuredPlayers.map(({ name, avatar }, index) => ({ id: `${index}-${name}`, name, avatar, hand: [], questionResults: [], drinks: 0 }))
   currentPlayerIndex = 0; busDriverIndex = 0; finalResult = ''
   deck = createDeck(gamePlayers.length >= 6 ? 2 : 1); phase = 'player-intro'; questionIndex = 0; hand = gamePlayers[0]!.hand; questionResults = gamePlayers[0]!.questionResults; answered = false
   feedback = { text: '', kind: 'info' }; pyramidCards = []; pyramidProgress = 0; pyramidHits = new Set<number>(); pyramidDecision = null; busCards = []; busProgress = 0; busFailed = false; busLost = false; busFeedbackPending = false; busfahrerUsedCards = []
@@ -411,8 +414,8 @@ function handleClick(event: Event) {
   if (button.dataset.action === 'back') window.location.hash = 'busfahrer-offline'
 }
 
-export function mountBusfahrer(root: HTMLElement, playerNames: string[] = ['Nick']) {
-  configuredPlayerNames = playerNames.length ? playerNames : ['Nick']
+export function mountBusfahrer(root: HTMLElement, playerSetups: PlayerSetup[] = [{ name: 'Nick', avatar: '' }]) {
+  configuredPlayers = playerSetups.length ? playerSetups : [{ name: 'Nick', avatar: '' }]
   gameRoot = root; resetGame(); root.addEventListener('click', handleClick); renderGame()
   return () => { window.clearTimeout(advanceTimer); root.removeEventListener('click', handleClick); gameRoot = null }
 }
