@@ -40,6 +40,7 @@ let busCards: Card[] = []
 let busProgress = 0
 let busFailed = false
 let busLost = false
+let busFeedbackPending = false
 let busfahrerUsedCards: Card[] = []
 let gameRoot: HTMLElement | null = null
 let advanceTimer: number | undefined
@@ -182,7 +183,7 @@ function revealPyramid() {
 
 function startBus() {
   deck = createDeck()
-  phase = 'bus'; busCards = []; busProgress = 0; busFailed = false; busLost = false; busfahrerUsedCards = []
+  phase = 'bus'; busCards = []; busProgress = 0; busFailed = false; busLost = false; busFeedbackPending = false; busfahrerUsedCards = []
   feedback = { text: '', kind: 'info' }
   renderGame()
 }
@@ -197,13 +198,14 @@ function renderBus() {
     && busProgress === busRoundLength
   const first = busProgress === 0
   const choicePrompt = first ? 'Rot oder Blau?' : 'Höher, gleich oder tiefer?'
+  const busDisabled = busFeedbackPending ? ' disabled' : ''
   const busAction = complete
     ? '<button class="game-button primary" data-action="restart">Neu starten</button>'
     : busFailed
       ? '<button class="game-button primary" data-action="retry-bus">Zurück zum Anfang</button>'
       : `<div class="choice-grid">${first
-        ? '<button class="game-button choice-red" data-bus-choice="red">Rot</button><button class="game-button choice-blue" data-bus-choice="blue">Blau</button>'
-        : '<div class="three-choices"><button class="game-button" data-bus-choice="higher">Höher</button><button class="game-button" data-bus-choice="equal">Gleich</button><button class="game-button" data-bus-choice="lower">Tiefer</button></div>'}</div>`
+        ? `<button class="game-button choice-red" data-bus-choice="red"${busDisabled}>Rot</button><button class="game-button choice-blue" data-bus-choice="blue"${busDisabled}>Blau</button>`
+        : `<div class="three-choices"><button class="game-button" data-bus-choice="higher"${busDisabled}>Höher</button><button class="game-button" data-bus-choice="equal"${busDisabled}>Gleich</button><button class="game-button" data-bus-choice="lower"${busDisabled}>Tiefer</button></div>`}</div>`
   return `${phaseHeader(3, complete ? 'Ziel erreicht' : `Karte ${busProgress + 1} von ${busCards.length}`)}<section class="bus-panel">
     <h2>${complete ? 'Geschafft!' : 'Busfahrer'}</h2>
     <div class="bus-card-row">${Array.from({ length: busRoundLength }, (_, index) => {
@@ -217,7 +219,7 @@ function renderBus() {
 }
 
 function answerBus(choice: string) {
-  if (busFailed || busLost) return
+  if (busFailed || busLost || busFeedbackPending) return
   const previousCard = busCards[busProgress - 1]
   const card = drawBusCard()
   busCards.push(card)
@@ -235,15 +237,25 @@ function answerBus(choice: string) {
   busProgress += 1
   feedback = busProgress === busRoundLength
     ? { text: 'Geschafft! Du bist aus dem Bus.', kind: 'success' }
-    : { text: '', kind: 'info' }
+    : { text: 'Richtig – weiter!', kind: 'success' }
+  busFeedbackPending = busProgress < busRoundLength
   renderGame()
+  if (busFeedbackPending) {
+    window.clearTimeout(advanceTimer)
+    advanceTimer = window.setTimeout(() => {
+      if (phase !== 'bus' || !busFeedbackPending) return
+      busFeedbackPending = false
+      feedback = { text: '', kind: 'info' }
+      renderGame()
+    }, 1100)
+  }
 }
 
 function resetGame() {
   window.clearTimeout(advanceTimer)
   advanceTimer = undefined
   deck = createDeck(); phase = 'questions'; questionIndex = 0; hand = []; questionResults = []; answered = false
-  feedback = { text: '', kind: 'info' }; pyramidCards = []; pyramidProgress = 0; pyramidHits = new Set<number>(); busCards = []; busProgress = 0; busFailed = false; busLost = false; busfahrerUsedCards = []
+  feedback = { text: '', kind: 'info' }; pyramidCards = []; pyramidProgress = 0; pyramidHits = new Set<number>(); busCards = []; busProgress = 0; busFailed = false; busLost = false; busFeedbackPending = false; busfahrerUsedCards = []
 }
 
 function renderGame() {
@@ -266,7 +278,7 @@ function handleClick(event: Event) {
     if (deck.length < busRoundLength) {
       busLost = true; feedback = { text: '', kind: 'info' }
     } else {
-      busCards = []; busProgress = 0; busFailed = false
+      busCards = []; busProgress = 0; busFailed = false; busFeedbackPending = false
       feedback = { text: '', kind: 'info' }
     }
     renderGame()
