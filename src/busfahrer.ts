@@ -153,7 +153,10 @@ function nextQuestion() {
   if (questionIndex < 3) {
     questionIndex += 1; answered = false; feedback = { text: '', kind: 'info' }
   } else {
-    phase = 'pyramid'; pyramidCards = Array.from({ length: 10 }, drawCard)
+    phase = 'pyramid'
+    const heldCardIds = new Set(hand.map((card) => card.id))
+    deck = deck.filter((card) => !heldCardIds.has(card.id))
+    pyramidCards = Array.from({ length: 10 }, drawCard)
     feedback = { text: '', kind: 'info' }
   }
   renderGame()
@@ -231,13 +234,13 @@ function answerBus(choice: string) {
         ? card.numericValue < previousCard!.numericValue
         : card.numericValue === previousCard!.numericValue
   if (!correct) {
-    feedback = { text: 'Falsch – zurück zum Anfang.', kind: 'error' }
+    feedback = { text: 'Falsch – trinken.', kind: 'error' }
     busFailed = true; renderGame(); return
   }
   busProgress += 1
   feedback = busProgress === busRoundLength
     ? { text: 'Geschafft! Du bist aus dem Bus.', kind: 'success' }
-    : { text: 'Richtig – weiter!', kind: 'success' }
+    : { text: 'Richtig!', kind: 'success' }
   busFeedbackPending = busProgress < busRoundLength
   renderGame()
   if (busFeedbackPending) {
