@@ -147,6 +147,9 @@
   justify-content: center;
 }
 .phase-one-prompt { margin: 0; color: #d4c8f4; font-weight: 800; }
+.prompt-red { color: #ff526d; font-weight: 900; }
+.prompt-blue { color: #58a1ff; font-weight: 900; }
+.prompt-purple { color: #b591ff; font-weight: 900; }
 .question-panel .feedback {
   width: fit-content;
   min-height: 0;
@@ -184,8 +187,10 @@
 .game-button:hover { transform: none; filter: brightness(1.13); }
 .game-button:active { transform: none; filter: brightness(.96); }
 .game-button.primary { grid-column: 1 / -1; background: linear-gradient(135deg, #8255e8, #536de3); box-shadow: 0 10px 24px rgba(91, 80, 220, .26); }
-.choice-red, .choice-heart, .choice-diamond { background: #b92e4b; background-image: none; }
-.choice-blue, .choice-star, .choice-moon { background: #2862b8; background-image: none; }
+.choice-red, .choice-heart, .choice-diamond, .choice-higher, .choice-inside { background: #b92e4b; background-image: none; }
+.choice-blue, .choice-star, .choice-moon, .choice-lower, .choice-outside { background: #2862b8; background-image: none; }
+.choice-equal { background: #7650b8; background-image: none; }
+.choice-red, .choice-blue, .choice-higher, .choice-equal, .choice-lower, .choice-inside, .choice-outside { font-weight: 900; }
 
 .three-choices { grid-column: 1 / -1; display: flex; flex-wrap: nowrap; justify-content: center; gap: clamp(6px, 1.5vw, 12px); }
 .three-choices .game-button { flex: 1 1 0; min-width: 0; max-width: 170px; }

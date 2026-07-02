@@ -22,6 +22,12 @@ const questions = [
   { title: 'Innen oder außen?', options: [['Innen', 'inside'], ['Außen', 'outside']] },
   { title: 'Welche Kartenfarbe?', options: [['♥', 'heart'], ['◆', 'diamond'], ['★', 'star'], ['●', 'moon']] },
 ]
+const questionPrompts = [
+  '<span class="prompt-red">Rot</span> oder <span class="prompt-blue">Blau</span>?',
+  '<span class="prompt-red">Höher</span>, <span class="prompt-purple">gleich</span> oder <span class="prompt-blue">tiefer</span>?',
+  '<span class="prompt-red">Innen</span> oder <span class="prompt-blue">außen</span>?',
+  '<span class="prompt-purple">Welche Kartenfarbe?</span>',
+]
 const choiceNames: Record<string, string> = { heart: 'Herz', diamond: 'Karo', star: 'Stern', moon: 'Mond' }
 const pyramidOrder = [6, 7, 8, 9, 3, 4, 5, 1, 2, 0]
 const busRoundLength = 5
@@ -111,7 +117,7 @@ function renderQuestions() {
   return `${phaseHeader(1, `Frage ${questionIndex + 1} von 4`)}<section class="question-panel">
     <h2>Fragenrunde</h2>
     <div class="question-card-slot">${answered ? cardMarkup(hand.at(-1)!, true, questionResults.at(-1) ? 'answer-correct' : 'answer-wrong') : cardMarkup(preview, false)}</div>
-    <div class="phase-one-feedback-zone">${answered ? feedbackMarkup() : `<p class="phase-one-prompt">${question.title}</p>`}</div>
+    <div class="phase-one-feedback-zone">${answered ? feedbackMarkup() : `<p class="phase-one-prompt">${questionPrompts[questionIndex]}</p>`}</div>
     <div class="choice-grid ${question.options.length === 4 ? 'four-choices' : ''} ${question.options.length === 3 ? 'three-choices' : ''}">
       ${question.options.map(([label, choice]) => `<button class="game-button choice-${choice}" data-choice="${choice}" aria-label="${choiceNames[choice] ?? label}" ${answered ? 'disabled' : ''}>${label}</button>`).join('')}
     </div>
@@ -196,7 +202,7 @@ function renderBus() {
   const complete = busProgress === busCards.length
     && busProgress === busRoundLength
   const first = busProgress === 0
-  const choicePrompt = first ? 'Rot oder Blau?' : 'Höher, gleich oder tiefer?'
+  const choicePrompt = first ? questionPrompts[0] : questionPrompts[1]
   const busDisabled = busFeedbackPending ? ' disabled' : ''
   const busAction = complete
     ? '<button class="game-button primary" data-action="restart">Neu starten</button>'
@@ -204,7 +210,7 @@ function renderBus() {
       ? '<button class="game-button primary" data-action="retry-bus">Zurück zum Anfang</button>'
       : `<div class="choice-grid">${first
         ? `<button class="game-button choice-red" data-bus-choice="red"${busDisabled}>Rot</button><button class="game-button choice-blue" data-bus-choice="blue"${busDisabled}>Blau</button>`
-        : `<div class="three-choices"><button class="game-button" data-bus-choice="higher"${busDisabled}>Höher</button><button class="game-button" data-bus-choice="equal"${busDisabled}>Gleich</button><button class="game-button" data-bus-choice="lower"${busDisabled}>Tiefer</button></div>`}</div>`
+        : `<div class="three-choices"><button class="game-button choice-higher" data-bus-choice="higher"${busDisabled}>Höher</button><button class="game-button choice-equal" data-bus-choice="equal"${busDisabled}>Gleich</button><button class="game-button choice-lower" data-bus-choice="lower"${busDisabled}>Tiefer</button></div>`}</div>`
   return `${phaseHeader(3, complete ? 'Ziel erreicht' : `Karte ${busProgress + 1} von ${busCards.length}`)}<section class="bus-panel">
     <h2>${complete ? 'Geschafft!' : 'Busfahrer'}</h2>
     <div class="bus-card-row">${Array.from({ length: busRoundLength }, (_, index) => {
