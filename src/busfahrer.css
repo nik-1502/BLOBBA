@@ -205,9 +205,11 @@
 .hand-cards p { color: #8f879e; }
 
 .used-cards {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   flex: 0 0 auto;
   margin: 0;
-  padding: clamp(5px, 1vh, 10px) clamp(5px, 1vh, 10px) calc(clamp(5px, 1vh, 10px) + 44px);
+  padding: clamp(5px, 1vh, 10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
   background: rgba(31, 25, 44, 0.82);
@@ -225,7 +227,7 @@
 .used-card-list {
   display: flex;
   min-height: clamp(42px, 8vh, 56px);
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   gap: clamp(7px, 2vw, 18px);
   overflow: hidden;
