@@ -181,8 +181,8 @@
 .question-panel .game-button:disabled { cursor: default; filter: saturate(0.82) brightness(0.9); opacity: 0.78; transform: none; }
 .bus-panel .game-button:disabled { cursor: default; filter: saturate(0.82) brightness(0.9); opacity: 0.78; transform: none; }
 .game-button { min-height: 50px; padding: 12px 18px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; color: #fff; background: #352c48; font: inherit; font-weight: 800; cursor: pointer; transition: transform .16s ease, filter .16s ease, box-shadow .16s ease; }
-.game-button:hover { transform: translateY(-2px); filter: brightness(1.13); }
-.game-button:active { transform: translateY(1px) scale(.98); }
+.game-button:hover { transform: none; filter: brightness(1.13); }
+.game-button:active { transform: none; filter: brightness(.96); }
 .game-button.primary { grid-column: 1 / -1; background: linear-gradient(135deg, #8255e8, #536de3); box-shadow: 0 10px 24px rgba(91, 80, 220, .26); }
 .choice-red, .choice-heart, .choice-diamond { background: #b92e4b; background-image: none; }
 .choice-blue, .choice-star, .choice-moon { background: #2862b8; background-image: none; }
