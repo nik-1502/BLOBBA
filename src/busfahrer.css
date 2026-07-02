@@ -265,7 +265,14 @@
 .pyramid-hit { animation: hit-glow 1s ease-in-out infinite alternate; }
 .pyramid-hit .card-front { box-shadow: 0 0 0 4px #62df9b, 0 0 28px rgba(70, 230, 142, .8); }
 
-.bus-panel { --bus-edge-gap: clamp(10px, 3vw, 28px); display: flex; flex-direction: column; justify-content: space-between; }
+.bus-panel {
+  --bus-edge-gap: clamp(10px, 3vw, 28px);
+  --bus-prompt-height: clamp(42px, 7dvh, 64px);
+  --bus-control-height: clamp(44px, 7dvh, 50px);
+  display: grid;
+  grid-template-rows: auto auto 3px var(--bus-prompt-height) var(--bus-control-height);
+  align-content: space-between;
+}
 .bus-panel h2 { margin: 0; }
 .bus-card-row { display: flex; width: min(820px, 100%); margin: 0 auto; align-items: center; justify-content: space-between; gap: clamp(4px, 2vw, 22px); padding-inline: var(--bus-edge-gap); }
 .bus-dashed-line { width: calc(100% - 2 * var(--bus-edge-gap)); height: 3px; margin: 0 auto; border-radius: 9px; background: repeating-linear-gradient(90deg, #70687c 0 22px, transparent 22px 38px); }
@@ -273,13 +280,17 @@
 .bus-prompt-zone {
   display: grid;
   width: 100%;
-  height: auto;
+  height: var(--bus-prompt-height);
   min-height: 0;
   place-items: center;
   text-align: center;
 }
 .bus-prompt-zone > p { width: 100%; margin: 0; color: #d4c8f4; font-weight: 800; }
 .bus-prompt-zone .feedback { min-height: 0; margin: 0 !important; align-self: center; }
+.bus-panel > .choice-grid,
+.bus-panel > .game-button { height: var(--bus-control-height); min-height: var(--bus-control-height); }
+.bus-panel > .choice-grid { align-content: stretch; }
+.bus-panel > .choice-grid .game-button { height: 100%; min-height: 100%; }
 .current-card .card-back { box-shadow: 0 0 0 3px #a88aff, 0 0 24px rgba(142, 101, 255, .6); }
 
 .lost-screen h2 { margin-block: clamp(38px, 8vh, 80px); }

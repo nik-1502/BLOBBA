@@ -196,7 +196,7 @@ function renderBus() {
   const complete = busProgress === busCards.length
     && busProgress === busRoundLength
   const first = busProgress === 0
-  const choicePrompt = first ? 'Errate die Kartenfarbe' : 'Ist die nächste Karte höher, gleich oder tiefer?'
+  const choicePrompt = first ? 'Rot oder Blau?' : 'Höher, gleich oder tiefer?'
   const busAction = complete
     ? '<button class="game-button primary" data-action="restart">Neu starten</button>'
     : busFailed
