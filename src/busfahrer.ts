@@ -115,7 +115,7 @@ function syncCurrentPlayerCards() {
 }
 
 function handMarkup() {
-  return `<section class="player-hand"><h3><span class="hand-title-label">Deine Karten:</span> <strong class="hand-player-name">${escapeHtml(currentPlayer().name)}</strong></h3><div class="hand-cards">${hand.length ? hand.map((card, index) => cardMarkup(card, true, questionResults[index] ? 'answer-correct' : 'answer-wrong')).join('') : '<p>Noch keine Karten gezogen.</p>'}</div></section>`
+  return `<section class="player-hand"><h3><strong class="hand-player-name">${escapeHtml(currentPlayer().name)}:</strong> <span class="hand-title-label">Deine Karten</span></h3><div class="hand-cards">${hand.length ? hand.map((card, index) => cardMarkup(card, true, questionResults[index] ? 'answer-correct' : 'answer-wrong')).join('') : '<p>Noch keine Karten gezogen.</p>'}</div></section>`
 }
 
 function renderPlayerIntro() {
@@ -134,7 +134,7 @@ function busUsedCardsMarkup() {
         : `<span class="placeholder-card">${label}</span>`}
     </div>`
   }).join('')
-  return `<section class="used-cards" aria-label="Gezogene Karten"><h3>Gezogene Karten</h3><div class="used-card-list">${stacks}</div></section>`
+  return `<section class="used-cards" aria-label="Gezogene Karten"><h3><strong class="hand-player-name">${escapeHtml(currentPlayer().name)}:</strong> <span class="hand-title-label">Gezogene Karten</span></h3><div class="used-card-list">${stacks}</div></section>`
 }
 
 function renderQuestions() {
@@ -263,9 +263,11 @@ function finishPlayerPyramid() {
     feedback = { text: '', kind: 'info' }
     phase = 'player-intro'
   } else {
-    const ranked = gamePlayers.map((player, index) => ({ player, index })).sort((a, b) =>
-      b.player.hand.length - a.player.hand.length || b.player.drinks - a.player.drinks || a.index - b.index)
-    busDriverIndex = ranked[0]!.index
+    const mostCards = Math.max(...gamePlayers.map((player) => player.hand.length))
+    const cardLeaders = gamePlayers.map((player, index) => ({ player, index })).filter(({ player }) => player.hand.length === mostCards)
+    const mostDrinks = Math.max(...cardLeaders.map(({ player }) => player.drinks))
+    const tiedLeaders = cardLeaders.filter(({ player }) => player.drinks === mostDrinks)
+    busDriverIndex = tiedLeaders[Math.floor(Math.random() * tiedLeaders.length)]!.index
     phase = 'summary'
     feedback = { text: '', kind: 'info' }
   }
@@ -281,7 +283,7 @@ function startBus() {
 }
 
 function playerStatsMarkup() {
-  return `<div class="game-stats-table"><div class="game-stats-head"><span>Spieler</span><span>Karten</span><span>Schlücke</span></div>${gamePlayers.map((player, index) => `<div class="game-stats-row ${index === busDriverIndex ? 'is-bus-driver' : ''}"><strong>${escapeHtml(player.name)}</strong><span>${player.hand.length}</span><span>${player.drinks}</span></div>`).join('')}</div>`
+  return `<div class="game-stats-table"><div class="game-stats-head"><span>Spieler</span><span>Schlücke</span></div>${gamePlayers.map((player, index) => `<div class="game-stats-row ${index === busDriverIndex ? 'is-bus-driver' : ''}"><strong>${escapeHtml(player.name)}</strong><span>${player.drinks}</span></div>`).join('')}</div>`
 }
 
 function renderSummary(final = false) {
