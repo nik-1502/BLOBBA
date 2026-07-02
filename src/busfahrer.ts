@@ -115,7 +115,7 @@ function syncCurrentPlayerCards() {
 }
 
 function handMarkup() {
-  return `<section class="player-hand"><h3><strong class="hand-player-name">${escapeHtml(currentPlayer().name)}:</strong> <span class="hand-title-label">Deine Karten</span></h3><div class="hand-cards">${hand.length ? hand.map((card, index) => cardMarkup(card, true, questionResults[index] ? 'answer-correct' : 'answer-wrong')).join('') : '<p>Noch keine Karten gezogen.</p>'}</div></section>`
+  return `<section class="player-hand"><h3><strong class="hand-player-name">${escapeHtml(currentPlayer().name)}</strong><span class="hand-title-colon">:</span> <span class="hand-title-label">Deine Karten</span></h3><div class="hand-cards">${hand.length ? hand.map((card, index) => cardMarkup(card, true, questionResults[index] ? 'answer-correct' : 'answer-wrong')).join('') : '<p>Noch keine Karten gezogen.</p>'}</div></section>`
 }
 
 function renderPlayerIntro() {
@@ -134,7 +134,7 @@ function busUsedCardsMarkup() {
         : `<span class="placeholder-card">${label}</span>`}
     </div>`
   }).join('')
-  return `<section class="used-cards" aria-label="Gezogene Karten"><h3><strong class="hand-player-name">${escapeHtml(currentPlayer().name)}:</strong> <span class="hand-title-label">Gezogene Karten</span></h3><div class="used-card-list">${stacks}</div></section>`
+  return `<section class="used-cards" aria-label="Gezogene Karten"><h3><strong class="hand-player-name">${escapeHtml(currentPlayer().name)}</strong><span class="hand-title-colon">:</span> <span class="hand-title-label">Gezogene Karten</span></h3><div class="used-card-list">${stacks}</div></section>`
 }
 
 function renderQuestions() {
@@ -197,7 +197,7 @@ function renderPyramid() {
   const rows = [[0], [1, 2], [3, 4, 5], [6, 7, 8, 9]]
   const complete = pyramidProgress === 10
   const pyramidAction = pyramidDecision?.step === 'offer'
-    ? `<div class="pyramid-decision"><p>Möchtest du deine ${pyramidDecision.label} setzen?</p><div><button class="game-button primary" data-action="use-pyramid-card">Ja</button><button class="game-button" data-action="keep-pyramid-card">Nein</button></div></div>`
+    ? `<div class="pyramid-decision pyramid-offer"><div class="pyramid-offer-question">Möchtest du deine ${pyramidDecision.label} setzen?</div><button class="game-button choice-red pyramid-side-choice pyramid-choice-no" data-action="keep-pyramid-card">Nein</button><button class="game-button choice-blue pyramid-side-choice pyramid-choice-yes" data-action="use-pyramid-card">Ja</button></div>`
     : pyramidDecision?.step === 'target'
       ? `<div class="pyramid-decision"><p>Wer soll ${pyramidDecision.drinks} Schluck${pyramidDecision.drinks === 1 ? '' : 'e'} trinken?</p><div class="pyramid-targets">${gamePlayers.map((player, index) => `<button class="game-button" data-pyramid-target="${index}">${escapeHtml(player.name)}</button>`).join('')}</div></div>`
       : `<button class="game-button primary" data-action="${complete ? 'finish-player-pyramid' : 'reveal-pyramid'}">${complete ? `${currentPlayer().name} ist fertig` : 'Nächste Karte aufdecken'}</button>`

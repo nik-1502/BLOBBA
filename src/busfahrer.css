@@ -200,6 +200,7 @@
 .player-hand h3 { margin: 0 0 12px; text-align: center; color: #d7d0e4; font-size: .9rem; }
 .hand-title-label { color: #d7d0e4; font-weight: 500; }
 .hand-player-name { color: #dda15e; font-size: 1.08rem; font-weight: 850; }
+.hand-title-colon { color: #fff; font-weight: 400; }
 .hand-cards { display: flex; width: max-content; min-width: 100%; min-height: clamp(58px, 11vh, 82px); margin-inline: auto; justify-content: center; align-items: center; gap: clamp(4px, 1vw, 8px); }
 .hand-cards .playing-card { width: clamp(38px, 8vh, 60px); }
 .hand-cards .card-value { font-size: clamp(.82rem, 2.3vh, 1.2rem); }
@@ -284,7 +285,7 @@
 
 .lost-screen > p:not(.eyebrow) { color: #bdb4d2; }
 
-.pyramid-panel { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; align-items: center; }
+.pyramid-panel { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; align-items: center; row-gap: clamp(8px, 1.5dvh, 16px); }
 .pyramid-panel h2 { margin: 0; }
 .pyramid { width: min(540px, 100%); min-height: 0; margin: auto; display: grid; place-self: center; align-content: center; gap: clamp(2px, .6vh, 6px); transform: translateY(clamp(-8px, -0.8vh, -3px)); }
 .pyramid-panel > .feedback { position: absolute; z-index: 2; top: clamp(6px, 1.2vh, 12px); right: clamp(8px, 2vw, 18px); max-width: 34%; min-height: 0; margin: 0; padding: 5px 8px; font-size: clamp(0.62rem, 1.5vw, 0.78rem); pointer-events: none; }
@@ -296,9 +297,14 @@
 .pyramid-decision > div > .game-button { min-width: 120px; min-height: var(--phase-action-height); }
 .pyramid-targets { max-height: 104px; padding: 2px; flex-wrap: wrap; overflow: auto; }
 .pyramid-targets .game-button { min-width: 0 !important; padding: 8px 12px; flex: 1 1 120px; }
+.pyramid-offer { display: grid; place-items: center; }
+.pyramid-offer-question { display: grid; width: min(248px, 100%); height: var(--phase-action-height); padding: 6px 14px; place-items: center; border: 1px solid rgba(255, 255, 255, .16); border-radius: 14px; color: #fff; background: #352c48; font-weight: 800; }
+.pyramid-side-choice { position: absolute; top: 50%; width: clamp(58px, 11vw, 110px); min-width: 0 !important; min-height: var(--phase-action-height); padding-inline: 8px; translate: 0 -50%; z-index: 3; }
+.pyramid-choice-no { left: clamp(4px, 1.5vw, 16px); }
+.pyramid-choice-yes { right: clamp(4px, 1.5vw, 16px); }
 .pyramid-row { position: relative; display: flex; justify-content: center; gap: 7px; }
 .pyramid-row::after { content: attr(data-drinks); position: absolute; left: calc(50% + 226px); top: 50%; color: #9c94aa; font-size: .68rem; transform: translateY(-50%); white-space: nowrap; }
-.pyramid .playing-card { width: clamp(35px, min(10vw, 10vh), 78px); }
+.pyramid .playing-card { width: clamp(32px, min(8.5vw, 8.5vh), 68px); }
 .pyramid .card-value { font-size: clamp(.78rem, 2.5vh, 1.4rem); }
 .pyramid .card-symbol { font-size: clamp(.6rem, 1.8vh, 1rem); }
 .pyramid-hit { animation: hit-glow 1s ease-in-out infinite alternate; }
