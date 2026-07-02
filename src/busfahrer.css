@@ -270,7 +270,7 @@
 .bus-road { display: flex; width: min(820px, 100%); min-height: 0; margin: 0 auto; flex: 1 1 auto; flex-direction: column; justify-content: flex-end; overflow: hidden; }
 .bus-card-row { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: clamp(4px, 2vw, 22px); padding-inline: var(--bus-edge-gap); }
 .bus-controls {
-  --bus-prompt-height: clamp(84px, 12dvh, 112px);
+  --bus-prompt-height: clamp(100px, 14dvh, 128px);
   display: grid;
   width: min(820px, 100%);
   margin: 0 auto;
