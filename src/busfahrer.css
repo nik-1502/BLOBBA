@@ -1,6 +1,6 @@
 .busfahrer-page {
   height: 100vh;
-  height: 100svh;
+  height: 100dvh;
   padding: 0;
   overflow: hidden;
   color: #f8f5ff;
@@ -78,13 +78,14 @@
 .pyramid-panel,
 .bus-panel { min-height: 0; padding: clamp(8px, 2vh, 22px) clamp(10px, 3vw, 28px); text-align: center; overflow: hidden; }
 .question-panel {
+  --phase-one-control-height: clamp(44px, 7dvh, 50px);
   display: grid;
   grid-template-rows:
     auto
     clamp(34px, 6vh, 54px)
-    minmax(100px, 1fr)
-    clamp(42px, 7vh, 64px)
-    clamp(50px, 11vh, 104px);
+    auto
+    minmax(clamp(32px, 6dvh, 64px), 1fr)
+    var(--phase-one-control-height);
   align-items: center;
 }
 .question-panel .eyebrow { align-self: end; }
@@ -111,9 +112,21 @@
 .card-center small { font-size: .58rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .card-symbol, .figure { font-size: 2.55rem; line-height: 1; }
 .figure { display: grid; width: 52px; height: 52px; place-items: center; border: 3px solid currentColor; border-radius: 16px 5px; background: color-mix(in srgb, currentColor 8%, white); }
-.question-card-slot { display: flex; width: 100%; min-height: 0; height: 100%; align-items: center; justify-content: center; }
-.question-card-slot .playing-card { width: clamp(72px, 15vh, 112px); }
-.question-panel .feedback { width: fit-content; min-height: 0; height: clamp(42px, 7vh, 64px); margin: 0 auto; flex: 0 0 auto; }
+.question-card-slot { display: flex; width: 100%; min-height: 0; align-items: center; justify-content: center; }
+.question-card-slot .playing-card { width: clamp(72px, 15dvh, 112px); }
+.phase-one-feedback-zone {
+  display: flex;
+  width: 100%;
+  min-height: clamp(32px, 6dvh, 64px);
+  align-items: center;
+  justify-content: center;
+}
+.question-panel .feedback {
+  width: fit-content;
+  min-height: 0;
+  height: auto;
+  margin: 0;
+}
 
 .feedback { display: grid; min-height: clamp(26px, 5vh, 42px); margin: clamp(3px, 1vh, 10px) auto; place-items: center; font-weight: 800; }
 .feedback:not(.is-empty) { width: fit-content; max-width: 100%; padding: 9px 16px; border-radius: 10px; animation: feedback-pop .35s ease-out; }
@@ -138,7 +151,7 @@
 .question-panel .four-choices .game-button { flex: 1 1 0; min-width: 0; max-width: 120px; font-size: clamp(1.05rem, 3vw, 1.35rem); }
 .question-panel .three-choices { display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; }
 .question-panel .three-choices .game-button { flex: 1 1 0; min-width: 0; max-width: 170px; }
-.question-panel > .choice-grid .game-button { height: clamp(44px, 7vh, 50px); min-height: clamp(44px, 7vh, 50px); }
+.question-panel > .choice-grid .game-button { height: var(--phase-one-control-height); min-height: var(--phase-one-control-height); }
 .question-panel .game-button:disabled { cursor: default; filter: saturate(0.82) brightness(0.9); opacity: 0.78; transform: none; }
 .game-button { min-height: 50px; padding: 12px 18px; border: 1px solid rgba(255,255,255,.16); border-radius: 14px; color: #fff; background: #352c48; font: inherit; font-weight: 800; cursor: pointer; transition: transform .16s ease, filter .16s ease, box-shadow .16s ease; }
 .game-button:hover { transform: translateY(-2px); filter: brightness(1.13); }
@@ -276,11 +289,6 @@
   .end-actions .game-button { padding-inline: 8px; font-size: 0.78rem; }
 }
 
-@media (max-width: 600px) and (pointer: coarse) and (display-mode: standalone) {
-  .busfahrer-page { height: 100dvh; }
-  .question-panel .feedback { position: relative; top: -8px; }
-}
-
 @media (max-height: 650px) and (orientation: landscape) {
   .busfahrer-shell { padding-block: 5px; }
   .busfahrer-header h1 { font-size: 1.35rem; }
@@ -289,10 +297,9 @@
   .game-stage { gap: 4px; }
   .game-progress { font-size: 0.68rem; }
   .question-panel, .pyramid-panel, .bus-panel { padding: 5px 10px; }
-  .question-panel { grid-template-rows: auto 26px minmax(65px, 1fr) 26px 40px; }
+  .question-panel { --phase-one-control-height: 38px; grid-template-rows: auto 26px auto minmax(32px, 1fr) var(--phase-one-control-height); }
   .eyebrow { margin-bottom: 1px; font-size: 0.62rem; }
   .question-panel h2, .pyramid-panel h2, .bus-panel h2 { margin-bottom: 3px; font-size: 1.15rem; }
-  .question-card-slot { height: 100%; }
   .question-card-slot .playing-card { width: 58px; }
   .feedback { min-height: 22px; margin-block: 2px; font-size: 0.72rem; }
   .game-button { min-height: 38px; padding: 5px 10px; font-size: 0.75rem; }

@@ -113,7 +113,8 @@ function renderQuestions() {
   const preview = deck.at(-1) ?? createDeck()[0]!
   return `${phaseHeader(1, `Frage ${questionIndex + 1} von 4`)}<section class="question-panel">
     <p class="eyebrow">Fragenrunde</p><h2>${question.title}</h2>
-    <div class="question-card-slot">${answered ? cardMarkup(hand.at(-1)!, true, questionResults.at(-1) ? 'answer-correct' : 'answer-wrong') : cardMarkup(preview, false)}</div>${feedbackMarkup()}
+    <div class="question-card-slot">${answered ? cardMarkup(hand.at(-1)!, true, questionResults.at(-1) ? 'answer-correct' : 'answer-wrong') : cardMarkup(preview, false)}</div>
+    <div class="phase-one-feedback-zone">${feedbackMarkup()}</div>
     <div class="choice-grid ${question.options.length === 4 ? 'four-choices' : ''} ${question.options.length === 3 ? 'three-choices' : ''}">
       ${question.options.map(([label, choice]) => `<button class="game-button choice-${choice}" data-choice="${choice}" aria-label="${choiceNames[choice] ?? label}" ${answered ? 'disabled' : ''}>${label}</button>`).join('')}
     </div>
