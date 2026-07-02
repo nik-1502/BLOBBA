@@ -146,7 +146,7 @@
   align-items: center;
   justify-content: center;
 }
-.phase-one-prompt { margin: 0; color: #d4c8f4; font-weight: 800; }
+.phase-one-prompt { margin: 0; color: #fff; font-weight: 400; }
 .prompt-red { color: #ff526d; font-weight: 900; }
 .prompt-blue { color: #58a1ff; font-weight: 900; }
 .prompt-purple { color: #b591ff; font-weight: 900; }
@@ -240,9 +240,9 @@
 
 .used-card-stack {
   position: relative;
-  width: 38px;
-  height: 53px;
-  flex: 0 0 38px;
+  width: 44px;
+  height: 61px;
+  flex: 0 0 44px;
 }
 
 .placeholder-card {
@@ -250,8 +250,8 @@
   right: 0;
   bottom: 0;
   display: grid;
-  width: 34px;
-  height: 48px;
+  width: 40px;
+  height: 56px;
   place-items: center;
   border: 1px solid rgba(42, 40, 48, 0.28);
   border-radius: 5px;
@@ -268,8 +268,8 @@
   right: calc(var(--stack-index) * -3px);
   bottom: calc(var(--stack-index) * 2px);
   display: grid;
-  width: 34px;
-  height: 48px;
+  width: 40px;
+  height: 56px;
   place-items: center;
   border: 2px solid #191919;
   border-radius: 5px;
@@ -318,7 +318,7 @@
   place-items: center;
   text-align: center;
 }
-.bus-prompt-zone > p { width: 100%; margin: 0; color: #d4c8f4; font-weight: 800; }
+.bus-prompt-zone > p { width: 100%; margin: 0; color: #fff; font-weight: 400; }
 .bus-prompt-zone .feedback { min-height: 0; margin: 0 !important; align-self: center; }
 .bus-panel > .choice-grid,
 .bus-panel > .game-button { height: var(--bus-control-height); min-height: var(--bus-control-height); }
@@ -360,9 +360,9 @@
   .hand-cards { justify-content: center; }
   .used-card-list { justify-content: center; padding: 0 8px 4px; }
   .used-card-list { gap: 4px; }
-  .used-card-stack { width: 30px; height: 44px; flex-basis: 30px; }
-  .mini-used-card { width: 27px; height: 39px; font-size: 0.82rem; }
-  .placeholder-card { width: 27px; height: 39px; font-size: 0.82rem; }
+  .used-card-stack { width: 35px; height: 50px; flex-basis: 35px; }
+  .mini-used-card { width: 32px; height: 45px; font-size: 0.9rem; }
+  .placeholder-card { width: 32px; height: 45px; font-size: 0.9rem; }
   .end-actions { gap: 8px; }
   .end-actions .game-button { padding-inline: 8px; font-size: 0.78rem; }
 }
