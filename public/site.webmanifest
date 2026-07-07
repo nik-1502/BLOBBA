@@ -1,0 +1,17 @@
+{
+  "name": "GetDrunk",
+  "short_name": "GetDrunk",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#171321",
+  "theme_color": "#8c52cc",
+  "icons": [
+    {
+      "src": "/app-icon.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

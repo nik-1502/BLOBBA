@@ -1,6 +1,7 @@
 import './style.css'
 import { mountBusfahrer } from './busfahrer.ts'
 import { avatarColor, avatarOptions, avatarSource, avatarVisualMarkup } from './profiles.ts'
+import userButtonImage from './assets/benutzer/Benutzer.png'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 const PROFILE_STORAGE_KEY = 'getdrunk.profiles.v1'
@@ -129,10 +130,9 @@ function renderPage() {
 }
 
 function renderHome() {
-  const profile = activeProfile()
   app.innerHTML = `<main class="home-page">
-    <button class="home-profile-button ${profile.avatarId ? '' : 'is-default'}" type="button" aria-label="Profil öffnen" title="Profil öffnen" style="--avatar-ring:${avatarColor(profile.avatarId)}">
-      ${avatarVisualMarkup(profile.avatarId, profile.name ? `Profilbild von ${escapeHtml(profile.name)}` : 'Profil')}
+    <button class="home-profile-button" type="button" aria-label="Profil öffnen" title="Profil öffnen">
+      <img src="${userButtonImage}" alt="">
     </button>
     <header class="title-frame"><h1>GetDrunk</h1></header>
     <button class="busfahrer-button" type="button">Busfahrer</button>
