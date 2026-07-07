@@ -6,7 +6,7 @@ import heroLogo from './assets/überschrift/ebe5baf7-8dca-44a0-a5bc-ba2f48425dc2
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 const PROFILE_STORAGE_KEY = 'getdrunk.profiles.v1'
-const MAX_PLAYERS = 10
+const MAX_PLAYERS = 9
 const DEFAULT_AVATAR_ID = 'bier'
 
 type StoredProfile = { id: string; name: string; avatarId: string | null }
@@ -81,7 +81,7 @@ function createLocalPlayer(index: number): SetupPlayer {
   return {
     id: createId(),
     profileId: `local-${createId()}`,
-    name: `Spieler ${index}`,
+    name: `Spieler-${index}`,
     avatarId,
     avatar: avatarSource(avatarId),
     avatarColor: avatarColor(avatarId),
@@ -187,7 +187,7 @@ function renderOnlineMenu() {
 function renderOfflineMenu() {
   setupShell(`<div class="setup-panel offline-panel"><p class="eyebrow">Offline</p><h2>Spieler</h2>
     <div class="player-table" role="list">${players.map((player, index) => `<div class="player-row" role="listitem">
-      <div class="player-row-main">${playerAvatarMarkup(player)}<input class="player-name-input" data-player-name="${player.id}" value="${escapeHtml(player.name || `Spieler ${index + 1}`)}" maxlength="24" autocomplete="off" aria-label="Name von Spieler ${index + 1}"></div>
+      <div class="player-row-main">${playerAvatarMarkup(player)}<input class="player-name-input" data-player-name="${player.id}" value="${escapeHtml(player.name || `Spieler-${index + 1}`)}" maxlength="24" autocomplete="off" aria-label="Name von Spieler ${index + 1}"></div>
       <button class="player-remove" type="button" data-remove-player="${player.id}" ${players.length === 1 ? 'disabled' : ''}>Entfernen</button>
     </div>`).join('')}</div>
     <button class="game-button setup-add-player" type="button" data-add-player ${players.length >= MAX_PLAYERS ? 'disabled' : ''}>+ Spieler hinzufügen</button>
@@ -212,7 +212,7 @@ function renderOfflineMenu() {
     renderOfflineMenu()
   })
   app.querySelector<HTMLButtonElement>('[data-start-game]')!.addEventListener('click', () => {
-    gamePlayerSnapshot = players.map((player, index) => ({ ...player, name: player.name.trim() || `Spieler ${index + 1}` }))
+    gamePlayerSnapshot = players.map((player, index) => ({ ...player, name: player.name.trim() || `Spieler-${index + 1}` }))
     profileStore.lastUsedProfileIds = players
       .map((player) => player.profileId)
       .filter((id) => profileStore.profiles.some((profile) => profile.id === id))

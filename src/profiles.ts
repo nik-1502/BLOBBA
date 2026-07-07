@@ -23,7 +23,6 @@ const avatarDefinitions: AvatarDefinition[] = [
   { id: 'champagner', fileName: 'champagner.png', label: 'Champagner', color: '#5D1B01' },
   { id: 'wuerfel', fileName: 'würfel.png', label: 'Würfel', color: '#19454B' },
   { id: 'bierpong', fileName: 'bierpong.png', label: 'Beerpong', color: '#16464D' },
-  { id: 'captain', fileName: 'captain.png', label: 'Piratenflasche', color: '#602B08' },
 ]
 
 function moduleForFile(fileName: string) {
