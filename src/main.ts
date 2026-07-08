@@ -1,6 +1,27 @@
 import './style.css'
-import { mountBusfahrer } from './busfahrer.ts'
+import { applyBusfahrerState, getBusfahrerState, mountBusfahrer, type BusfahrerGameState } from './busfahrer.ts'
 import { avatarColor, avatarOptions, avatarSource, avatarVisualMarkup } from './profiles.ts'
+import {
+  createOnlineGroup,
+  fetchGroupSnapshot,
+  getSession,
+  inviteUrl,
+  joinOnlineGroup,
+  leaveOnlineGroup,
+  loadRemoteProfile,
+  onAuthChanged,
+  onlineAvailable,
+  removeOnlineMember,
+  saveRemoteProfile,
+  signIn,
+  signOut,
+  signUp,
+  subscribeToGroup,
+  updateOnlineGameState,
+  type OnlineGroup,
+  type OnlineMember,
+} from './online.ts'
+import type { Session } from '@supabase/supabase-js'
 import userButtonImage from './assets/benutzer/4c0c56d3-a7e5-4be3-81b0-fda84fd67cbf.png'
 import heroLogo from './assets/überschrift/ebe5baf7-8dca-44a0-a5bc-ba2f48425dc2.png'
 
@@ -13,6 +34,10 @@ type StoredProfile = { id: string; name: string; avatarId: string | null }
 type ProfileStore = { profiles: StoredProfile[]; activeProfileId: string; lastUsedProfileIds: string[] }
 type SetupPlayer = { id: string; profileId: string; name: string; avatarId: string | null; avatar: string; avatarColor: string }
 type ProfileEditorContext = { mode: 'primary' | 'new-player' | 'edit-player'; profileId?: string }
+type SetupMode = 'offline' | 'online'
+type OnlineModal = 'create' | 'join' | 'invite' | null
+type AuthModal = 'login' | 'register' | null
+type OnlineGroupState = { joined: boolean; isHost: boolean; inviteCode: string; groupId: string | null; status: 'lobby' | 'playing' | 'finished'; players: SetupPlayer[]; members: OnlineMember[]; gameState: BusfahrerGameState | null }
 
 let unmountCurrentPage: (() => void) | undefined
 let profileStore = loadProfileStore()
@@ -20,6 +45,14 @@ let players = suggestedPlayers()
 let gamePlayerSnapshot: SetupPlayer[] = []
 let profileEditorContext: ProfileEditorContext = { mode: 'primary' }
 let pendingPlayerNameFocusId: string | undefined
+let setupMode: SetupMode = 'offline'
+let activeOnlineModal: OnlineModal = null
+let onlineGroup: OnlineGroupState = { joined: false, isHost: false, inviteCode: 'BLOBBA-724', groupId: null, status: 'lobby', players: [], members: [], gameState: null }
+let authSession: Session | null = null
+let authModal: AuthModal = null
+let onlineUnsubscribe: (() => void) | undefined
+let pendingInviteCode: string | null = null
+let onlineNotice = ''
 
 const viewportMeta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]')!
 const zoomableViewport = 'width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0'
@@ -81,11 +114,15 @@ function createLocalPlayer(index: number): SetupPlayer {
   return {
     id: createId(),
     profileId: `local-${createId()}`,
-    name: `Spieler-${index}`,
+    name: defaultPlayerName(index),
     avatarId,
     avatar: avatarSource(avatarId),
     avatarColor: avatarColor(avatarId),
   }
+}
+
+function defaultPlayerName(index: number) {
+  return `Spieler ${index}`
 }
 
 function suggestedPlayers() {
@@ -99,6 +136,117 @@ function syncSetupPlayers(profile: StoredProfile) {
   players = players.map((player) => player.profileId === profile.id
     ? { ...player, name: profile.name, avatarId: profile.avatarId, avatar: avatarSource(profile.avatarId), avatarColor: avatarColor(profile.avatarId) }
     : player)
+}
+
+function currentUser() {
+  return authSession?.user ?? null
+}
+
+function currentOnlineProfile() {
+  const profile = activeProfile()
+  return { name: profile.name || 'Spieler', avatarId: profile.avatarId ?? DEFAULT_AVATAR_ID }
+}
+
+function setupPlayerFromMember(member: OnlineMember): SetupPlayer {
+  return {
+    id: member.user_id,
+    profileId: member.user_id,
+    name: member.name,
+    avatarId: member.avatar_id,
+    avatar: avatarSource(member.avatar_id),
+    avatarColor: avatarColor(member.avatar_id),
+  }
+}
+
+function applyOnlineSnapshot(group: OnlineGroup, members: OnlineMember[]) {
+  onlineGroup = {
+    joined: true,
+    isHost: group.host_user_id === currentUser()?.id,
+    inviteCode: group.invite_code,
+    groupId: group.id,
+    status: group.status,
+    players: members.map(setupPlayerFromMember),
+    members,
+    gameState: (group.game_state as BusfahrerGameState | null) ?? null,
+  }
+  gamePlayerSnapshot = onlineGroup.players
+  if (group.status === 'playing' && window.location.hash.split('?')[0] !== '#busfahrer') {
+    window.location.hash = 'busfahrer'
+  } else if (group.status === 'playing' && onlineGroup.gameState) {
+    applyBusfahrerState(onlineGroup.gameState)
+  }
+  reconcileDepartedPlayers()
+}
+
+function reconcileDepartedPlayers() {
+  if (!onlineGroup.isHost || !onlineGroup.groupId || !onlineGroup.gameState || onlineGroup.status !== 'playing') return
+  const memberIds = new Set(onlineGroup.members.map((member) => member.user_id))
+  const previousPlayers = onlineGroup.gameState.gamePlayers
+  const nextPlayers = previousPlayers.filter((player) => memberIds.has(player.id))
+  if (nextPlayers.length === previousPlayers.length || !nextPlayers.length) return
+  const previousActiveId = previousPlayers[onlineGroup.gameState.currentPlayerIndex]?.id
+  const nextActiveIndex = previousActiveId && memberIds.has(previousActiveId)
+    ? nextPlayers.findIndex((player) => player.id === previousActiveId)
+    : Math.min(onlineGroup.gameState.currentPlayerIndex, nextPlayers.length - 1)
+  const nextState = {
+    ...onlineGroup.gameState,
+    gamePlayers: nextPlayers,
+    currentPlayerIndex: Math.max(0, nextActiveIndex),
+    busDriverIndex: Math.min(onlineGroup.gameState.busDriverIndex, nextPlayers.length - 1),
+    hand: nextPlayers[Math.max(0, nextActiveIndex)]?.hand ?? [],
+    questionResults: nextPlayers[Math.max(0, nextActiveIndex)]?.questionResults ?? [],
+  }
+  onlineGroup.gameState = nextState
+  void updateOnlineGameState(onlineGroup.groupId, nextState, 'playing')
+}
+
+async function refreshOnlineGroup() {
+  if (!onlineGroup.groupId) return
+  const snapshot = await fetchGroupSnapshot(onlineGroup.groupId)
+  applyOnlineSnapshot(snapshot.group, snapshot.members)
+  if (window.location.hash.split('?')[0] !== '#busfahrer') renderModeMenu()
+}
+
+function subscribeCurrentGroup() {
+  onlineUnsubscribe?.()
+  onlineUnsubscribe = onlineGroup.groupId ? subscribeToGroup(onlineGroup.groupId, () => { void refreshOnlineGroup() }) : undefined
+}
+
+function localPlayerIsCurrent(state: BusfahrerGameState) {
+  const userId = currentUser()?.id
+  return Boolean(userId && state.gamePlayers[state.currentPlayerIndex]?.id === userId)
+}
+
+async function leaveCurrentOnlineGroup() {
+  const userId = currentUser()?.id
+  if (!userId || !onlineGroup.groupId) return
+  await leaveOnlineGroup(onlineGroup.groupId, userId)
+  onlineUnsubscribe?.()
+  onlineUnsubscribe = undefined
+  onlineGroup = { joined: false, isHost: false, inviteCode: 'BLOBBA-724', groupId: null, status: 'lobby', players: [], members: [], gameState: null }
+}
+
+async function syncRemoteProfile() {
+  const user = currentUser()
+  if (!user || !onlineAvailable()) return
+  const profile = activeProfile()
+  await saveRemoteProfile(user, profile.name, profile.avatarId)
+}
+
+async function loadAuthState() {
+  authSession = await getSession()
+  const user = currentUser()
+  if (user) {
+    const remoteProfile = await loadRemoteProfile(user.id)
+    if (remoteProfile) {
+      const profile = activeProfile()
+      profile.name = remoteProfile.name ?? profile.name
+      profile.avatarId = remoteProfile.avatar_id ?? profile.avatarId
+      syncSetupPlayers(profile)
+      saveProfileStore()
+    }
+  }
+  renderPage()
 }
 
 function resetPinchZoom() {
@@ -126,22 +274,36 @@ function renderPage() {
   unmountCurrentPage = undefined
 
   const route = window.location.hash
-  const usesDarkTheme = route.startsWith('#busfahrer') || route === '#profile'
+  const [routeBase, routeQuery = ''] = route.split('?')
+  const inviteFromRoute = new URLSearchParams(routeQuery).get('invite')
+  if (inviteFromRoute) pendingInviteCode = inviteFromRoute
+  const usesDarkTheme = routeBase.startsWith('#busfahrer') || routeBase === '#profile'
   document.documentElement.classList.toggle('busfahrer-active', usesDarkTheme)
   document.body.classList.toggle('busfahrer-active', usesDarkTheme)
 
-  if (route === '#busfahrer') {
+  if (routeBase === '#busfahrer') {
     const snapshot = gamePlayerSnapshot.length ? gamePlayerSnapshot : players
     app.innerHTML = '<main class="busfahrer-page" id="busfahrer-game"></main>'
-    unmountCurrentPage = mountBusfahrer(app.querySelector<HTMLElement>('#busfahrer-game')!, snapshot.map(({ name, avatar, avatarColor }) => ({ name, avatar, avatarColor })))
+    unmountCurrentPage = mountBusfahrer(app.querySelector<HTMLElement>('#busfahrer-game')!, snapshot.map(({ profileId, name, avatar, avatarColor }) => ({ id: profileId, name, avatar, avatarColor })), setupMode === 'online' && onlineGroup.groupId ? {
+      localPlayerId: authSession?.user.id,
+      initialState: onlineGroup.gameState,
+      onStateChange: (state) => { if (onlineGroup.groupId && localPlayerIsCurrent(state)) void updateOnlineGameState(onlineGroup.groupId, state, state.phase === 'final' ? 'finished' : 'playing') },
+      onLeave: () => { void leaveCurrentOnlineGroup() },
+    } : {})
     return
   }
-  if (route === '#busfahrer-menu') return renderModeMenu()
-  if (route === '#busfahrer-offline') return renderOfflineMenu()
-  if (route === '#busfahrer-online') return renderOnlineMenu()
-  if (route === '#busfahrer-profile-picker') return renderProfilePicker()
-  if (route === '#busfahrer-profile-editor') return renderProfileEditor()
-  if (route === '#profile') {
+  if (routeBase === '#busfahrer-menu') return renderModeMenu()
+  if (routeBase === '#busfahrer-offline') {
+    setupMode = 'offline'
+    return renderOfflineMenu()
+  }
+  if (routeBase === '#busfahrer-online') {
+    setupMode = 'online'
+    return renderOnlineMenu()
+  }
+  if (routeBase === '#busfahrer-profile-picker') return renderProfilePicker()
+  if (routeBase === '#busfahrer-profile-editor') return renderProfileEditor()
+  if (routeBase === '#profile') {
     profileEditorContext = { mode: 'primary', profileId: profileStore.activeProfileId }
     return renderProfileEditor()
   }
@@ -157,23 +319,273 @@ function renderHome() {
       <img class="hero-logo" src="${heroLogo}" alt="BLOBBA">
     </header>
     <section class="game-list" aria-label="Spiele">
-      <button class="busfahrer-button" type="button">Busfahrer</button>
+      <button class="busfahrer-button" type="button">BLOBB-FAHRER</button>
     </section>
   </main>`
   app.querySelector<HTMLButtonElement>('.home-profile-button')!.addEventListener('click', () => { window.location.hash = 'profile' })
-  app.querySelector<HTMLButtonElement>('.busfahrer-button')!.addEventListener('click', () => { window.location.hash = 'busfahrer-menu' })
+  app.querySelector<HTMLButtonElement>('.busfahrer-button')!.addEventListener('click', () => {
+    setupMode = 'offline'
+    activeOnlineModal = null
+    window.location.hash = 'busfahrer-menu'
+  })
 }
 
-function setupShell(content: string, backTarget: string, title = 'Busfahrer', eyebrow = 'GetDrunk präsentiert', pageClass = '') {
+function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER', eyebrow = 'GetDrunk präsentiert', pageClass = '', centerTitle = true) {
   app.innerHTML = `<main class="busfahrer-page ${pageClass}"><div class="busfahrer-shell setup-shell">
-    <header class="busfahrer-header"><button class="back-button bus-back" type="button" data-setup-back>← Zurück</button><div><p>${eyebrow}</p><h1>${title}</h1></div><span></span></header>
-    <section class="setup-stage">${content}</section>
+    <header class="busfahrer-header"><button class="back-button bus-back" type="button" data-setup-back>← Zurück</button>${centerTitle ? '<span></span>' : `<div><p>${eyebrow}</p><h1>${title}</h1></div>`}<span></span></header>
+    <section class="setup-stage"><div class="setup-stack">${centerTitle ? `<h1 class="setup-title">${title}</h1>` : ''}${content}</div></section>
   </div></main>`
   app.querySelector<HTMLButtonElement>('[data-setup-back]')!.addEventListener('click', () => { window.location.hash = backTarget })
 }
 
 function renderModeMenu() {
-  setupShell(`<div class="setup-panel"><p class="eyebrow">Spielmodus</p><h2>Wie möchtest du spielen?</h2>
+  setupShell(`<div class="setup-panel setup-game-panel">
+    ${renderModeSwitch()}
+    ${setupMode === 'offline' ? renderOfflineSetupContent() : renderOnlineSetupContent()}
+  </div>${renderOnlineModal()}`, '')
+  app.querySelector<HTMLButtonElement>('[data-add-player]')?.replaceChildren('+ Spieler')
+  bindSetupModeSwitch()
+  setupMode === 'offline' ? bindOfflineSetup() : bindOnlineSetup()
+  bindOnlineModal()
+  maybeAutoJoinInvite()
+}
+
+function renderModeSwitch() {
+  return `<div class="setup-mode-switch" aria-label="Spielmodus">
+    <button class="game-button ${setupMode === 'offline' ? 'primary is-active' : 'is-inactive'}" type="button" data-setup-mode="offline" aria-pressed="${setupMode === 'offline'}">Offline</button>
+    <button class="game-button ${setupMode === 'online' ? 'primary is-active' : 'is-inactive'}" type="button" data-setup-mode="online" aria-pressed="${setupMode === 'online'}">Online</button>
+  </div>`
+}
+
+function renderOfflineSetupContent() {
+  return `<section class="offline-panel" aria-label="Offline-Spieler">
+    <h2>Spieler</h2>
+    ${renderPlayerTable(players, { editable: true, canRemove: true })}
+    <button class="game-button setup-add-player" type="button" data-add-player ${players.length >= MAX_PLAYERS ? 'disabled' : ''}>+ Spieler hinzufÃ¼gen</button>
+    <button class="game-button primary setup-start-game" type="button" data-start-game>Spiel starten</button>
+  </section>`
+}
+
+function renderOnlineSetupContent() {
+  const isReady = onlineAvailable()
+  const isLoggedIn = Boolean(currentUser())
+  const canStart = onlineGroup.joined && onlineGroup.isHost && onlineGroup.players.length > 0
+  const link = onlineGroup.joined ? inviteUrl(onlineGroup.inviteCode) : ''
+  return `<section class="online-panel" aria-label="Online-Gruppe">
+    <h2>Online-Gruppe</h2>
+    ${!isReady ? '<p class="setup-copy">Supabase ist noch nicht konfiguriert. Der Gastmodus bleibt offline spielbar.</p>' : ''}
+    ${isReady && !isLoggedIn ? '<p class="setup-copy">Melde dich im Profil an, um Online-Gruppen zu nutzen.</p><button class="game-button primary" type="button" data-open-profile-login>Login</button>' : ''}
+    ${isReady && isLoggedIn ? `<div class="online-actions">
+      <button class="game-button" type="button" data-online-create>Gruppe erstellen</button>
+      <button class="game-button" type="button" data-online-join>Gruppe beitreten</button>
+    </div>` : ''}
+    ${onlineGroup.joined ? `<div class="online-group-tools"><button class="game-button setup-invite-button" type="button" data-online-invite>Einladen</button></div>
+      <div class="online-invite-link"><input class="player-name-input" value="${escapeHtml(link)}" readonly aria-label="Einladungslink"><button class="game-button" type="button" data-copy-invite>Kopieren</button><a class="game-button online-share-button" href="https://wa.me/?text=${encodeURIComponent(link)}" target="_blank" rel="noreferrer">WhatsApp</a></div>
+      ${renderPlayerTable(onlineGroup.players, { editable: false, canRemove: onlineGroup.isHost })}` : '<p class="setup-copy">Erstelle eine Gruppe oder tritt einer bestehenden Gruppe bei.</p>'}
+    ${onlineNotice ? `<p class="setup-copy">${escapeHtml(onlineNotice)}</p>` : ''}
+    <button class="game-button primary setup-start-game" type="button" data-start-game ${canStart ? '' : 'disabled'}>${onlineGroup.isHost ? 'Spiel starten' : 'Warten auf Host'}</button>
+  </section>`
+}
+
+function renderPlayerTable(playerList: SetupPlayer[], options: { editable: boolean; canRemove: boolean }) {
+  return `<div class="player-table" role="list">${playerList.map((player, index) => `<div class="player-row" role="listitem">
+    <div class="player-row-main">${playerAvatarMarkup(player)}${options.editable
+      ? `<input class="player-name-input" data-player-name="${player.id}" value="${escapeHtml(player.name || defaultPlayerName(index + 1))}" maxlength="24" autocomplete="off" aria-label="Name von Spieler ${index + 1}">`
+      : `<strong class="player-name">${escapeHtml(player.name || defaultPlayerName(index + 1))}</strong>`}</div>
+    ${options.canRemove ? `<button class="player-remove" type="button" data-remove-player="${player.id}" ${playerList.length === 1 ? 'disabled' : ''}>Entfernen</button>` : ''}
+  </div>`).join('')}</div>`
+}
+
+function renderOnlineModal() {
+  if (!activeOnlineModal) return ''
+  if (activeOnlineModal === 'invite') {
+    return `<div class="setup-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="online-invite-title">
+      <div class="setup-modal">
+        <h2 id="online-invite-title">Einladen</h2>
+        <p class="setup-copy">Teile diesen Gruppencode mit deinen Mitspielern.</p>
+        <output class="invite-code">${escapeHtml(onlineGroup.inviteCode)}</output>
+        <button class="game-button primary" type="button" data-modal-close>Fertig</button>
+      </div>
+    </div>`
+  }
+  const isCreate = activeOnlineModal === 'create'
+  return `<div class="setup-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="online-modal-title">
+    <form class="setup-modal" data-online-modal-form>
+      <h2 id="online-modal-title">${isCreate ? 'Gruppe erstellen' : 'Gruppe beitreten'}</h2>
+      <label class="profile-name-label" for="online-group-input">${isCreate ? 'Gruppenname' : 'Gruppencode'}</label>
+      <input class="profile-name-input" id="online-group-input" name="online-group-input" value="${isCreate ? 'BLOBBA' : ''}" maxlength="24" autocomplete="off" required>
+      <div class="modal-actions">
+        <button class="game-button" type="button" data-modal-close>Abbrechen</button>
+        <button class="game-button primary" type="submit">${isCreate ? 'Erstellen' : 'Beitreten'}</button>
+      </div>
+    </form>
+  </div>`
+}
+
+function bindSetupModeSwitch() {
+  app.querySelectorAll<HTMLButtonElement>('[data-setup-mode]').forEach((button) => button.addEventListener('click', () => {
+    setupMode = button.dataset.setupMode === 'online' ? 'online' : 'offline'
+    activeOnlineModal = null
+    renderModeMenu()
+  }))
+}
+
+function bindOfflineSetup() {
+  app.querySelectorAll<HTMLInputElement>('[data-player-name]').forEach((input) => {
+    input.addEventListener('input', () => {
+      players = players.map((player) => player.id === input.dataset.playerName ? { ...player, name: input.value } : player)
+    })
+  })
+  app.querySelectorAll<HTMLButtonElement>('[data-remove-player]').forEach((button) => button.addEventListener('click', () => {
+    if (players.length === 1) return
+    players = players.filter((player) => player.id !== button.dataset.removePlayer)
+    renderModeMenu()
+  }))
+  app.querySelector<HTMLButtonElement>('[data-add-player]')!.addEventListener('click', () => {
+    if (players.length >= MAX_PLAYERS) return
+    const player = createLocalPlayer(players.length + 1)
+    players.push(player)
+    pendingPlayerNameFocusId = player.id
+    renderModeMenu()
+  })
+  app.querySelector<HTMLButtonElement>('[data-start-game]')!.addEventListener('click', () => {
+    startSetupGame(players, true)
+  })
+  if (pendingPlayerNameFocusId) {
+    const input = app.querySelector<HTMLInputElement>(`[data-player-name="${pendingPlayerNameFocusId}"]`)
+    pendingPlayerNameFocusId = undefined
+    focusAndSelectInput(input)
+  }
+}
+
+function focusAndSelectInput(input: HTMLInputElement | null) {
+  if (!input) return
+  input.focus({ preventScroll: true })
+  input.select()
+  input.setSelectionRange(0, input.value.length)
+}
+
+function bindOnlineSetup() {
+  app.querySelector<HTMLButtonElement>('[data-open-profile-login]')?.addEventListener('click', () => {
+    authModal = 'login'
+    window.location.hash = 'profile'
+  })
+  app.querySelector<HTMLButtonElement>('[data-online-create]')?.addEventListener('click', () => {
+    activeOnlineModal = 'create'
+    renderModeMenu()
+  })
+  app.querySelector<HTMLButtonElement>('[data-online-join]')?.addEventListener('click', () => {
+    activeOnlineModal = 'join'
+    renderModeMenu()
+  })
+  app.querySelector<HTMLButtonElement>('[data-online-invite]')?.addEventListener('click', () => {
+    activeOnlineModal = 'invite'
+    renderModeMenu()
+  })
+  app.querySelector<HTMLButtonElement>('[data-copy-invite]')?.addEventListener('click', () => {
+    void navigator.clipboard?.writeText(inviteUrl(onlineGroup.inviteCode))
+    onlineNotice = 'Einladungslink kopiert.'
+    renderModeMenu()
+  })
+  app.querySelectorAll<HTMLButtonElement>('[data-remove-player]').forEach((button) => button.addEventListener('click', () => {
+    if (!onlineGroup.isHost || onlineGroup.players.length === 1 || !onlineGroup.groupId || !button.dataset.removePlayer) return
+    void removeOnlineMember(onlineGroup.groupId, button.dataset.removePlayer).then(refreshOnlineGroup)
+  }))
+  app.querySelector<HTMLButtonElement>('[data-start-game]')?.addEventListener('click', () => {
+    if (!onlineGroup.joined || !onlineGroup.players.length || !onlineGroup.isHost || !onlineGroup.groupId) return
+    const groupId = onlineGroup.groupId
+    startSetupGame(onlineGroup.players, false)
+    window.setTimeout(() => {
+      const state = getBusfahrerState()
+      onlineGroup.gameState = state
+      void updateOnlineGameState(groupId, state, 'playing')
+    }, 0)
+  })
+}
+
+function bindOnlineModal() {
+  app.querySelectorAll<HTMLButtonElement>('[data-modal-close]').forEach((button) => button.addEventListener('click', () => {
+    activeOnlineModal = null
+    renderModeMenu()
+  }))
+  app.querySelector<HTMLFormElement>('[data-online-modal-form]')?.addEventListener('submit', (event) => {
+    event.preventDefault()
+    const form = event.currentTarget as HTMLFormElement
+    const input = form.querySelector<HTMLInputElement>('#online-group-input')!
+    if (!input.value.trim()) {
+      input.reportValidity()
+      return
+    }
+    void submitOnlineModal(input.value.trim())
+  })
+  const modalInput = app.querySelector<HTMLInputElement>('#online-group-input')
+  if (modalInput) window.setTimeout(() => {
+    modalInput.focus()
+    modalInput.select()
+  }, 0)
+}
+
+async function submitOnlineModal(value: string) {
+  try {
+    const user = currentUser()
+    if (!user) throw new Error('Bitte zuerst einloggen.')
+    const profile = currentOnlineProfile()
+    await syncRemoteProfile()
+    const wasCreate = activeOnlineModal === 'create'
+    const group = wasCreate
+      ? await createOnlineGroup(user, profile.name, profile.avatarId)
+      : await joinOnlineGroup(value, user, profile.name, profile.avatarId)
+    const snapshot = await fetchGroupSnapshot(group.id)
+    applyOnlineSnapshot(snapshot.group, snapshot.members)
+    subscribeCurrentGroup()
+    activeOnlineModal = null
+    onlineNotice = wasCreate ? 'Gruppe erstellt.' : 'Gruppe beigetreten.'
+    renderModeMenu()
+  } catch (error) {
+    onlineNotice = error instanceof Error ? error.message : 'Online-Aktion fehlgeschlagen.'
+    activeOnlineModal = null
+    renderModeMenu()
+  }
+}
+
+function maybeAutoJoinInvite() {
+  if (setupMode !== 'online' || !pendingInviteCode || !currentUser() || onlineGroup.inviteCode === pendingInviteCode) return
+  const inviteCode = pendingInviteCode
+  pendingInviteCode = null
+  void submitOnlineInvite(inviteCode)
+}
+
+async function submitOnlineInvite(inviteCode: string) {
+  try {
+    const user = currentUser()
+    if (!user) throw new Error('Bitte zuerst einloggen.')
+    const profile = currentOnlineProfile()
+    await syncRemoteProfile()
+    const group = await joinOnlineGroup(inviteCode, user, profile.name, profile.avatarId)
+    const snapshot = await fetchGroupSnapshot(group.id)
+    applyOnlineSnapshot(snapshot.group, snapshot.members)
+    subscribeCurrentGroup()
+    onlineNotice = 'Gruppe beigetreten.'
+    renderModeMenu()
+  } catch (error) {
+    onlineNotice = error instanceof Error ? error.message : 'Einladungslink konnte nicht geöffnet werden.'
+    renderModeMenu()
+  }
+}
+
+function startSetupGame(playerList: SetupPlayer[], rememberProfiles: boolean) {
+  gamePlayerSnapshot = playerList.map((player, index) => ({ ...player, name: player.name.trim() || defaultPlayerName(index + 1) }))
+  if (rememberProfiles) {
+    profileStore.lastUsedProfileIds = players
+      .map((player) => player.profileId)
+      .filter((id) => profileStore.profiles.some((profile) => profile.id === id))
+    saveProfileStore()
+  }
+  window.location.hash = 'busfahrer'
+}
+
+function renderOldModeMenu() {
+  setupShell(`<div class="setup-panel mode-panel"><h2>Wie möchtest du spielen?</h2>
     <div class="setup-mode-actions"><button class="game-button primary" type="button" data-mode="offline">Offline</button><button class="game-button" type="button" data-mode="online">Online</button></div>
   </div>`, '')
   app.querySelector<HTMLButtonElement>('[data-mode="offline"]')!.addEventListener('click', () => { window.location.hash = 'busfahrer-offline' })
@@ -181,13 +593,19 @@ function renderModeMenu() {
 }
 
 function renderOnlineMenu() {
+  setupMode = 'online'
+  renderModeMenu()
+  return
   setupShell('<div class="setup-panel"><p class="eyebrow">Online</p><h2>Online-Spiel</h2><p class="setup-copy">Der Online-Modus wird als Nächstes eingerichtet.</p></div>', 'busfahrer-menu')
 }
 
 function renderOfflineMenu() {
+  setupMode = 'offline'
+  renderModeMenu()
+  return
   setupShell(`<div class="setup-panel offline-panel"><p class="eyebrow">Offline</p><h2>Spieler</h2>
     <div class="player-table" role="list">${players.map((player, index) => `<div class="player-row" role="listitem">
-      <div class="player-row-main">${playerAvatarMarkup(player)}<input class="player-name-input" data-player-name="${player.id}" value="${escapeHtml(player.name || `Spieler-${index + 1}`)}" maxlength="24" autocomplete="off" aria-label="Name von Spieler ${index + 1}"></div>
+      <div class="player-row-main">${playerAvatarMarkup(player)}<input class="player-name-input" data-player-name="${player.id}" value="${escapeHtml(player.name || defaultPlayerName(index + 1))}" maxlength="24" autocomplete="off" aria-label="Name von Spieler ${index + 1}"></div>
       <button class="player-remove" type="button" data-remove-player="${player.id}" ${players.length === 1 ? 'disabled' : ''}>Entfernen</button>
     </div>`).join('')}</div>
     <button class="game-button setup-add-player" type="button" data-add-player ${players.length >= MAX_PLAYERS ? 'disabled' : ''}>+ Spieler hinzufügen</button>
@@ -212,7 +630,7 @@ function renderOfflineMenu() {
     renderOfflineMenu()
   })
   app.querySelector<HTMLButtonElement>('[data-start-game]')!.addEventListener('click', () => {
-    gamePlayerSnapshot = players.map((player, index) => ({ ...player, name: player.name.trim() || `Spieler-${index + 1}` }))
+    gamePlayerSnapshot = players.map((player, index) => ({ ...player, name: player.name.trim() || defaultPlayerName(index + 1) }))
     profileStore.lastUsedProfileIds = players
       .map((player) => player.profileId)
       .filter((id) => profileStore.profiles.some((profile) => profile.id === id))
@@ -251,6 +669,55 @@ function renderProfilePicker() {
   })
 }
 
+function renderAuthModal() {
+  if (!authModal) return ''
+  const isRegister = authModal === 'register'
+  return `<div class="setup-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <form class="setup-modal" data-auth-form>
+      <h2 id="auth-modal-title">${isRegister ? 'Registrieren' : 'Login'}</h2>
+      <label class="profile-name-label" for="auth-email">E-Mail</label>
+      <input class="profile-name-input" id="auth-email" type="email" autocomplete="email" required>
+      <label class="profile-name-label" for="auth-password">Passwort</label>
+      <input class="profile-name-input" id="auth-password" type="password" autocomplete="${isRegister ? 'new-password' : 'current-password'}" minlength="6" required>
+      <div class="modal-actions">
+        <button class="game-button" type="button" data-auth-close>Abbrechen</button>
+        <button class="game-button primary" type="submit">${isRegister ? 'Registrieren' : 'Login'}</button>
+      </div>
+      <button class="game-button auth-switch-button" type="button" data-auth-switch>${isRegister ? 'Zum Login' : 'Registrieren'}</button>
+    </form>
+  </div>`
+}
+
+function bindAuthModal() {
+  app.querySelector<HTMLButtonElement>('[data-auth-close]')?.addEventListener('click', () => {
+    authModal = null
+    renderProfileEditor()
+  })
+  app.querySelector<HTMLButtonElement>('[data-auth-switch]')?.addEventListener('click', () => {
+    authModal = authModal === 'login' ? 'register' : 'login'
+    renderProfileEditor()
+  })
+  app.querySelector<HTMLFormElement>('[data-auth-form]')?.addEventListener('submit', (event) => {
+    event.preventDefault()
+    const email = app.querySelector<HTMLInputElement>('#auth-email')!.value.trim()
+    const password = app.querySelector<HTMLInputElement>('#auth-password')!.value
+    void submitAuth(email, password)
+  })
+}
+
+async function submitAuth(email: string, password: string) {
+  try {
+    authSession = authModal === 'register' ? await signUp(email, password) : await signIn(email, password)
+    authModal = null
+    await syncRemoteProfile()
+    renderProfileEditor()
+  } catch (error) {
+    onlineNotice = error instanceof Error ? error.message : 'Login fehlgeschlagen.'
+    authModal = null
+    renderProfileEditor()
+  }
+}
+
 function renderProfileEditor() {
   const isPrimary = profileEditorContext.mode === 'primary'
   const isNew = profileEditorContext.mode === 'new-player'
@@ -260,6 +727,7 @@ function renderProfileEditor() {
   const backTarget = isPrimary ? '' : profileEditorContext.mode === 'edit-player' ? 'busfahrer-offline' : 'busfahrer-profile-picker'
 
   setupShell(`<form class="setup-panel profile-editor-panel" data-profile-form>
+    <div class="profile-auth-row"><button class="game-button profile-auth-button" type="button" data-auth-action="${currentUser() ? 'logout' : 'login'}">${currentUser() ? 'Logout' : 'Login'}</button></div>
     <p class="eyebrow">${isPrimary ? 'Benutzerprofil' : isNew ? 'Neues Spielerprofil' : 'Spielerprofil'}</p>
     <h2>${isPrimary ? 'Dein Profil' : isNew ? 'Profil anlegen' : 'Profil bearbeiten'}</h2>
     <div class="profile-preview" data-profile-preview style="--avatar-ring:${avatarColor(selectedAvatarId)}">${avatarVisualMarkup(selectedAvatarId)}</div>
@@ -269,10 +737,23 @@ function renderProfileEditor() {
       ${avatarOptions.map((avatar) => `<button class="avatar-choice ${selectedAvatarId === avatar.id ? 'is-selected' : ''}" type="button" data-avatar-id="${avatar.id}" aria-label="${avatar.label}" aria-pressed="${selectedAvatarId === avatar.id}"><span class="avatar-choice-visual" style="--avatar-ring:${avatar.color}">${avatarVisualMarkup(avatar.id)}</span></button>`).join('')}
     </div></fieldset>
     <button class="game-button primary profile-save-button" type="submit">Speichern</button>
-  </form>`, backTarget, 'Profil', 'GetDrunk', 'profile-page')
+  </form>${renderAuthModal()}`, backTarget, 'Profil', 'GetDrunk', 'profile-page', false)
 
   const preview = app.querySelector<HTMLElement>('[data-profile-preview]')!
   const input = app.querySelector<HTMLInputElement>('#profile-name')!
+  bindAuthModal()
+  app.querySelector<HTMLButtonElement>('[data-auth-action]')?.addEventListener('click', () => {
+    if (currentUser()) {
+      void signOut().then(() => {
+        authSession = null
+        authModal = null
+        renderProfileEditor()
+      })
+    } else {
+      authModal = 'login'
+      renderProfileEditor()
+    }
+  })
   app.querySelectorAll<HTMLButtonElement>('[data-avatar-id]').forEach((button) => button.addEventListener('click', () => {
     selectedAvatarId = button.dataset.avatarId || DEFAULT_AVATAR_ID
     app.querySelectorAll<HTMLButtonElement>('[data-avatar-id]').forEach((choice) => {
@@ -303,9 +784,18 @@ function renderProfileEditor() {
       syncSetupPlayers(storedProfile)
     }
     saveProfileStore()
+    void syncRemoteProfile()
     window.location.hash = isPrimary ? '' : 'busfahrer-offline'
   })
 }
 
+void renderOldModeMenu
+
 window.addEventListener('hashchange', renderPage)
+onAuthChanged((session) => {
+  authSession = session
+  if (!session) onlineUnsubscribe?.()
+  renderPage()
+})
+void loadAuthState()
 renderPage()

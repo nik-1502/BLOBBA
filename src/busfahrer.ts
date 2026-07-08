@@ -5,9 +5,39 @@ type CardColor = 'red' | 'blue'
 type SuitId = 'heart' | 'diamond' | 'star' | 'moon'
 type Card = { id: string; value: number; label: string; color: CardColor; suit: SuitId; suitLabel: string; symbol: string; numericValue: number }
 type FeedbackKind = 'success' | 'error' | 'info'
+type Phase = 'player-intro' | 'questions' | 'pyramid' | 'summary' | 'bus' | 'final'
 type GamePlayer = { id: string; name: string; avatar: string; avatarColor: string; hand: Card[]; questionResults: boolean[]; drinks: number }
-type PlayerSetup = { name: string; avatar: string; avatarColor: string }
+export type PlayerSetup = { id?: string; name: string; avatar: string; avatarColor: string }
 type PyramidDecision = { cardId: string; label: string; drinks: number; step: 'offer' | 'target' }
+export type BusfahrerGameState = {
+  deck: Card[]
+  phase: Phase
+  gamePlayers: GamePlayer[]
+  currentPlayerIndex: number
+  busDriverIndex: number
+  finalResult: string
+  questionIndex: number
+  hand: Card[]
+  questionResults: boolean[]
+  answered: boolean
+  feedback: { text: string; kind: FeedbackKind }
+  pyramidCards: Card[]
+  pyramidProgress: number
+  pyramidHits: number[]
+  pyramidDecision: PyramidDecision | null
+  busCards: Card[]
+  busProgress: number
+  busFailed: boolean
+  busLost: boolean
+  busFeedbackPending: boolean
+  busfahrerUsedCards: Card[]
+}
+type OnlineGameOptions = {
+  localPlayerId?: string
+  initialState?: BusfahrerGameState | null
+  onStateChange?: (state: BusfahrerGameState) => void
+  onLeave?: () => void
+}
 
 const suits: Array<Pick<Card, 'suit' | 'suitLabel' | 'symbol' | 'color'>> = [
   { suit: 'heart', suitLabel: 'Herz', symbol: '♥', color: 'red' },
@@ -37,7 +67,7 @@ const pyramidOrder = [6, 7, 8, 9, 3, 4, 5, 1, 2, 0]
 const busRoundLength = 5
 
 let deck: Card[] = []
-let phase: 'player-intro' | 'questions' | 'pyramid' | 'summary' | 'bus' | 'final' = 'player-intro'
+let phase: Phase = 'player-intro'
 let configuredPlayers: PlayerSetup[] = [{ name: 'Nick', avatar: '', avatarColor: '#dda15e' }]
 let gamePlayers: GamePlayer[] = []
 let currentPlayerIndex = 0
@@ -60,6 +90,8 @@ let busFeedbackPending = false
 let busfahrerUsedCards: Card[] = []
 let gameRoot: HTMLElement | null = null
 let advanceTimer: number | undefined
+let onlineOptions: OnlineGameOptions = {}
+let suppressStatePublish = false
 
 function shuffle<T>(items: T[]) {
   const result = [...items]
@@ -111,6 +143,59 @@ function currentPlayer() {
   return gamePlayers[currentPlayerIndex]!
 }
 
+function localCanControl() {
+  if (!onlineOptions.localPlayerId) return true
+  return currentPlayer()?.id === onlineOptions.localPlayerId
+}
+
+function snapshotGameState(): BusfahrerGameState {
+  return {
+    deck, phase, gamePlayers, currentPlayerIndex, busDriverIndex, finalResult, questionIndex, hand, questionResults,
+    answered, feedback, pyramidCards, pyramidProgress, pyramidHits: [...pyramidHits], pyramidDecision, busCards,
+    busProgress, busFailed, busLost, busFeedbackPending, busfahrerUsedCards,
+  }
+}
+
+function applyGameState(state: BusfahrerGameState) {
+  deck = state.deck
+  phase = state.phase
+  gamePlayers = state.gamePlayers
+  currentPlayerIndex = Math.min(state.currentPlayerIndex, Math.max(0, gamePlayers.length - 1))
+  busDriverIndex = Math.min(state.busDriverIndex, Math.max(0, gamePlayers.length - 1))
+  finalResult = state.finalResult
+  questionIndex = state.questionIndex
+  hand = state.hand
+  questionResults = state.questionResults
+  answered = state.answered
+  feedback = state.feedback
+  pyramidCards = state.pyramidCards
+  pyramidProgress = state.pyramidProgress
+  pyramidHits = new Set(state.pyramidHits)
+  pyramidDecision = state.pyramidDecision
+  busCards = state.busCards
+  busProgress = state.busProgress
+  busFailed = state.busFailed
+  busLost = state.busLost
+  busFeedbackPending = state.busFeedbackPending
+  busfahrerUsedCards = state.busfahrerUsedCards
+}
+
+export function getBusfahrerState() {
+  return snapshotGameState()
+}
+
+export function applyBusfahrerState(state: BusfahrerGameState) {
+  suppressStatePublish = true
+  applyGameState(state)
+  renderGame()
+  suppressStatePublish = false
+}
+
+function publishState() {
+  if (suppressStatePublish || !onlineOptions.onStateChange) return
+  onlineOptions.onStateChange(snapshotGameState())
+}
+
 function syncCurrentPlayerCards() {
   currentPlayer().hand = hand
   currentPlayer().questionResults = questionResults
@@ -124,8 +209,8 @@ function renderPlayerIntro() {
   const player = currentPlayer()
   const avatar = player.avatar ? `<img src="${player.avatar}" alt="Profilbild von ${escapeHtml(player.name)}">` : defaultProfileIconMarkup()
   const playerImage = `<span class="player-turn-avatar ${player.avatar ? '' : 'is-default'}" style="--avatar-ring:${player.avatarColor}">${avatar}</span>`
-  return `<section class="player-turn-screen">${playerImage}<p>Spieler ${currentPlayerIndex + 1} von ${gamePlayers.length}</p><h2><strong class="turn-player-name">${escapeHtml(player.name)}</strong><span>ist dran</span></h2>
-    <div class="player-turn-actions"><button class="game-button primary" data-action="start-player-round">Jetzt starten</button></div></section>`
+  return `<div class="player-turn-wrap">${playerImage}<section class="player-turn-screen"><p>Spieler ${currentPlayerIndex + 1} von ${gamePlayers.length}</p><h2><strong class="turn-player-name">${escapeHtml(player.name)}</strong><span>ist dran</span></h2>
+    <div class="player-turn-actions"><button class="game-button primary" data-action="start-player-round">Jetzt starten</button></div></section></div>`
 }
 
 function busUsedCardsMarkup() {
@@ -294,7 +379,7 @@ function playerStatsMarkup() {
 }
 
 function renderSummary(final = false) {
-  const title = final ? finalResult : `${gamePlayers[busDriverIndex]!.name} ist Busfahrer`
+  const title = final ? finalResult : `${gamePlayers[busDriverIndex]!.name} ist BLOBB-FAHRER`
   return `${phaseHeader(final ? 3 : 2, final ? 'Endstand' : 'Auswertung')}<section class="game-summary-panel"><h2>${escapeHtml(title)}</h2>${playerStatsMarkup()}
     <button class="game-button primary" data-action="${final ? 'restart' : 'start-bus'}">${final ? 'Neu starten' : 'Phase 3 starten'}</button></section>`
 }
@@ -318,7 +403,7 @@ function renderBus() {
         ? `<button class="game-button choice-red" data-bus-choice="red"${busDisabled}>Rot</button><button class="game-button choice-blue" data-bus-choice="blue"${busDisabled}>Blau</button>`
         : `<div class="three-choices"><button class="game-button choice-higher" data-bus-choice="higher"${busDisabled}>Höher</button><button class="game-button choice-equal" data-bus-choice="equal"${busDisabled}>Gleich</button><button class="game-button choice-lower" data-bus-choice="lower"${busDisabled}>Tiefer</button></div>`}</div>`
   return `${phaseHeader(3, complete ? 'Ziel erreicht' : `Karte ${busProgress + 1} von ${busCards.length}`)}<section class="bus-panel">
-    <h2>${complete ? 'Geschafft!' : 'Busfahrer'}</h2>
+    <h2>${complete ? 'Geschafft!' : 'BLOBB-FAHRER'}</h2>
     <div class="bus-card-row">${Array.from({ length: busRoundLength }, (_, index) => {
       const card = busCards[index]
       return card ? cardMarkup(card, true, index === busProgress ? 'current-card' : '') : cardMarkup(deck.at(-1) ?? createDeck()[0]!, false, index === busProgress ? 'current-card' : '')
@@ -366,7 +451,7 @@ function answerBus(choice: string) {
 function resetGame() {
   window.clearTimeout(advanceTimer)
   advanceTimer = undefined
-  gamePlayers = configuredPlayers.map(({ name, avatar, avatarColor }, index) => ({ id: `${index}-${name}`, name, avatar, avatarColor, hand: [], questionResults: [], drinks: 0 }))
+  gamePlayers = configuredPlayers.map(({ id, name, avatar, avatarColor }, index) => ({ id: id ?? `${index}-${name}`, name, avatar, avatarColor, hand: [], questionResults: [], drinks: 0 }))
   currentPlayerIndex = 0; busDriverIndex = 0; finalResult = ''
   deck = createDeck(gamePlayers.length >= 6 ? 2 : 1); phase = 'player-intro'; questionIndex = 0; hand = gamePlayers[0]!.hand; questionResults = gamePlayers[0]!.questionResults; answered = false
   feedback = { text: '', kind: 'info' }; pyramidCards = []; pyramidProgress = 0; pyramidHits = new Set<number>(); pyramidDecision = null; busCards = []; busProgress = 0; busFailed = false; busLost = false; busFeedbackPending = false; busfahrerUsedCards = []
@@ -376,14 +461,33 @@ function renderGame() {
   if (!gameRoot) return
   const content = phase === 'player-intro' ? renderPlayerIntro() : phase === 'questions' ? renderQuestions() : phase === 'pyramid' ? renderPyramid() : phase === 'summary' ? renderSummary() : phase === 'final' ? renderSummary(true) : renderBus()
   gameRoot.innerHTML = `<div class="busfahrer-shell"><header class="busfahrer-header">
-    <button class="back-button bus-back" type="button" data-action="back">${phase === 'player-intro' ? 'Beenden' : '← Zurück'}</button><div><p>GetDrunk präsentiert</p><h1>Busfahrer</h1></div>
+    <button class="back-button bus-back" type="button" data-action="back">${phase === 'player-intro' ? 'Beenden' : '← Zurück'}</button><div><p>GetDrunk präsentiert</p><h1>BLOBB-FAHRER</h1></div>
     <button class="restart-button" type="button" data-action="restart">Neu starten</button></header>
     <p class="responsibility-note">Trink verantwortungsvoll. Dieses Spiel ist nur für Erwachsene.</p><div class="game-stage">${content}${phase === 'bus' ? busUsedCardsMarkup() : ''}</div></div>`
+  applyOnlineControls()
+  publishState()
+}
+
+function applyOnlineControls() {
+  if (!gameRoot || !onlineOptions.localPlayerId) return
+  const backButton = gameRoot.querySelector<HTMLButtonElement>('[data-action="back"]')
+  if (backButton) backButton.textContent = 'Spiel verlassen'
+  if (localCanControl()) return
+  gameRoot.querySelectorAll<HTMLButtonElement>('button').forEach((button) => {
+    if (button.dataset.action === 'back') return
+    button.disabled = true
+  })
 }
 
 function handleClick(event: Event) {
   const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button')
   if (!button) return
+  if (button.dataset.action === 'back') {
+    onlineOptions.onLeave?.()
+    window.location.hash = onlineOptions.localPlayerId ? 'busfahrer-menu' : 'busfahrer-offline'
+    return
+  }
+  if (!localCanControl()) return
   if (button.dataset.choice) answerQuestion(button.dataset.choice)
   if (button.dataset.busChoice) answerBus(button.dataset.busChoice)
   if (button.dataset.pyramidTarget) assignPyramidDrinks(Number(button.dataset.pyramidTarget))
@@ -398,7 +502,7 @@ function handleClick(event: Event) {
   }
   if (button.dataset.action === 'start-bus') startBus()
   if (button.dataset.action === 'show-final-summary') {
-    finalResult = `${currentPlayer().name} hat die Busfahrer-Runde geschafft!`
+    finalResult = `${currentPlayer().name} hat die BLOBB-FAHRER-Runde geschafft!`
     phase = 'final'
     renderGame()
   }
@@ -413,11 +517,14 @@ function handleClick(event: Event) {
     renderGame()
   }
   if (button.dataset.action === 'restart') { resetGame(); renderGame() }
-  if (button.dataset.action === 'back') window.location.hash = 'busfahrer-offline'
 }
 
-export function mountBusfahrer(root: HTMLElement, playerSetups: PlayerSetup[] = [{ name: 'Nick', avatar: '', avatarColor: '#dda15e' }]) {
+export function mountBusfahrer(root: HTMLElement, playerSetups: PlayerSetup[] = [{ name: 'Nick', avatar: '', avatarColor: '#dda15e' }], options: OnlineGameOptions = {}) {
+  onlineOptions = options
   configuredPlayers = playerSetups.length ? playerSetups : [{ name: 'Nick', avatar: '', avatarColor: '#dda15e' }]
-  gameRoot = root; resetGame(); root.addEventListener('click', handleClick); renderGame()
-  return () => { window.clearTimeout(advanceTimer); root.removeEventListener('click', handleClick); gameRoot = null }
+  gameRoot = root
+  if (options.initialState) applyGameState(options.initialState)
+  else resetGame()
+  root.addEventListener('click', handleClick); renderGame()
+  return () => { window.clearTimeout(advanceTimer); root.removeEventListener('click', handleClick); gameRoot = null; onlineOptions = {} }
 }
