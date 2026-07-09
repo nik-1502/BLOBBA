@@ -40,30 +40,42 @@ export function onlineAvailable() {
 export async function getSession() {
   if (!supabase) return null
   const { data, error } = await supabase.auth.getSession()
+  console.log('[Auth] current session', data.session)
   if (error) throw error
   return data.session
 }
 
 export function onAuthChanged(callback: (session: Session | null) => void) {
   if (!supabase) return () => {}
-  const { data } = supabase.auth.onAuthStateChange((_event, session) => callback(session))
+  const { data } = supabase.auth.onAuthStateChange((event, session) => {
+    console.log('[Auth] state changed', event, session)
+    callback(session)
+  })
   return () => data.subscription.unsubscribe()
 }
 
 export async function signUp(email: string, password: string) {
+  console.log('[Auth] signUp clicked', email)
   const { data, error } = await requireClient().auth.signUp({ email, password })
+  console.log('[Auth] signUp response', data)
+  if (error) console.error('[Auth] signUp error', error)
   if (error) throw error
-  return data.session
+  return data
 }
 
 export async function signIn(email: string, password: string) {
+  console.log('[Auth] signIn clicked', email)
   const { data, error } = await requireClient().auth.signInWithPassword({ email, password })
+  console.log('[Auth] signIn response', data)
+  if (error) console.error('[Auth] signIn error', error)
   if (error) throw error
   return data.session
 }
 
 export async function signOut() {
+  console.log('[Auth] signOut clicked')
   const { error } = await requireClient().auth.signOut()
+  if (error) console.error('[Auth] signOut error', error)
   if (error) throw error
 }
 

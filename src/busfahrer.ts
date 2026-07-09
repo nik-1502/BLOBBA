@@ -202,7 +202,7 @@ function syncCurrentPlayerCards() {
 }
 
 function handMarkup() {
-  return `<section class="player-hand"><h3><strong class="hand-player-name">${escapeHtml(currentPlayer().name)}</strong><span class="hand-title-colon">:</span> <span class="hand-title-label">Deine Karten</span></h3><div class="hand-cards">${hand.length ? hand.map((card, index) => cardMarkup(card, true, questionResults[index] ? 'answer-correct' : 'answer-wrong')).join('') : '<p>Noch keine Karten gezogen.</p>'}</div></section>`
+  return `<section class="player-hand" data-question-hand-title="${escapeHtml(`${currentPlayer().name} – Deine Karten`)}"><h3><strong class="hand-player-name">${escapeHtml(currentPlayer().name)}</strong><span class="hand-title-colon">:</span> <span class="hand-title-label">Deine Karten</span></h3><div class="hand-cards">${hand.length ? hand.map((card, index) => cardMarkup(card, true, questionResults[index] ? 'answer-correct' : 'answer-wrong')).join('') : '<p>Noch keine Karten gezogen.</p>'}</div></section>`
 }
 
 function renderPlayerIntro() {
@@ -464,6 +464,7 @@ function renderGame() {
     <button class="back-button bus-back" type="button" data-action="back">${phase === 'player-intro' ? 'Beenden' : '← Zurück'}</button><div><p>GetDrunk präsentiert</p><h1>BLOBB-FAHRER</h1></div>
     <button class="restart-button" type="button" data-action="restart">Neu starten</button></header>
     <p class="responsibility-note">Trink verantwortungsvoll. Dieses Spiel ist nur für Erwachsene.</p><div class="game-stage">${content}${phase === 'bus' ? busUsedCardsMarkup() : ''}</div></div>`
+  gameRoot.querySelector('.responsibility-note')?.remove()
   applyOnlineControls()
   publishState()
 }

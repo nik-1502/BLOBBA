@@ -38,6 +38,7 @@ type SetupMode = 'offline' | 'online'
 type OnlineModal = 'create' | 'join' | 'invite' | null
 type AuthModal = 'login' | 'register' | null
 type OnlineGroupState = { joined: boolean; isHost: boolean; inviteCode: string; groupId: string | null; status: 'lobby' | 'playing' | 'finished'; players: SetupPlayer[]; members: OnlineMember[]; gameState: BusfahrerGameState | null }
+type VisualViewportLike = { height: number; offsetTop: number; addEventListener: Window['addEventListener']; removeEventListener: Window['removeEventListener'] }
 
 let unmountCurrentPage: (() => void) | undefined
 let profileStore = loadProfileStore()
@@ -50,9 +51,11 @@ let activeOnlineModal: OnlineModal = null
 let onlineGroup: OnlineGroupState = { joined: false, isHost: false, inviteCode: 'BLOBBA-724', groupId: null, status: 'lobby', players: [], members: [], gameState: null }
 let authSession: Session | null = null
 let authModal: AuthModal = null
+let authNotice = ''
 let onlineUnsubscribe: (() => void) | undefined
 let pendingInviteCode: string | null = null
 let onlineNotice = ''
+let keyboardViewportCleanup: (() => void) | undefined
 
 const viewportMeta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]')!
 const zoomableViewport = 'width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0'
@@ -233,6 +236,14 @@ async function syncRemoteProfile() {
   await saveRemoteProfile(user, profile.name, profile.avatarId)
 }
 
+async function trySyncRemoteProfile() {
+  try {
+    await syncRemoteProfile()
+  } catch (error) {
+    console.error('[Auth] profile sync error', error)
+  }
+}
+
 async function loadAuthState() {
   authSession = await getSession()
   const user = currentUser()
@@ -272,6 +283,8 @@ function playerAvatarMarkup(player: Pick<SetupPlayer, 'avatarId' | 'name' | 'ava
 function renderPage() {
   unmountCurrentPage?.()
   unmountCurrentPage = undefined
+  keyboardViewportCleanup?.()
+  keyboardViewportCleanup = undefined
 
   const route = window.location.hash
   const [routeBase, routeQuery = ''] = route.split('?')
@@ -336,6 +349,7 @@ function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER',
     <section class="setup-stage"><div class="setup-stack">${centerTitle ? `<h1 class="setup-title">${title}</h1>` : ''}${content}</div></section>
   </div></main>`
   app.querySelector<HTMLButtonElement>('[data-setup-back]')!.addEventListener('click', () => { window.location.hash = backTarget })
+  keyboardViewportCleanup = bindKeyboardViewportPadding()
 }
 
 function renderModeMenu() {
@@ -390,10 +404,15 @@ function renderOnlineSetupContent() {
 function renderPlayerTable(playerList: SetupPlayer[], options: { editable: boolean; canRemove: boolean }) {
   return `<div class="player-table" role="list">${playerList.map((player, index) => `<div class="player-row" role="listitem">
     <div class="player-row-main">${playerAvatarMarkup(player)}${options.editable
-      ? `<input class="player-name-input" data-player-name="${player.id}" value="${escapeHtml(player.name || defaultPlayerName(index + 1))}" maxlength="24" autocomplete="off" aria-label="Name von Spieler ${index + 1}">`
+      ? playerNameInputMarkup(player, index)
       : `<strong class="player-name">${escapeHtml(player.name || defaultPlayerName(index + 1))}</strong>`}</div>
     ${options.canRemove ? `<button class="player-remove" type="button" data-remove-player="${player.id}" ${playerList.length === 1 ? 'disabled' : ''}>Entfernen</button>` : ''}
   </div>`).join('')}</div>`
+}
+
+function playerNameInputMarkup(player: SetupPlayer, index: number) {
+  const safeId = player.id.replace(/[^a-zA-Z0-9_-]/g, '-')
+  return `<input class="player-name-input" id="player-name-${safeId}" name="player-name-${safeId}" data-player-name="${player.id}" value="${escapeHtml(player.name || defaultPlayerName(index + 1))}" maxlength="24" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="text" aria-label="Name von Spieler ${index + 1}">`
 }
 
 function renderOnlineModal() {
@@ -460,9 +479,34 @@ function bindOfflineSetup() {
 
 function focusAndSelectInput(input: HTMLInputElement | null) {
   if (!input) return
-  input.focus({ preventScroll: true })
-  input.select()
-  input.setSelectionRange(0, input.value.length)
+  const focusSelectAndScroll = (behavior: ScrollBehavior = 'smooth') => {
+    input.focus({ preventScroll: true })
+    input.select()
+    input.setSelectionRange(0, input.value.length)
+    input.scrollIntoView({ behavior, block: 'center', inline: 'nearest' })
+  }
+  focusSelectAndScroll('auto')
+  requestAnimationFrame(() => focusSelectAndScroll('smooth'))
+  window.setTimeout(() => focusSelectAndScroll('smooth'), 380)
+  window.setTimeout(() => focusSelectAndScroll('smooth'), 620)
+}
+
+function bindKeyboardViewportPadding() {
+  const viewport = window.visualViewport as VisualViewportLike | undefined
+  const page = app.querySelector<HTMLElement>('.busfahrer-page')
+  if (!viewport || !page) return undefined
+  const updatePadding = () => {
+    const keyboardHeight = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+    page.style.setProperty('--keyboard-bottom-offset', `${Math.ceil(keyboardHeight)}px`)
+  }
+  updatePadding()
+  viewport.addEventListener('resize', updatePadding)
+  viewport.addEventListener('scroll', updatePadding)
+  return () => {
+    viewport.removeEventListener('resize', updatePadding)
+    viewport.removeEventListener('scroll', updatePadding)
+    page.style.removeProperty('--keyboard-bottom-offset')
+  }
 }
 
 function bindOnlineSetup() {
@@ -530,7 +574,7 @@ async function submitOnlineModal(value: string) {
     const user = currentUser()
     if (!user) throw new Error('Bitte zuerst einloggen.')
     const profile = currentOnlineProfile()
-    await syncRemoteProfile()
+    await trySyncRemoteProfile()
     const wasCreate = activeOnlineModal === 'create'
     const group = wasCreate
       ? await createOnlineGroup(user, profile.name, profile.avatarId)
@@ -605,7 +649,7 @@ function renderOfflineMenu() {
   return
   setupShell(`<div class="setup-panel offline-panel"><p class="eyebrow">Offline</p><h2>Spieler</h2>
     <div class="player-table" role="list">${players.map((player, index) => `<div class="player-row" role="listitem">
-      <div class="player-row-main">${playerAvatarMarkup(player)}<input class="player-name-input" data-player-name="${player.id}" value="${escapeHtml(player.name || defaultPlayerName(index + 1))}" maxlength="24" autocomplete="off" aria-label="Name von Spieler ${index + 1}"></div>
+      <div class="player-row-main">${playerAvatarMarkup(player)}${playerNameInputMarkup(player, index)}</div>
       <button class="player-remove" type="button" data-remove-player="${player.id}" ${players.length === 1 ? 'disabled' : ''}>Entfernen</button>
     </div>`).join('')}</div>
     <button class="game-button setup-add-player" type="button" data-add-player ${players.length >= MAX_PLAYERS ? 'disabled' : ''}>+ Spieler hinzufügen</button>
@@ -675,6 +719,7 @@ function renderAuthModal() {
   return `<div class="setup-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
     <form class="setup-modal" data-auth-form>
       <h2 id="auth-modal-title">${isRegister ? 'Registrieren' : 'Login'}</h2>
+      ${authNotice ? `<p class="setup-copy" data-auth-notice>${escapeHtml(authNotice)}</p>` : ''}
       <label class="profile-name-label" for="auth-email">E-Mail</label>
       <input class="profile-name-input" id="auth-email" type="email" autocomplete="email" required>
       <label class="profile-name-label" for="auth-password">Passwort</label>
@@ -691,10 +736,12 @@ function renderAuthModal() {
 function bindAuthModal() {
   app.querySelector<HTMLButtonElement>('[data-auth-close]')?.addEventListener('click', () => {
     authModal = null
+    authNotice = ''
     renderProfileEditor()
   })
   app.querySelector<HTMLButtonElement>('[data-auth-switch]')?.addEventListener('click', () => {
     authModal = authModal === 'login' ? 'register' : 'login'
+    authNotice = ''
     renderProfileEditor()
   })
   app.querySelector<HTMLFormElement>('[data-auth-form]')?.addEventListener('submit', (event) => {
@@ -707,13 +754,34 @@ function bindAuthModal() {
 
 async function submitAuth(email: string, password: string) {
   try {
-    authSession = authModal === 'register' ? await signUp(email, password) : await signIn(email, password)
+    const mode = authModal
+    console.log('[Auth] submit', mode)
+    if (mode === 'register') {
+      const data = await signUp(email, password)
+      authSession = data.session
+      if (!data.session) {
+        authNotice = 'Registrierung erfolgreich. Bitte bestätige deine E-Mail.'
+        console.log('[Auth] registration needs email confirmation')
+        renderProfileEditor()
+        return
+      }
+    } else {
+      authSession = await signIn(email, password)
+    }
+    authSession = await getSession()
+    console.log('[Auth] session after submit', authSession)
+    if (!authSession) {
+      authNotice = 'Login nicht abgeschlossen. Bitte prüfe deine E-Mail oder dein Passwort.'
+      renderProfileEditor()
+      return
+    }
     authModal = null
+    authNotice = ''
     await syncRemoteProfile()
     renderProfileEditor()
   } catch (error) {
-    onlineNotice = error instanceof Error ? error.message : 'Login fehlgeschlagen.'
-    authModal = null
+    console.error('[Auth] submit error', error)
+    authNotice = error instanceof Error ? error.message : 'Login fehlgeschlagen.'
     renderProfileEditor()
   }
 }
@@ -744,13 +812,19 @@ function renderProfileEditor() {
   bindAuthModal()
   app.querySelector<HTMLButtonElement>('[data-auth-action]')?.addEventListener('click', () => {
     if (currentUser()) {
-      void signOut().then(() => {
+      console.log('[Auth] logout button clicked')
+      void signOut().then(async () => {
+        authSession = await getSession()
+        console.log('[Auth] session after logout', authSession)
         authSession = null
         authModal = null
+        authNotice = ''
         renderProfileEditor()
       })
     } else {
+      console.log('[Auth] login button clicked')
       authModal = 'login'
+      authNotice = ''
       renderProfileEditor()
     }
   })
@@ -784,7 +858,7 @@ function renderProfileEditor() {
       syncSetupPlayers(storedProfile)
     }
     saveProfileStore()
-    void syncRemoteProfile()
+    void trySyncRemoteProfile()
     window.location.hash = isPrimary ? '' : 'busfahrer-offline'
   })
 }
