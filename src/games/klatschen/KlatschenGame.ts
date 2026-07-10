@@ -3,7 +3,7 @@ import { defaultProfileIconMarkup } from '../../profiles.ts'
 import { klatschenCardMap, klatschenCards, type KlatschenCard } from './klatschenCards.ts'
 
 export type KlatschenPlayerSetup = { id?: string; name: string; avatar: string; avatarColor: string }
-export type KlatschenPlayer = KlatschenPlayerSetup & { id: string; drinks: number; heldCards: string[]; partnerPlayerId: string | null; activeRuleLabels: Record<string, string> }
+export type KlatschenPlayer = KlatschenPlayerSetup & { id: string; drinks: number; heldCards: string[]; partnerPlayerId: string | null }
 export type KlatschenPhase = 'rule' | 'turn' | 'card' | 'finished'
 
 export type KlatschenGameState = {
@@ -17,7 +17,7 @@ export type KlatschenGameState = {
   drawnSlot: number | null
   selectedTargetIndex: number | null
   openedHeldCardId: string | null
-  selectedRuleMode: 'own' | 'suggested' | null
+  openedHeldCardOwnerId: string | null
 }
 
 type KlatschenOptions = {
@@ -46,19 +46,22 @@ function escapeHtml(value: string) {
 }
 
 function createState(setups: KlatschenPlayerSetup[]): KlatschenGameState {
-  const players = setups.map((player, index) => ({ ...player, id: player.id ?? `${index}-${player.name}`, drinks: 0, heldCards: [], partnerPlayerId: null, activeRuleLabels: {} }))
+  const players = setups.map((player, index) => ({ ...player, id: player.id ?? `${index}-${player.name}`, drinks: 0, heldCards: [], partnerPlayerId: null }))
+  const partnerCardCount = Math.floor(players.length / 2)
+  const deck = klatschenCards.filter((card) => card.id !== 'clap-partner').map((card) => card.id)
+  deck.push(...Array.from({ length: partnerCardCount }, () => 'clap-partner'))
   return {
     phase: 'rule',
     players,
     currentPlayerIndex: 0,
-    deck: shuffle(klatschenCards.map((card) => card.id)),
+    deck: shuffle(deck),
     drawIndex: 0,
-    remainingSlots: klatschenCards.map((_, index) => index),
+    remainingSlots: deck.map((_, index) => index),
     currentCardId: null,
     drawnSlot: null,
     selectedTargetIndex: null,
     openedHeldCardId: null,
-    selectedRuleMode: null,
+    openedHeldCardOwnerId: null,
   }
 }
 
@@ -80,13 +83,13 @@ function publish() {
 }
 
 function cardBackMarkup(slot: number) {
-  const angle = (slot / klatschenCards.length) * 360
+  const angle = (slot / state.deck.length) * 360
   const present = state.remainingSlots.includes(slot)
   return `<div class="klatschen-circle-slot ${present ? '' : 'is-empty'}" style="--slot-angle:${angle}deg" aria-hidden="${present ? 'false' : 'true'}">${present ? `<div class="klatschen-card-back"><span><i>B</i>B</span></div>` : ''}</div>`
 }
 
 function circleMarkup() {
-  return `<div class="klatschen-card-circle" aria-label="Kartenkreis">${klatschenCards.map((_, slot) => cardBackMarkup(slot)).join('')}</div>`
+  return `<div class="klatschen-card-circle" aria-label="Kartenkreis">${state.deck.map((_, slot) => cardBackMarkup(slot)).join('')}</div>`
 }
 
 function playerTurnMarkup() {
@@ -95,28 +98,47 @@ function playerTurnMarkup() {
   return `<div class="klatschen-turn" style="--current-player-color:${player.avatarColor}">${avatarMarkup(player)}<strong class="${nameSizeClass}">${escapeHtml(player.name)}</strong></div>`
 }
 
+function heldCardLabel(card: KlatschenCard) {
+  if (card.title === 'Nasen-Blobb') return 'Nasen...'
+  if (card.title === 'Daumen-Blobb') return 'Daumen...'
+  if (card.title === 'Fragenmeister') return 'Regel...'
+  if (card.title === 'Doppel-Blobb') return 'Doppel...'
+  return card.title
+}
+
 function heldCardsMarkup() {
-  const player = currentPlayer()
-  if (!canControl() || (!player.heldCards.length && !player.partnerPlayerId)) return ''
-  const partner = player.partnerPlayerId ? state.players.find((item) => item.id === player.partnerPlayerId) : undefined
-  const partnerStatus = partner && !player.heldCards.includes('clap-partner')
-    ? `<button type="button" class="klatschen-held-preview" data-klatschen-held="partner-status">${avatarMarkup(partner, 'klatschen-status-avatar')}<strong>Blobb-Partner</strong><small>Verbunden mit ${escapeHtml(partner.name)}</small></button>`
-    : ''
-  return `<section class="klatschen-held-cards" aria-label="Aktive Blobb-Karten und Zustände"><h2>Deine aktiven Blobb-Karten</h2><div>${player.heldCards.map((cardId) => {
-    const card = klatschenCardMap.get(cardId)
-    if (!card) return ''
-    const partnerName = card.id === 'clap-partner' && partner ? `Verbunden mit ${escapeHtml(partner.name)}` : ''
-    const ruleLabel = player.activeRuleLabels[card.id] ? escapeHtml(player.activeRuleLabels[card.id]!) : ''
-    return `<button type="button" class="klatschen-held-preview" data-klatschen-held="${escapeHtml(card.id)}"><span>${card.symbol}</span><strong>${escapeHtml(card.title)}</strong>${partnerName || ruleLabel ? `<small>${partnerName || ruleLabel}</small>` : ''}</button>`
-  }).join('')}${partnerStatus}</div></section>`
+  const cards: string[] = []
+  state.players.forEach((player) => {
+    const stacks = player.heldCards.reduce<Array<{ card: KlatschenCard; count: number }>>((result, cardId) => {
+      const card = klatschenCardMap.get(cardId)
+      if (!card || card.id === 'clap-partner') return result
+      const stack = result.find((item) => item.card.title === card.title)
+      if (stack) stack.count += 1
+      else result.push({ card, count: 1 })
+      return result
+    }, [])
+    stacks.forEach(({ card, count }) => {
+      cards.push(`<button type="button" class="klatschen-held-preview" data-klatschen-held="${escapeHtml(card.id)}" data-klatschen-owner="${escapeHtml(player.id)}">${count > 1 ? `<b class="klatschen-held-count" aria-label="${count} Karten">${count}</b>` : ''}<span>${card.symbol}</span><strong>${escapeHtml(heldCardLabel(card))}</strong></button>`)
+    })
+  })
+  const renderedPairs = new Set<string>()
+  state.players.forEach((player) => {
+    const partner = player.partnerPlayerId ? state.players.find((item) => item.id === player.partnerPlayerId) : undefined
+    if (!partner) return
+    const pairKey = [player.id, partner.id].sort().join('|')
+    if (renderedPairs.has(pairKey)) return
+    renderedPairs.add(pairKey)
+    cards.push(`<button type="button" class="klatschen-held-preview" data-klatschen-held="partner-status" data-klatschen-owner="${escapeHtml(player.id)}"><span>🤝</span><strong>Blobb-Partner</strong></button>`)
+  })
+  if (!cards.length) return ''
+  return `<section class="klatschen-held-cards" aria-label="Aktive Blobb-Karten und Zustände"><div>${cards.join('')}</div></section>`
 }
 
 function heldCardDialogMarkup() {
   const cardId = state.openedHeldCardId === 'partner-status' ? 'clap-partner' : state.openedHeldCardId
   const card = cardId ? klatschenCardMap.get(cardId) : undefined
   if (!card) return ''
-  const rule = currentPlayer().activeRuleLabels[card.id]
-  return `<div class="klatschen-held-dialog-backdrop" data-klatschen-action="cancel-held"><article class="klatschen-held-dialog" role="dialog" aria-modal="true" aria-labelledby="held-card-title"><h2 id="held-card-title">Blobb-Karte entfernen?</h2><span>${card.symbol}</span><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(rule ?? card.description)}</p><div><button class="game-button" data-klatschen-action="cancel-held">Nein</button><button class="game-button primary" data-klatschen-action="remove-held">Ja</button></div></article></div>`
+  return `<div class="klatschen-held-dialog-backdrop" data-klatschen-action="cancel-held"><article class="klatschen-held-dialog" role="dialog" aria-modal="true" aria-labelledby="held-card-title"><h2 id="held-card-title">Blobb-Karte entfernen?</h2><span>${card.symbol}</span><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.description)}</p><div><button class="game-button klatschen-cancel-remove" data-klatschen-action="cancel-held">Nein</button><button class="game-button primary" data-klatschen-action="remove-held">Ja</button></div></article></div>`
 }
 
 function renderRule() {
@@ -124,16 +146,16 @@ function renderRule() {
 }
 
 function renderTurn() {
-  return `<section class="klatschen-play-screen">${circleMarkup()}<div class="klatschen-center-controls">${playerTurnMarkup()}<button class="game-button primary klatschen-draw-button" data-klatschen-action="draw">Karte ziehen</button></div>${heldCardsMarkup()}${heldCardDialogMarkup()}</section>`
+  return `<section class="klatschen-play-screen">${circleMarkup()}<div class="klatschen-center-controls">${playerTurnMarkup()}<button class="game-button primary klatschen-draw-button" data-klatschen-action="draw">Nächste Karte ziehen</button></div>${heldCardsMarkup()}${heldCardDialogMarkup()}</section>`
 }
 
 function drawnCardMarkup(card: KlatschenCard) {
-  const angle = ((state.drawnSlot ?? 0) / klatschenCards.length) * 360
+  const angle = ((state.drawnSlot ?? 0) / state.deck.length) * 360
   return `<article class="klatschen-drawn-card" style="--draw-angle:${angle}deg;--draw-counter-angle:${-angle}deg"><div class="klatschen-drawn-inner"><div class="klatschen-drawn-back"><span><i>B</i>B</span></div><div class="klatschen-drawn-front"><h2>${escapeHtml(card.title)}</h2><span class="klatschen-card-symbol" aria-hidden="true">${card.symbol}</span><p>${escapeHtml(card.description)}</p>${card.suggestedRule ? `<small>Vorschlag: ${escapeHtml(card.suggestedRule)}</small>` : ''}${card.amount ? `<strong class="klatschen-amount">${card.amount} Schluck${card.amount === 1 ? '' : 'e'}</strong>` : ''}</div></div></article>`
 }
 
 function needsTarget(card: KlatschenCard) {
-  return card.type === 'choose-player' || card.type === 'distribute' || (card.id === 'clap-partner' && state.players.length > 1)
+  return card.id === 'clap-partner' && state.players.length > 1
 }
 
 function targetMarkup(card: KlatschenCard) {
@@ -141,21 +163,16 @@ function targetMarkup(card: KlatschenCard) {
   return `<div class="klatschen-targets" aria-label="Spieler auswählen">${state.players.map((player, index) => `<button class="game-button klatschen-target ${state.selectedTargetIndex === index ? 'is-selected' : ''}" data-klatschen-target="${index}" ${card.id === 'clap-partner' && index === state.currentPlayerIndex ? 'disabled' : ''}>${avatarMarkup(player)}<span>${escapeHtml(player.name)}</span></button>`).join('')}</div>`
 }
 
-function ruleChoiceMarkup(card: KlatschenCard) {
-  if (card.type !== 'temporary-rule') return ''
-  return `<div class="klatschen-rule-choices"><button class="game-button ${state.selectedRuleMode === 'own' ? 'is-selected' : ''}" data-klatschen-rule="own">Eigene Regel wählen</button><button class="game-button ${state.selectedRuleMode === 'suggested' ? 'is-selected' : ''}" data-klatschen-rule="suggested">Vorgeschlagene Regel verwenden</button><p>Vorschlag: ${escapeHtml(card.suggestedRule ?? '')}</p></div>`
-}
-
 function renderCard() {
   const card = state.currentCardId ? klatschenCardMap.get(state.currentCardId) : undefined
   if (!card) return renderTurn()
-  const actionPending = (needsTarget(card) && state.selectedTargetIndex === null) || (card.type === 'temporary-rule' && state.selectedRuleMode === null)
-  return `<section class="klatschen-card-screen">${circleMarkup()}${drawnCardMarkup(card)}<div class="klatschen-card-actions">${targetMarkup(card)}${ruleChoiceMarkup(card)}<div class="klatschen-standard-actions"><button class="game-button primary klatschen-next-button" data-klatschen-action="next" ${actionPending ? 'disabled' : ''}>Weiter</button></div></div></section>`
+  const actionPending = needsTarget(card) && state.selectedTargetIndex === null
+  return `<section class="klatschen-card-screen">${circleMarkup()}${drawnCardMarkup(card)}${heldCardsMarkup()}${heldCardDialogMarkup()}<div class="klatschen-card-actions">${targetMarkup(card)}</div><button class="game-button primary klatschen-next-button" data-klatschen-action="next" ${actionPending ? 'disabled' : ''}>Weiter</button></section>`
 }
 
 function renderFinished() {
   const sorted = [...state.players].sort((left, right) => right.drinks - left.drinks)
-  return `<section class="klatschen-summary"><h2>Alle Karten wurden gezogen</h2><div class="klatschen-stats">${sorted.map((player) => `<div>${avatarMarkup(player)}<strong>${escapeHtml(player.name)}</strong><span>${player.drinks} Schluck${player.drinks === 1 ? '' : 'e'}</span></div>`).join('')}</div><div class="klatschen-summary-actions"><button class="game-button primary" data-klatschen-action="restart">Neustarten</button><button class="game-button" data-klatschen-action="exit">Beenden</button></div></section>`
+  return `<section class="klatschen-summary"><h2>Alle Karten wurden gezogen</h2><div class="klatschen-stats">${sorted.map((player) => `<div>${avatarMarkup(player)}<strong>${escapeHtml(player.name)}</strong><span>${player.drinks} Schluck${player.drinks === 1 ? '' : 'e'}</span></div>`).join('')}</div><div class="klatschen-summary-actions"><button class="game-button primary" data-klatschen-action="exit">Beenden</button><button class="game-button primary" data-klatschen-action="restart">Neustarten</button></div></section>`
 }
 
 function addDrinks(playerIndex: number, amount: number, includePartner = true) {
@@ -170,7 +187,11 @@ function addDrinks(playerIndex: number, amount: number, includePartner = true) {
 function clearPartnership(player: KlatschenPlayer) {
   if (!player.partnerPlayerId) return
   const partner = state.players.find((item) => item.id === player.partnerPlayerId)
-  if (partner?.partnerPlayerId === player.id) partner.partnerPlayerId = null
+  player.heldCards = player.heldCards.filter((cardId) => cardId !== 'clap-partner')
+  if (partner?.partnerPlayerId === player.id) {
+    partner.partnerPlayerId = null
+    partner.heldCards = partner.heldCards.filter((cardId) => cardId !== 'clap-partner')
+  }
   player.partnerPlayerId = null
 }
 
@@ -181,7 +202,16 @@ function applyAutomaticDrinks(card: KlatschenCard) {
   if (card.id === 'all-except') state.players.forEach((_, index) => { if (index !== state.currentPlayerIndex) addDrinks(index, amount) })
   if (card.id === 'left') addDrinks((state.currentPlayerIndex - 1 + state.players.length) % state.players.length, amount)
   if (card.id === 'right') addDrinks((state.currentPlayerIndex + 1) % state.players.length, amount)
-  if ((card.type === 'collectible-action' || card.keepUntilUsed) && !currentPlayer().heldCards.includes(card.id)) currentPlayer().heldCards.push(card.id)
+  if (card.exclusiveRole) {
+    const existingOwner = state.players.find((player) => player.heldCards.some((cardId) => klatschenCardMap.get(cardId)?.exclusiveRole === card.exclusiveRole))
+    if (existingOwner?.id === currentPlayer().id) return
+    state.players.forEach((player) => {
+      player.heldCards = player.heldCards.filter((cardId) => klatschenCardMap.get(cardId)?.exclusiveRole !== card.exclusiveRole)
+    })
+    currentPlayer().heldCards.push(card.id)
+    return
+  }
+  if (card.id !== 'clap-partner' && (card.type === 'collectible-action' || card.keepUntilUsed)) currentPlayer().heldCards.push(card.id)
 }
 
 function drawCard() {
@@ -191,7 +221,6 @@ function drawCard() {
   state.remainingSlots.splice(slotPosition, 1)
   state.currentCardId = state.deck[state.drawIndex++] ?? null
   state.selectedTargetIndex = null
-  state.selectedRuleMode = null
   state.phase = 'card'
   const card = state.currentCardId ? klatschenCardMap.get(state.currentCardId) : undefined
   if (card) applyAutomaticDrinks(card)
@@ -205,25 +234,13 @@ function selectTarget(index: number) {
   if (!card || !needsTarget(card)) return
   if (card.id === 'clap-partner' && index === state.currentPlayerIndex) return
   state.selectedTargetIndex = index
-  if (card.id === 'clap-partner') {
-    const owner = currentPlayer()
-    const partner = state.players[index]!
-    clearPartnership(owner)
-    clearPartnership(partner)
-    owner.partnerPlayerId = partner.id
-    partner.partnerPlayerId = owner.id
-  } else addDrinks(index, card.amount ?? 0)
-  render()
-  publish()
-}
-
-function selectRule(mode: 'own' | 'suggested') {
-  if (!canControl() || state.phase !== 'card' || state.selectedRuleMode !== null) return
-  const card = state.currentCardId ? klatschenCardMap.get(state.currentCardId) : undefined
-  if (!card || card.type !== 'temporary-rule') return
-  state.selectedRuleMode = mode
-  if (!currentPlayer().heldCards.includes(card.id)) currentPlayer().heldCards.push(card.id)
-  currentPlayer().activeRuleLabels[card.id] = mode === 'own' ? 'Eigene Blobb-Regel aktiv' : (card.suggestedRule ?? 'Vorgeschlagene Blobb-Regel aktiv')
+  const owner = currentPlayer()
+  const partner = state.players[index]!
+  clearPartnership(owner)
+  clearPartnership(partner)
+  owner.partnerPlayerId = partner.id
+  partner.partnerPlayerId = owner.id
+  owner.heldCards.push('clap-partner')
   render()
   publish()
 }
@@ -238,7 +255,6 @@ function nextTurn() {
   state.currentCardId = null
   state.drawnSlot = null
   state.selectedTargetIndex = null
-  state.selectedRuleMode = null
   render()
   publish()
 }
@@ -247,33 +263,37 @@ function handleClick(event: Event) {
   const target = event.target as HTMLElement
   if (target.classList.contains('klatschen-held-dialog-backdrop')) {
     state.openedHeldCardId = null
+    state.openedHeldCardOwnerId = null
     render(); publish(); return
   }
   const button = target.closest<HTMLButtonElement>('button')
   if (!button) return
   if (button.dataset.klatschenHeld) {
-    const isPartnerStatus = button.dataset.klatschenHeld === 'partner-status' && Boolean(currentPlayer().partnerPlayerId)
-    if (!canControl() || (!isPartnerStatus && !currentPlayer().heldCards.includes(button.dataset.klatschenHeld))) return
+    const owner = state.players.find((player) => player.id === button.dataset.klatschenOwner)
+    const isPartnerStatus = button.dataset.klatschenHeld === 'partner-status' && Boolean(owner?.partnerPlayerId)
+    if (!canControl() || !owner || (!isPartnerStatus && !owner.heldCards.includes(button.dataset.klatschenHeld))) return
     state.openedHeldCardId = button.dataset.klatschenHeld
+    state.openedHeldCardOwnerId = owner.id
     render(); publish(); return
   }
   if (button.dataset.klatschenTarget !== undefined) return selectTarget(Number(button.dataset.klatschenTarget))
-  if (button.dataset.klatschenRule === 'own' || button.dataset.klatschenRule === 'suggested') return selectRule(button.dataset.klatschenRule)
   const action = button.dataset.klatschenAction
   if (action === 'start' && canControl()) { state.phase = 'turn'; render(); publish() }
   if (action === 'draw') drawCard()
   if (action === 'next') nextTurn()
-  if (action === 'cancel-held') { state.openedHeldCardId = null; render(); publish() }
+  if (action === 'cancel-held') { state.openedHeldCardId = null; state.openedHeldCardOwnerId = null; render(); publish() }
   if (action === 'remove-held' && canControl() && state.openedHeldCardId) {
+    const owner = state.players.find((player) => player.id === state.openedHeldCardOwnerId)
+    if (!owner) return
     const cardId = state.openedHeldCardId === 'partner-status' ? 'clap-partner' : state.openedHeldCardId
     if (cardId === 'clap-partner') {
-      clearPartnership(currentPlayer())
-      state.players.forEach((player) => { player.heldCards = player.heldCards.filter((heldCardId) => heldCardId !== 'clap-partner') })
+      clearPartnership(owner)
     } else {
-      currentPlayer().heldCards = currentPlayer().heldCards.filter((heldCardId) => heldCardId !== cardId)
-      delete currentPlayer().activeRuleLabels[cardId]
+      const heldCardIndex = owner.heldCards.indexOf(cardId)
+      if (heldCardIndex >= 0) owner.heldCards.splice(heldCardIndex, 1)
     }
     state.openedHeldCardId = null
+    state.openedHeldCardOwnerId = null
     render(); publish()
   }
   if (action === 'restart') { options.onLeave?.(); window.location.hash = 'klatschen-menu' }
@@ -283,7 +303,7 @@ function handleClick(event: Event) {
 
 function applyControls() {
   if (!options.localPlayerId || canControl()) return
-  root?.querySelectorAll<HTMLButtonElement>('[data-klatschen-action], [data-klatschen-target], [data-klatschen-rule], [data-klatschen-held]').forEach((button) => { button.disabled = true })
+  root?.querySelectorAll<HTMLButtonElement>('[data-klatschen-action], [data-klatschen-target], [data-klatschen-held]').forEach((button) => { button.disabled = true })
 }
 
 function positionDrawAnimation() {
@@ -349,13 +369,38 @@ function positionMiddleLayout() {
   turn.style.top = `${turnTop}px`
 
   const freeBottomTop = Math.min(screenRect.bottom, circleBottom)
-  const buttonTop = ((freeBottomTop + screenRect.bottom) / 2) - screenRect.top - (drawButton.getBoundingClientRect().height / 2)
+  const buttonHeight = drawButton.getBoundingClientRect().height
+  const buttonTop = ((freeBottomTop + screenRect.bottom) / 2) - screenRect.top - (buttonHeight / 2) - (buttonHeight * .4)
   drawButton.style.top = `${buttonTop}px`
+  positionHeldCards(screen, circleTop)
+}
+
+function positionHeldCards(screen: HTMLElement, circleTop: number) {
+  const heldCards = screen.querySelector<HTMLElement>('.klatschen-held-cards')
+  if (!heldCards) return
+  const screenTop = screen.getBoundingClientRect().top
+  heldCards.style.maxHeight = `${Math.max(0, circleTop - screenTop - 16)}px`
+}
+
+function positionNextButton() {
+  const screen = root?.querySelector<HTMLElement>('.klatschen-card-screen')
+  const nextButton = root?.querySelector<HTMLElement>('.klatschen-next-button')
+  const slots = screen?.querySelectorAll<HTMLElement>('.klatschen-circle-slot')
+  if (!screen || !nextButton || !slots?.length) return
+  const screenRect = screen.getBoundingClientRect()
+  const circleBottom = Math.max(...[...slots].map((slot) => slot.getBoundingClientRect().bottom))
+  const circleTop = Math.min(...[...slots].map((slot) => slot.getBoundingClientRect().top))
+  const freeBottomTop = Math.min(screenRect.bottom, circleBottom)
+  const buttonHeight = nextButton.getBoundingClientRect().height
+  const buttonTop = ((freeBottomTop + screenRect.bottom) / 2) - screenRect.top - (buttonHeight / 2) - (buttonHeight * .4)
+  nextButton.style.top = `${buttonTop}px`
+  positionHeldCards(screen, circleTop)
 }
 
 function updateMiddleLayout() {
   fitCurrentPlayerDisplay()
   positionMiddleLayout()
+  positionNextButton()
 }
 
 function removeRevealedCardBack() {
@@ -385,14 +430,9 @@ export function applyKlatschenState(nextState: KlatschenGameState) {
   state.players.forEach((player) => {
     player.heldCards ??= []
     player.partnerPlayerId ??= null
-    player.activeRuleLabels ??= {}
-    Object.entries(player.activeRuleLabels).forEach(([cardId, label]) => {
-      if (label === 'Eigene Regel aktiv') player.activeRuleLabels[cardId] = 'Eigene Blobb-Regel aktiv'
-      if (label === 'Vorgeschlagene Regel aktiv') player.activeRuleLabels[cardId] = 'Vorgeschlagene Blobb-Regel aktiv'
-    })
   })
   state.openedHeldCardId ??= null
-  state.selectedRuleMode ??= null
+  state.openedHeldCardOwnerId ??= null
   render()
 }
 
@@ -403,14 +443,9 @@ export function mountKlatschen(target: HTMLElement, players: KlatschenPlayerSetu
   state.players.forEach((player) => {
     player.heldCards ??= []
     player.partnerPlayerId ??= null
-    player.activeRuleLabels ??= {}
-    Object.entries(player.activeRuleLabels).forEach(([cardId, label]) => {
-      if (label === 'Eigene Regel aktiv') player.activeRuleLabels[cardId] = 'Eigene Blobb-Regel aktiv'
-      if (label === 'Vorgeschlagene Regel aktiv') player.activeRuleLabels[cardId] = 'Vorgeschlagene Blobb-Regel aktiv'
-    })
   })
   state.openedHeldCardId ??= null
-  state.selectedRuleMode ??= null
+  state.openedHeldCardOwnerId ??= null
   root.addEventListener('click', handleClick)
   window.addEventListener('resize', updateMiddleLayout)
   render()

@@ -30,14 +30,14 @@
 .klatschen-turn .klatschen-avatar { width: clamp(132px, min(21.6vw, 26.4dvh), 216px); height: clamp(132px, min(21.6vw, 26.4dvh), 216px); }
 .klatschen-avatar img { width: 100%; height: 100%; object-fit: contain; }
 .klatschen-avatar .default-profile-icon { width: 68%; height: 68%; }
-.klatschen-draw-button { position: absolute; right: 0; left: 0; width: min(240px, calc(100% - 20px)); margin-inline: auto; pointer-events: auto; }
-.klatschen-held-cards { position: absolute; left: 50%; bottom: clamp(8px, 1.5vh, 16px); z-index: 4; width: min(720px,calc(100% - 20px)); transform: translateX(-50%); text-align: center; }
-.klatschen-held-cards h2 { margin: 0 0 7px; color: #d8d0e4; font-size: clamp(.72rem,2vw,.9rem); text-transform: uppercase; letter-spacing: .08em; }
-.klatschen-held-cards > div { display: flex; padding: 3px; justify-content: center; gap: 8px; overflow-x: auto; }
-.klatschen-held-preview { display: grid; min-width: 102px; min-height: 70px; padding: 7px 10px; border: 2px solid rgba(221,161,94,.7); border-radius: 11px; place-items: center; gap: 2px; color: #fff; background: linear-gradient(145deg,#5d3bb6,#352c48); box-shadow: 0 7px 18px rgba(0,0,0,.3); font: inherit; cursor: pointer; }
-.klatschen-held-preview span { font-size: 1.35rem; }
-.klatschen-held-preview strong { max-width: 112px; overflow: hidden; font-size: .76rem; text-overflow: ellipsis; white-space: nowrap; }
-.klatschen-held-preview small { display: block; max-width: 125px; overflow: hidden; color: #e8dff4; font-size: .64rem; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
+.klatschen-draw-button,
+.klatschen-next-button { position: absolute; right: 0; left: 0; width: min(240px, calc(100% - 20px)); margin-inline: auto; pointer-events: auto; }
+.klatschen-held-cards { position: absolute; top: 8px; right: 10px; left: 10px; z-index: 4; padding: 4px; box-sizing: border-box; overflow: auto; scrollbar-gutter: stable; }
+.klatschen-held-cards > div { display: grid; width: min(600px,calc(100% - 8px)); padding: 4px; margin-inline: auto; box-sizing: border-box; grid-template-columns: repeat(4,minmax(0,1fr)); align-content: flex-start; gap: 8px; }
+.klatschen-held-preview { position: relative; display: grid; width: 100%; min-width: 0; min-height: 48px; padding: 3px 18px 3px 7px; border: 2px solid rgba(221,161,94,.7); border-radius: 11px; box-sizing: border-box; place-items: center; gap: 0; color: #000; background: linear-gradient(145deg,#fff,#efe9f6); box-shadow: 0 3px 8px rgba(0,0,0,.2), inset 0 0 0 1px rgba(255,255,255,.7); font: inherit; cursor: pointer; }
+.klatschen-held-preview span { font-size: 1rem; line-height: 1; }
+.klatschen-held-preview strong { width: 100%; max-width: 100%; overflow: hidden; color: #000; font-size: .7rem; text-overflow: ellipsis; white-space: nowrap; }
+.klatschen-held-count { position: absolute; top: 4px; right: 6px; z-index: 1; color: #c51f35; font-size: 1rem; font-weight: 950; line-height: 1; }
 .klatschen-status-avatar { display: grid; width: 27px; height: 27px; place-items: center; }
 .klatschen-status-avatar img { width: 100%; height: 100%; object-fit: contain; }
 .klatschen-held-dialog-backdrop { position: absolute; inset: 0; z-index: 20; display: grid; padding: 12px; place-items: center; background: rgba(4,2,10,.72); backdrop-filter: blur(5px); }
@@ -48,6 +48,8 @@
 .klatschen-held-dialog > span { font-size: clamp(3rem,10vw,5rem); }
 .klatschen-held-dialog p { color: #eee8f5; font-size: clamp(1rem,2.8vw,1.2rem); font-weight: 700; line-height: 1.35; }
 .klatschen-held-dialog > div { display: grid; width: 100%; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+.klatschen-held-dialog > div .game-button { display: flex; width: 100%; min-width: 0; height: clamp(38px,7dvh,50px); min-height: clamp(38px,7dvh,50px); padding: 12px 18px; grid-column: auto; align-items: center; justify-content: center; }
+.klatschen-held-dialog .klatschen-cancel-remove { background: #b92e4b; }
 
 .klatschen-drawn-card { --draw-radius: clamp(118px, min(29vw, 27dvh), 255px); position: absolute; left: 50%; top: 43%; z-index: 5; width: clamp(190px, min(50vw, 31dvh), 310px); aspect-ratio: 5 / 7; perspective: 1200px; transform: translate(-50%,-50%); }
 .klatschen-drawn-inner { position: relative; width: 100%; height: 100%; animation: klatschen-draw 900ms cubic-bezier(.2,.72,.2,1) both; transform-style: preserve-3d; }
@@ -60,19 +62,11 @@
 .klatschen-drawn-front small { color: #6d45c4; font-size: clamp(.7rem,1.8vw,.9rem); font-weight: 800; line-height: 1.15; }
 .klatschen-amount { color: #b92e4b; font-size: clamp(1.12rem, 3vw, 1.5rem); }
 .klatschen-card-actions { position: absolute; left: 0; right: 0; bottom: clamp(8px, 1.6vh, 16px); z-index: 7; display: grid; width: auto; padding-inline: 10px; gap: 8px; animation: klatschen-actions-in .35s 750ms both; }
-.klatschen-standard-actions { display: flex; justify-content: center; }
-.klatschen-standard-actions .game-button { width: min(520px,100%); }
 .klatschen-targets { display: flex; width: min(620px,100%); max-height: clamp(86px, 13vh, 112px); margin-inline: auto; padding: 4px; gap: 7px; overflow-x: auto; }
 .klatschen-target { display: flex; min-width: 145px; min-height: 48px; padding: 7px 10px; align-items: center; justify-content: flex-start; gap: 8px; }
 .klatschen-target.is-selected { outline: 3px solid #dda15e; background: #584170; }
 .klatschen-target .klatschen-avatar { width: 31px; height: 31px; }
 .klatschen-target span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.klatschen-rule-choices { display: grid; width: min(620px,100%); margin-inline: auto; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
-.klatschen-rule-choices .game-button { min-width: 0; padding-inline: 9px; font-size: clamp(.78rem,2vw,1rem); }
-.klatschen-rule-choices .is-selected { outline: 3px solid #dda15e; background: #584170; }
-.klatschen-rule-choices p { grid-column: 1 / -1; margin: 0; color: #e5ddf2; font-size: clamp(.68rem,1.8vw,.84rem); font-weight: 700; }
-.klatschen-next-button { margin-inline: auto; }
-
 .klatschen-summary h2 { margin: 0; }
 .klatschen-stats { width: min(620px,100%); max-height: 55vh; border: 1px solid rgba(255,255,255,.12); border-radius: 14px; overflow: auto; }
 .klatschen-stats > div { display: grid; padding: 9px 12px; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; gap: 10px; border-top: 1px solid rgba(255,255,255,.1); text-align: left; }
@@ -80,6 +74,7 @@
 .klatschen-stats strong { overflow: hidden; color: #dda15e; text-overflow: ellipsis; white-space: nowrap; }
 .klatschen-stats span { font-weight: 900; }
 .klatschen-summary-actions { display: grid; width: min(520px,100%); grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+.klatschen-summary-actions .game-button { display: flex; width: 100%; height: 100%; min-width: 0; grid-column: auto; align-items: center; justify-content: center; }
 
 @keyframes klatschen-draw {
   0% { transform: translate(var(--draw-x),var(--draw-y)) scale(var(--draw-scale)) rotateY(0); }

@@ -8,6 +8,7 @@ export type KlatschenCard = {
   type: KlatschenCardType
   amount?: number
   keepUntilUsed?: boolean
+  exclusiveRole?: string
   suggestedRule?: string
 }
 
@@ -34,7 +35,10 @@ export const klatschenCards: KlatschenCard[] = [
   { id: 'question-direct-2', title: 'Fragefalle', symbol: '❓', description: 'Stelle einem Spieler eine Frage. Antwortet die Person, muss sie blobben. Sobald der nächste Spieler dran ist, endet deine Fragefalle.', type: 'question', amount: 1 },
   { id: 'question-direct-3', title: 'Fragefalle', symbol: '❓', description: 'Stelle einem Spieler eine Frage. Antwortet die Person, muss sie blobben. Sobald der nächste Spieler dran ist, endet deine Fragefalle.', type: 'question', amount: 1 },
   { id: 'question-direct-4', title: 'Fragefalle', symbol: '❓', description: 'Stelle einem Spieler eine Frage. Antwortet die Person, muss sie blobben. Sobald der nächste Spieler dran ist, endet deine Fragefalle.', type: 'question', amount: 1 },
-  { id: 'question-rule', title: 'Keine Antwort', symbol: '🤐', description: 'Bis zu deinem nächsten Zug darf dir niemand eine Frage beantworten.', type: 'question', amount: 1 },
+  { id: 'question-rule', title: 'Fragenmeister', symbol: '🤐', description: 'Du bist der neue Fragenmeister. Wer dir eine Frage beantwortet, muss blobben.', type: 'question', amount: 1, exclusiveRole: 'question-master' },
+  { id: 'question-rule-2', title: 'Fragenmeister', symbol: '🤐', description: 'Du bist der neue Fragenmeister. Wer dir eine Frage beantwortet, muss blobben.', type: 'question', amount: 1, exclusiveRole: 'question-master' },
+  { id: 'question-rule-3', title: 'Fragenmeister', symbol: '🤐', description: 'Du bist der neue Fragenmeister. Wer dir eine Frage beantwortet, muss blobben.', type: 'question', amount: 1, exclusiveRole: 'question-master' },
+  { id: 'question-rule-4', title: 'Fragenmeister', symbol: '🤐', description: 'Du bist der neue Fragenmeister. Wer dir eine Frage beantwortet, muss blobben.', type: 'question', amount: 1, exclusiveRole: 'question-master' },
   { id: 'rule-free-1', title: 'Neue Regel', symbol: '📜', description: 'Du darfst dir eine eigene Regel für die Runde überlegen. Alternativ kannst du die vorgeschlagene Regel verwenden.', suggestedRule: 'Niemand darf Vornamen sagen.', type: 'temporary-rule' },
   { id: 'rule-free-2', title: 'Neue Regel', symbol: '📜', description: 'Du darfst dir eine eigene Regel für die Runde überlegen. Alternativ kannst du die vorgeschlagene Regel verwenden.', suggestedRule: 'Niemand darf auf andere Spieler zeigen.', type: 'temporary-rule' },
   { id: 'rule-free-3', title: 'Neue Regel', symbol: '📜', description: 'Du darfst dir eine eigene Regel für die Runde überlegen. Alternativ kannst du die vorgeschlagene Regel verwenden.', suggestedRule: 'Jeder Satz muss mit „Also“ beginnen.', type: 'temporary-rule' },
@@ -57,11 +61,16 @@ export const klatschenCards: KlatschenCard[] = [
   { id: 'thumb-clapper-1', title: 'Daumen-Blobb', symbol: '👍', description: 'Lege irgendwann unauffällig deinen Daumen auf den Tisch. Alle anderen müssen es nachmachen. Die letzte Person muss blobben.', type: 'collectible-action', keepUntilUsed: true },
   { id: 'thumb-clapper-2', title: 'Daumen-Blobb', symbol: '👍', description: 'Lege irgendwann unauffällig deinen Daumen auf den Tisch. Alle anderen müssen es nachmachen. Die letzte Person muss blobben.', type: 'collectible-action', keepUntilUsed: true },
   { id: 'thumb-clapper-3', title: 'Daumen-Blobb', symbol: '👍', description: 'Lege irgendwann unauffällig deinen Daumen auf den Tisch. Alle anderen müssen es nachmachen. Die letzte Person muss blobben.', type: 'collectible-action', keepUntilUsed: true },
+  { id: 'thumb-clapper-4', title: 'Daumen-Blobb', symbol: '👍', description: 'Lege irgendwann unauffällig deinen Daumen auf den Tisch. Alle anderen müssen es nachmachen. Die letzte Person muss blobben.', type: 'collectible-action', keepUntilUsed: true },
   { id: 'nose-clapper-1', title: 'Nasen-Blobb', symbol: '👃', description: 'Lege irgendwann unauffällig deinen Zeigefinger an deine Nase. Alle anderen müssen es nachmachen. Die letzte Person muss blobben.', type: 'collectible-action', keepUntilUsed: true },
   { id: 'nose-clapper-2', title: 'Nasen-Blobb', symbol: '👃', description: 'Lege irgendwann unauffällig deinen Zeigefinger an deine Nase. Alle anderen müssen es nachmachen. Die letzte Person muss blobben.', type: 'collectible-action', keepUntilUsed: true },
   { id: 'nose-clapper-3', title: 'Nasen-Blobb', symbol: '👃', description: 'Lege irgendwann unauffällig deinen Zeigefinger an deine Nase. Alle anderen müssen es nachmachen. Die letzte Person muss blobben.', type: 'collectible-action', keepUntilUsed: true },
+  { id: 'nose-clapper-4', title: 'Nasen-Blobb', symbol: '👃', description: 'Lege irgendwann unauffällig deinen Zeigefinger an deine Nase. Alle anderen müssen es nachmachen. Die letzte Person muss blobben.', type: 'collectible-action', keepUntilUsed: true },
   { id: 'clap-partner', title: 'Blobb-Partner', symbol: '🤝', description: 'Wähle einen anderen Spieler als deinen Blobb-Partner. Immer wenn du blobben musst, muss dein Blobb-Partner dieselbe Anzahl ebenfalls blobben.', type: 'collectible-action', keepUntilUsed: true },
   { id: 'double-clap', title: 'Doppel-Blobb', symbol: '✌️', description: 'Setze diese Blobb-Karte ein, um die Schlücke einer beliebigen Aktion für eine Person zu verdoppeln.', type: 'collectible-action', keepUntilUsed: true },
+  { id: 'double-clap-2', title: 'Doppel-Blobb', symbol: '✌️', description: 'Setze diese Blobb-Karte ein, um die Schlücke einer beliebigen Aktion für eine Person zu verdoppeln.', type: 'collectible-action', keepUntilUsed: true },
+  { id: 'double-clap-3', title: 'Doppel-Blobb', symbol: '✌️', description: 'Setze diese Blobb-Karte ein, um die Schlücke einer beliebigen Aktion für eine Person zu verdoppeln.', type: 'collectible-action', keepUntilUsed: true },
+  { id: 'double-clap-4', title: 'Doppel-Blobb', symbol: '✌️', description: 'Setze diese Blobb-Karte ein, um die Schlücke einer beliebigen Aktion für eine Person zu verdoppeln.', type: 'collectible-action', keepUntilUsed: true },
 ]
 
 export const klatschenCardMap = new Map(klatschenCards.map((card) => [card.id, card]))
