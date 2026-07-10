@@ -227,7 +227,10 @@ function playerTargetAvatarMarkup(player: GamePlayer) {
 }
 
 function currentPlayerFooterMarkup() {
-  if (phase === 'player-intro' || phase === 'summary' || phase === 'final') return ''
+  const isActiveGameScreen = phase === 'questions'
+    || phase === 'bus'
+    || (phase === 'pyramid' && pyramidDecision?.step !== 'target')
+  if (!isActiveGameScreen) return ''
   const player = currentPlayer()
   return `<div class="current-player-footer">${playerTargetAvatarMarkup(player)}<strong>${escapeHtml(player.name)}</strong></div>`
 }
@@ -310,7 +313,7 @@ function renderPyramid() {
   const rows = [[0], [1, 2], [3, 4, 5], [6, 7, 8, 9]]
   const complete = pyramidProgress === 10
   const pyramidAction = pyramidDecision?.step === 'offer'
-    ? `<div class="pyramid-decision pyramid-offer"><button class="game-button choice-red pyramid-side-choice pyramid-choice-no" data-action="keep-pyramid-card">Nein</button><div class="pyramid-offer-question">Möchtest du die Karte ${escapeHtml(pyramidDecision.label)} setzen?</div><button class="game-button choice-blue pyramid-side-choice pyramid-choice-yes" data-action="use-pyramid-card">Ja</button></div>`
+    ? `<div class="pyramid-offer"><button class="game-button choice-red pyramid-side-choice pyramid-choice-no" data-action="keep-pyramid-card">Nein</button><div class="pyramid-offer-question">Möchtest du die Karte ${escapeHtml(pyramidDecision.label)} setzen?</div><button class="game-button choice-blue pyramid-side-choice pyramid-choice-yes" data-action="use-pyramid-card">Ja</button></div>`
     : `<button class="game-button primary" data-action="${complete ? 'finish-player-pyramid' : 'reveal-pyramid'}">${complete ? `${currentPlayer().name} ist fertig` : 'Nächste Karte aufdecken'}</button>`
   return `${phaseHeader(2, `${currentPlayer().name} · ${pyramidProgress} von 10 Karten`)}<section class="pyramid-panel">
     <h2>Pyramide</h2><div class="pyramid">${rows.map((row, rowIndex) =>
@@ -479,6 +482,28 @@ function resetGame() {
   feedback = { text: '', kind: 'info' }; pyramidCards = []; pyramidProgress = 0; pyramidHits = new Set<number>(); pyramidDecision = null; busCards = []; busProgress = 0; busFailed = false; busLost = false; busFeedbackPending = false; busfahrerUsedCards = []
 }
 
+function alignPyramidOfferChoices() {
+  const panel = gameRoot?.querySelector<HTMLElement>('.pyramid-panel')
+  const offer = panel?.querySelector<HTMLElement>('.pyramid-offer')
+  const noButton = offer?.querySelector<HTMLElement>('.pyramid-choice-no')
+  const yesButton = offer?.querySelector<HTMLElement>('.pyramid-choice-yes')
+  const secondRowCards = panel?.querySelectorAll<HTMLElement>('.pyramid-row:nth-child(2) .playing-card')
+  if (!panel || !offer || !noButton || !yesButton || !secondRowCards?.length) return
+
+  const panelRect = panel.getBoundingClientRect()
+  const offerRect = offer.getBoundingClientRect()
+  const firstCardRect = secondRowCards[0]!.getBoundingClientRect()
+  const lastCardRect = secondRowCards[secondRowCards.length - 1]!.getBoundingClientRect()
+  const panelStyle = window.getComputedStyle(panel)
+  const innerLeft = panelRect.left + Number.parseFloat(panelStyle.borderLeftWidth)
+  const innerRight = panelRect.right - Number.parseFloat(panelStyle.borderRightWidth)
+
+  const noCenter = ((innerLeft + firstCardRect.left) / 2) - offerRect.left
+  const yesCenter = ((lastCardRect.right + innerRight) / 2) - offerRect.left
+  offer.style.setProperty('--pyramid-no-left', `${noCenter - (noButton.getBoundingClientRect().width / 2)}px`)
+  offer.style.setProperty('--pyramid-yes-left', `${yesCenter - (yesButton.getBoundingClientRect().width / 2)}px`)
+}
+
 function renderGame() {
   if (!gameRoot) return
   const content = phase === 'player-intro' ? renderPlayerIntro() : phase === 'questions' ? renderQuestions() : phase === 'pyramid' ? renderPyramid() : phase === 'summary' ? renderSummary() : phase === 'final' ? renderSummary(true) : renderBus()
@@ -487,6 +512,7 @@ function renderGame() {
     <button class="restart-button" type="button" data-action="restart">Neu starten</button></header>
     <p class="responsibility-note">Trink verantwortungsvoll. Dieses Spiel ist nur für Erwachsene.</p><div class="game-stage">${content}${phase === 'bus' ? busUsedCardsMarkup() : ''}${currentPlayerFooterMarkup()}</div></div>`
   gameRoot.querySelector('.responsibility-note')?.remove()
+  alignPyramidOfferChoices()
   applyOnlineControls()
   publishState()
 }
@@ -551,6 +577,8 @@ export function mountBusfahrer(root: HTMLElement, playerSetups: PlayerSetup[] = 
   gameRoot = root
   if (options.initialState) applyGameState(options.initialState)
   else resetGame()
-  root.addEventListener('click', handleClick); renderGame()
-  return () => { window.clearTimeout(advanceTimer); root.removeEventListener('click', handleClick); gameRoot = null; onlineOptions = {} }
+  root.addEventListener('click', handleClick)
+  window.addEventListener('resize', alignPyramidOfferChoices)
+  renderGame()
+  return () => { window.clearTimeout(advanceTimer); root.removeEventListener('click', handleClick); window.removeEventListener('resize', alignPyramidOfferChoices); gameRoot = null; onlineOptions = {} }
 }
