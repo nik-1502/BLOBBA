@@ -13,6 +13,7 @@
     radial-gradient(circle at 52% 45%, rgba(168, 39, 255, .48) 0%, rgba(94, 15, 153, .28) 34%, transparent 62%),
     radial-gradient(ellipse 115% 85% at 50% 114%, rgba(159, 0, 255, .32) 0%, rgba(26, 2, 54, .36) 42%, transparent 68%),
     linear-gradient(118deg, #120012 0%, #3b003b 24%, #22083e 48%, #071754 74%, #001435 100%);
+  background-color: #120012;
   background-attachment: fixed;
 }
 
