@@ -588,6 +588,7 @@ body {
 html.is-standalone {
   position: relative;
   isolation: isolate;
+  min-height: calc(100dvh + env(safe-area-inset-bottom, 0px));
 }
 
 .app-neon-background {
@@ -595,7 +596,7 @@ html.is-standalone {
 }
 
 html.is-standalone .app-neon-background {
-  position: fixed;
+  position: absolute;
   top: -10dvh;
   right: -10vw;
   bottom: -10dvh;
@@ -603,9 +604,9 @@ html.is-standalone .app-neon-background {
   z-index: 0;
   display: block;
   width: 120vw;
-  height: 120dvh;
+  height: calc(120dvh + env(safe-area-inset-bottom, 0px));
   min-width: 120vw;
-  min-height: 120dvh;
+  min-height: calc(120dvh + env(safe-area-inset-bottom, 0px));
   pointer-events: none;
   background: var(--app-background);
   background-attachment: fixed;
@@ -614,12 +615,14 @@ html.is-standalone .app-neon-background {
 html.is-standalone body {
   position: relative;
   z-index: 1;
+  min-height: calc(100dvh + env(safe-area-inset-bottom, 0px));
   background: transparent;
 }
 
 html.is-standalone #app {
   position: relative;
   z-index: 1;
+  min-height: calc(100dvh + env(safe-area-inset-bottom, 0px));
   background: transparent;
 }
 
