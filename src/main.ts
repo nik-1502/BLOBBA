@@ -64,14 +64,12 @@ type OnlineModal = 'create' | 'join' | 'invite' | null
 type AuthModal = 'login' | 'register' | null
 type SharedGameState = BusfahrerGameState | KlatschenGameState
 type OnlineGroupState = { joined: boolean; isHost: boolean; inviteCode: string; groupId: string | null; gameKey: GameKey; status: 'lobby' | 'playing' | 'finished'; players: SetupPlayer[]; members: OnlineMember[]; gameState: SharedGameState | null }
-type VisualViewportLike = { height: number; offsetTop: number; addEventListener: Window['addEventListener']; removeEventListener: Window['removeEventListener'] }
 
 let unmountCurrentPage: (() => void) | undefined
 let profileStore = loadProfileStore()
 let players = suggestedPlayers()
 let gamePlayerSnapshot: SetupPlayer[] = []
 let profileEditorContext: ProfileEditorContext = { mode: 'primary' }
-let pendingPlayerNameFocusId: string | undefined
 let avatarEditorPlayerId: string | null = null
 let setupMode: SetupMode = 'offline'
 let activeGame: GameKey = 'busfahrer'
@@ -83,9 +81,6 @@ let authNotice = ''
 let onlineUnsubscribe: (() => void) | undefined
 let pendingInviteCode: string | null = null
 let onlineNotice = ''
-let keyboardViewportCleanup: (() => void) | undefined
-let pendingSetupScrollTop: number | undefined
-let pendingLastPlayerTop: number | undefined
 
 function updateIPadStandaloneMode() {
   const navigatorWithStandalone = navigator as Navigator & { standalone?: boolean }
@@ -336,8 +331,6 @@ function gameRoute(suffix = '') {
 function renderPage() {
   unmountCurrentPage?.()
   unmountCurrentPage = undefined
-  keyboardViewportCleanup?.()
-  keyboardViewportCleanup = undefined
 
   const route = window.location.hash
   const [routeBase, routeQuery = ''] = route.split('?')
@@ -572,14 +565,11 @@ function updateCategoryMenu() {
 }
 
 function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER', eyebrow = 'GetDrunk präsentiert', pageClass = '', centerTitle = true) {
-  keyboardViewportCleanup?.()
-  keyboardViewportCleanup = undefined
-  app.innerHTML = `<main class="busfahrer-page ${pageClass}"><div class="busfahrer-shell setup-shell">
+  app.innerHTML = `<main class="busfahrer-page setup-page ${pageClass}"><div class="busfahrer-shell setup-shell">
     <header class="busfahrer-header"><button class="back-button bus-back" type="button" data-setup-back>← Zurück</button>${centerTitle ? '<span></span>' : `<div><p>${eyebrow}</p><h1>${title}</h1></div>`}<span></span></header>
     <section class="setup-stage"><div class="setup-stack">${centerTitle ? `<h1 class="setup-title">${title}</h1>` : ''}${content}</div></section>
   </div></main>`
   app.querySelector<HTMLButtonElement>('[data-setup-back]')!.addEventListener('click', () => { window.location.hash = backTarget })
-  keyboardViewportCleanup = bindKeyboardViewportPadding()
 }
 
 function renderModeMenu() {
@@ -633,7 +623,7 @@ function renderOnlineSetupContent() {
 }
 
 function renderPlayerTable(playerList: SetupPlayer[], options: { editable: boolean; canRemove: boolean }) {
-  return `<div class="player-table" role="list">${playerList.map((player, index) => `<div class="player-row${player.id === pendingPlayerNameFocusId ? ' is-new' : ''}" role="listitem" data-player-row="${player.id}">
+  return `<div class="player-table" role="list">${playerList.map((player, index) => `<div class="player-row" role="listitem" data-player-row="${player.id}">
     ${options.editable
       ? `<button class="player-avatar-trigger" type="button" data-edit-player-avatar="${player.id}" aria-label="Profilbild von ${escapeHtml(player.name || defaultPlayerName(index + 1))} ändern" title="Profilbild ändern">${playerAvatarMarkup(player)}</button>`
       : playerAvatarMarkup(player)}
@@ -755,34 +745,14 @@ function bindOfflineSetup() {
   }))
   app.querySelector<HTMLButtonElement>('[data-add-player]')!.addEventListener('click', () => {
     if (players.length >= MAX_PLAYERS) return
-    const stage = app.querySelector<HTMLElement>('.setup-stage')
-    const lastPlayerRow = app.querySelector<HTMLElement>('[data-player-row]:last-child')
-    pendingSetupScrollTop = stage?.scrollTop ?? 0
-    pendingLastPlayerTop = lastPlayerRow?.getBoundingClientRect().top
     const player = createLocalPlayer(players.length + 1)
     players.push(player)
-    pendingPlayerNameFocusId = player.id
     renderModeMenu()
     focusPlayerNameInput(player.id)
   })
   app.querySelector<HTMLButtonElement>('[data-start-game]')!.addEventListener('click', () => {
     startSetupGame(players, true)
   })
-  if (pendingPlayerNameFocusId) {
-    const newPlayerId = pendingPlayerNameFocusId
-    const stage = app.querySelector<HTMLElement>('.setup-stage')
-    const row = app.querySelector<HTMLElement>(`[data-player-row="${newPlayerId}"]`)
-    if (stage && pendingSetupScrollTop !== undefined) {
-      stage.scrollTop = pendingSetupScrollTop
-      if (row && pendingLastPlayerTop !== undefined) {
-        stage.scrollTop += row.getBoundingClientRect().top - pendingLastPlayerTop
-      }
-    }
-    pendingPlayerNameFocusId = undefined
-    pendingSetupScrollTop = undefined
-    pendingLastPlayerTop = undefined
-    row?.classList.add('is-new')
-  }
 }
 
 function focusPlayerNameInput(playerId: string) {
@@ -793,97 +763,6 @@ function focusPlayerNameInput(playerId: string) {
     input.select()
     input.setSelectionRange(0, input.value.length)
   })
-}
-
-function bindKeyboardViewportPadding() {
-  const viewport = window.visualViewport as VisualViewportLike | undefined
-  const page = app.querySelector<HTMLElement>('.busfahrer-page')
-  if (!viewport || !page) return undefined
-  const shell = page.querySelector<HTMLElement>('.setup-shell')
-  const stage = app.querySelector<HTMLElement>('.setup-stage')
-  const offlinePanel = app.querySelector<HTMLElement>('.offline-panel')
-  let keyboardWasOpen = false
-  let keyboardLayoutLocked = false
-  let activeKeyboardInput: HTMLInputElement | null = null
-
-  const unlockKeyboardLayout = () => {
-    if (!keyboardLayoutLocked) return
-    keyboardLayoutLocked = false
-    activeKeyboardInput = null
-    page.style.removeProperty('height')
-    page.style.removeProperty('min-height')
-    shell?.style.removeProperty('height')
-    shell?.style.removeProperty('min-height')
-    stage?.style.removeProperty('height')
-    stage?.style.removeProperty('min-height')
-    stage?.style.removeProperty('flex')
-    offlinePanel?.style.removeProperty('height')
-    offlinePanel?.style.removeProperty('max-height')
-    stage?.style.removeProperty('overflow')
-    offlinePanel?.style.removeProperty('overflow')
-  }
-
-  const lockKeyboardLayout = () => {
-    const focusedInput = document.activeElement instanceof HTMLInputElement && document.activeElement.matches('[data-player-name]')
-      ? document.activeElement
-      : null
-    if (!focusedInput) return
-    const pageHeight = page.getBoundingClientRect().height
-    const shellHeight = shell?.getBoundingClientRect().height
-    const stageHeight = stage?.getBoundingClientRect().height
-    const panelHeight = offlinePanel?.getBoundingClientRect().height
-    activeKeyboardInput = focusedInput
-    keyboardLayoutLocked = true
-    page.style.setProperty('height', `${pageHeight}px`)
-    page.style.setProperty('min-height', `${pageHeight}px`)
-    if (shell && shellHeight) {
-      shell.style.setProperty('height', `${shellHeight}px`)
-      shell.style.setProperty('min-height', `${shellHeight}px`)
-    }
-    if (stage && stageHeight) {
-      stage.style.setProperty('height', `${stageHeight}px`)
-      stage.style.setProperty('min-height', `${stageHeight}px`)
-      stage.style.setProperty('flex', `0 0 ${stageHeight}px`)
-    }
-    if (offlinePanel && panelHeight) {
-      offlinePanel.style.setProperty('height', `${panelHeight}px`)
-      offlinePanel.style.setProperty('max-height', `${panelHeight}px`)
-    }
-    stage?.style.setProperty('overflow', 'hidden')
-    offlinePanel?.style.setProperty('overflow', 'hidden')
-  }
-
-  const updatePadding = () => {
-    const keyboardHeight = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
-    const keyboardIsOpen = keyboardHeight >= 80
-    if (keyboardIsOpen && !keyboardWasOpen) {
-      page.style.setProperty('--keyboard-bottom-offset', `${Math.ceil(keyboardHeight)}px`)
-      requestAnimationFrame(() => requestAnimationFrame(lockKeyboardLayout))
-    } else if (!keyboardIsOpen && keyboardWasOpen) {
-      unlockKeyboardLayout()
-      page.style.setProperty('--keyboard-bottom-offset', '0px')
-    } else if (keyboardIsOpen && keyboardLayoutLocked && document.activeElement === activeKeyboardInput) {
-      keyboardWasOpen = keyboardIsOpen
-      return
-    }
-    keyboardWasOpen = keyboardIsOpen
-  }
-
-  const handleFocusOut = () => requestAnimationFrame(() => {
-    if (document.activeElement !== activeKeyboardInput) unlockKeyboardLayout()
-  })
-
-  updatePadding()
-  viewport.addEventListener('resize', updatePadding)
-  viewport.addEventListener('scroll', updatePadding)
-  page.addEventListener('focusout', handleFocusOut)
-  return () => {
-    viewport.removeEventListener('resize', updatePadding)
-    viewport.removeEventListener('scroll', updatePadding)
-    page.removeEventListener('focusout', handleFocusOut)
-    unlockKeyboardLayout()
-    page.style.removeProperty('--keyboard-bottom-offset')
-  }
 }
 
 function bindOnlineSetup() {
