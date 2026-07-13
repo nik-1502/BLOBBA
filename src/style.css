@@ -583,3 +583,40 @@ body {
   .game-list,
   .game-filters { width: min(100%, 340px); }
 }
+
+/* Eine einzige feste Neon-Ebene deckt in der installierten App auch die
+   untere iOS-Safe-Area ab. Die Root-Farbe bleibt nur als Lade-Fallback. */
+@media (display-mode: standalone) {
+  body {
+    position: relative;
+    isolation: isolate;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: calc(-1 * env(safe-area-inset-bottom, 0px));
+    left: 0;
+    z-index: 0;
+    width: 100%;
+    height: calc(100dvh + env(safe-area-inset-bottom, 0px));
+    min-height: calc(100dvh + env(safe-area-inset-bottom, 0px));
+    pointer-events: none;
+    background: var(--app-background);
+    background-attachment: fixed;
+  }
+
+  #app {
+    position: relative;
+    z-index: 1;
+    background: transparent;
+  }
+
+  #app > .home-page,
+  #app > .busfahrer-page,
+  #app > .busfahrer-page.profile-page {
+    background: transparent;
+  }
+}
