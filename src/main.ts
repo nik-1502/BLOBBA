@@ -572,6 +572,8 @@ function updateCategoryMenu() {
 }
 
 function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER', eyebrow = 'GetDrunk präsentiert', pageClass = '', centerTitle = true) {
+  keyboardViewportCleanup?.()
+  keyboardViewportCleanup = undefined
   app.innerHTML = `<main class="busfahrer-page ${pageClass}"><div class="busfahrer-shell setup-shell">
     <header class="busfahrer-header"><button class="back-button bus-back" type="button" data-setup-back>← Zurück</button>${centerTitle ? '<span></span>' : `<div><p>${eyebrow}</p><h1>${title}</h1></div>`}<span></span></header>
     <section class="setup-stage"><div class="setup-stack">${centerTitle ? `<h1 class="setup-title">${title}</h1>` : ''}${content}</div></section>
@@ -797,23 +799,60 @@ function bindKeyboardViewportPadding() {
   const viewport = window.visualViewport as VisualViewportLike | undefined
   const page = app.querySelector<HTMLElement>('.busfahrer-page')
   if (!viewport || !page) return undefined
+  const stage = app.querySelector<HTMLElement>('.setup-stage')
+  const offlinePanel = app.querySelector<HTMLElement>('.offline-panel')
   let keyboardWasOpen = false
+  let keyboardLayoutLocked = false
+  let activeKeyboardInput: HTMLInputElement | null = null
+
+  const unlockKeyboardLayout = () => {
+    if (!keyboardLayoutLocked) return
+    keyboardLayoutLocked = false
+    activeKeyboardInput = null
+    stage?.style.removeProperty('overflow')
+    offlinePanel?.style.removeProperty('overflow')
+  }
+
+  const lockKeyboardLayout = () => {
+    const focusedInput = document.activeElement instanceof HTMLInputElement && document.activeElement.matches('[data-player-name]')
+      ? document.activeElement
+      : null
+    if (!focusedInput) return
+    activeKeyboardInput = focusedInput
+    keyboardLayoutLocked = true
+    stage?.style.setProperty('overflow', 'hidden')
+    offlinePanel?.style.setProperty('overflow', 'hidden')
+  }
+
   const updatePadding = () => {
     const keyboardHeight = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
     const keyboardIsOpen = keyboardHeight >= 80
     if (keyboardIsOpen && !keyboardWasOpen) {
       page.style.setProperty('--keyboard-bottom-offset', `${Math.ceil(keyboardHeight)}px`)
+      requestAnimationFrame(() => requestAnimationFrame(lockKeyboardLayout))
     } else if (!keyboardIsOpen && keyboardWasOpen) {
+      unlockKeyboardLayout()
       page.style.setProperty('--keyboard-bottom-offset', '0px')
+    } else if (keyboardIsOpen && keyboardLayoutLocked && document.activeElement === activeKeyboardInput) {
+      keyboardWasOpen = keyboardIsOpen
+      return
     }
     keyboardWasOpen = keyboardIsOpen
   }
+
+  const handleFocusOut = () => requestAnimationFrame(() => {
+    if (document.activeElement !== activeKeyboardInput) unlockKeyboardLayout()
+  })
+
   updatePadding()
   viewport.addEventListener('resize', updatePadding)
   viewport.addEventListener('scroll', updatePadding)
+  page.addEventListener('focusout', handleFocusOut)
   return () => {
     viewport.removeEventListener('resize', updatePadding)
     viewport.removeEventListener('scroll', updatePadding)
+    page.removeEventListener('focusout', handleFocusOut)
+    unlockKeyboardLayout()
     page.style.removeProperty('--keyboard-bottom-offset')
   }
 }
