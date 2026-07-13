@@ -85,6 +85,7 @@ let pendingInviteCode: string | null = null
 let onlineNotice = ''
 let keyboardViewportCleanup: (() => void) | undefined
 let pendingSetupScrollTop: number | undefined
+let pendingLastPlayerTop: number | undefined
 
 function updateIPadStandaloneMode() {
   const navigatorWithStandalone = navigator as Navigator & { standalone?: boolean }
@@ -752,7 +753,10 @@ function bindOfflineSetup() {
   }))
   app.querySelector<HTMLButtonElement>('[data-add-player]')!.addEventListener('click', () => {
     if (players.length >= MAX_PLAYERS) return
-    pendingSetupScrollTop = app.querySelector<HTMLElement>('.setup-stage')?.scrollTop ?? 0
+    const stage = app.querySelector<HTMLElement>('.setup-stage')
+    const lastPlayerRow = app.querySelector<HTMLElement>('[data-player-row]:last-child')
+    pendingSetupScrollTop = stage?.scrollTop ?? 0
+    pendingLastPlayerTop = lastPlayerRow?.getBoundingClientRect().top
     const player = createLocalPlayer(players.length + 1)
     players.push(player)
     pendingPlayerNameFocusId = player.id
@@ -766,9 +770,15 @@ function bindOfflineSetup() {
     const newPlayerId = pendingPlayerNameFocusId
     const stage = app.querySelector<HTMLElement>('.setup-stage')
     const row = app.querySelector<HTMLElement>(`[data-player-row="${newPlayerId}"]`)
-    if (stage && pendingSetupScrollTop !== undefined) stage.scrollTop = pendingSetupScrollTop
+    if (stage && pendingSetupScrollTop !== undefined) {
+      stage.scrollTop = pendingSetupScrollTop
+      if (row && pendingLastPlayerTop !== undefined) {
+        stage.scrollTop += row.getBoundingClientRect().top - pendingLastPlayerTop
+      }
+    }
     pendingPlayerNameFocusId = undefined
     pendingSetupScrollTop = undefined
+    pendingLastPlayerTop = undefined
     row?.classList.add('is-new')
   }
 }
@@ -783,64 +793,18 @@ function focusPlayerNameInput(playerId: string) {
   })
 }
 
-function positionFocusedPlayerRow() {
-  const viewport = window.visualViewport
-  const input = document.activeElement instanceof HTMLInputElement && document.activeElement.matches('[data-player-name]')
-    ? document.activeElement
-    : undefined
-  const stage = app.querySelector<HTMLElement>('.setup-stage')
-  const offlineButton = app.querySelector<HTMLElement>('[data-setup-mode="offline"]')
-  const row = input?.closest<HTMLElement>('[data-player-row]')
-  if (!viewport || !input || !stage || !offlineButton || !row) return
-
-  const keyboardHeight = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
-  if (keyboardHeight < 80) return
-
-  const keyboardTop = viewport.offsetTop + viewport.height
-  const desiredGap = offlineButton.getBoundingClientRect().height
-  const delta = row.getBoundingClientRect().bottom - (keyboardTop - desiredGap)
-  if (delta > 1) stage.scrollBy({ top: delta, behavior: 'smooth' })
-}
-
 function bindKeyboardViewportPadding() {
   const viewport = window.visualViewport as VisualViewportLike | undefined
   const page = app.querySelector<HTMLElement>('.busfahrer-page')
   if (!viewport || !page) return undefined
-  const stage = app.querySelector<HTMLElement>('.setup-stage')
-  let restingScrollTop = stage?.scrollTop ?? 0
   let keyboardWasOpen = false
-  let appliedKeyboardHeight = 0
-  let positionedInput: HTMLInputElement | null = null
-  let positionScheduled = false
   const updatePadding = () => {
     const keyboardHeight = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
     const keyboardIsOpen = keyboardHeight >= 80
-    if (keyboardIsOpen) {
-      const keyboardHeightChanged = keyboardWasOpen && Math.abs(keyboardHeight - appliedKeyboardHeight) >= 60
-      if (!keyboardWasOpen || keyboardHeightChanged) {
-        if (!keyboardWasOpen && stage) restingScrollTop = stage.scrollTop
-        appliedKeyboardHeight = keyboardHeight
-        positionedInput = null
-        page.style.setProperty('--keyboard-bottom-offset', `${Math.ceil(keyboardHeight)}px`)
-      }
-
-      const activeInput = document.activeElement instanceof HTMLInputElement && document.activeElement.matches('[data-player-name]')
-        ? document.activeElement
-        : null
-      if (activeInput && activeInput !== positionedInput && !positionScheduled) {
-        positionScheduled = true
-        requestAnimationFrame(() => {
-          positionFocusedPlayerRow()
-          positionedInput = activeInput
-          positionScheduled = false
-        })
-      }
-    } else {
+    if (keyboardIsOpen && !keyboardWasOpen) {
+      page.style.setProperty('--keyboard-bottom-offset', `${Math.ceil(keyboardHeight)}px`)
+    } else if (!keyboardIsOpen && keyboardWasOpen) {
       page.style.setProperty('--keyboard-bottom-offset', '0px')
-      appliedKeyboardHeight = 0
-      positionedInput = null
-      positionScheduled = false
-      if (keyboardWasOpen && stage) stage.scrollTo({ top: restingScrollTop, behavior: 'smooth' })
     }
     keyboardWasOpen = keyboardIsOpen
   }
