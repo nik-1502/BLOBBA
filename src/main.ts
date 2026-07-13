@@ -799,6 +799,7 @@ function bindKeyboardViewportPadding() {
   const viewport = window.visualViewport as VisualViewportLike | undefined
   const page = app.querySelector<HTMLElement>('.busfahrer-page')
   if (!viewport || !page) return undefined
+  const shell = page.querySelector<HTMLElement>('.setup-shell')
   const stage = app.querySelector<HTMLElement>('.setup-stage')
   const offlinePanel = app.querySelector<HTMLElement>('.offline-panel')
   let keyboardWasOpen = false
@@ -809,6 +810,15 @@ function bindKeyboardViewportPadding() {
     if (!keyboardLayoutLocked) return
     keyboardLayoutLocked = false
     activeKeyboardInput = null
+    page.style.removeProperty('height')
+    page.style.removeProperty('min-height')
+    shell?.style.removeProperty('height')
+    shell?.style.removeProperty('min-height')
+    stage?.style.removeProperty('height')
+    stage?.style.removeProperty('min-height')
+    stage?.style.removeProperty('flex')
+    offlinePanel?.style.removeProperty('height')
+    offlinePanel?.style.removeProperty('max-height')
     stage?.style.removeProperty('overflow')
     offlinePanel?.style.removeProperty('overflow')
   }
@@ -818,8 +828,27 @@ function bindKeyboardViewportPadding() {
       ? document.activeElement
       : null
     if (!focusedInput) return
+    const pageHeight = page.getBoundingClientRect().height
+    const shellHeight = shell?.getBoundingClientRect().height
+    const stageHeight = stage?.getBoundingClientRect().height
+    const panelHeight = offlinePanel?.getBoundingClientRect().height
     activeKeyboardInput = focusedInput
     keyboardLayoutLocked = true
+    page.style.setProperty('height', `${pageHeight}px`)
+    page.style.setProperty('min-height', `${pageHeight}px`)
+    if (shell && shellHeight) {
+      shell.style.setProperty('height', `${shellHeight}px`)
+      shell.style.setProperty('min-height', `${shellHeight}px`)
+    }
+    if (stage && stageHeight) {
+      stage.style.setProperty('height', `${stageHeight}px`)
+      stage.style.setProperty('min-height', `${stageHeight}px`)
+      stage.style.setProperty('flex', `0 0 ${stageHeight}px`)
+    }
+    if (offlinePanel && panelHeight) {
+      offlinePanel.style.setProperty('height', `${panelHeight}px`)
+      offlinePanel.style.setProperty('max-height', `${panelHeight}px`)
+    }
     stage?.style.setProperty('overflow', 'hidden')
     offlinePanel?.style.setProperty('overflow', 'hidden')
   }
