@@ -71,6 +71,7 @@ let players = suggestedPlayers()
 let gamePlayerSnapshot: SetupPlayer[] = []
 let profileEditorContext: ProfileEditorContext = { mode: 'primary' }
 let avatarEditorPlayerId: string | null = null
+let editingPlayerId: string | null = null
 let setupMode: SetupMode = 'offline'
 let activeGame: GameKey = 'busfahrer'
 let activeOnlineModal: OnlineModal = null
@@ -628,7 +629,9 @@ function renderPlayerTable(playerList: SetupPlayer[], options: { editable: boole
       ? `<button class="player-avatar-trigger" type="button" data-edit-player-avatar="${player.id}" aria-label="Profilbild von ${escapeHtml(player.name || defaultPlayerName(index + 1))} ändern" title="Profilbild ändern">${playerAvatarMarkup(player)}</button>`
       : playerAvatarMarkup(player)}
     ${options.editable
-      ? playerNameInputMarkup(player, index)
+      ? editingPlayerId === player.id
+        ? playerNameInputMarkup(player, index)
+        : `<button class="player-entry-trigger" type="button" data-edit-player-entry="${player.id}" aria-label="Spieler ${index + 1} bearbeiten">${escapeHtml(player.name || defaultPlayerName(index + 1))}</button>`
       : `<strong class="player-name">${escapeHtml(player.name || defaultPlayerName(index + 1))}</strong>`}
     ${options.canRemove ? removePlayerButtonMarkup(player.id, playerList.length === 1) : ''}
   </div>`).join('')}</div>`
@@ -698,6 +701,13 @@ function bindSetupModeSwitch() {
 }
 
 function bindOfflineSetup() {
+  app.querySelectorAll<HTMLButtonElement>('[data-edit-player-entry]').forEach((button) => button.addEventListener('click', () => {
+    const playerId = button.dataset.editPlayerEntry
+    if (!playerId) return
+    editingPlayerId = playerId
+    renderModeMenu()
+    focusPlayerNameInput(playerId)
+  }))
   app.querySelectorAll<HTMLInputElement>('[data-player-entry]').forEach((input) => {
     const selectName = () => requestAnimationFrame(() => {
       input.select()
@@ -723,10 +733,12 @@ function bindOfflineSetup() {
   })
   app.querySelectorAll<HTMLButtonElement>('[data-remove-player]').forEach((button) => button.addEventListener('click', () => {
     if (players.length === 1) return
+    if (editingPlayerId === button.dataset.removePlayer) editingPlayerId = null
     players = players.filter((player) => player.id !== button.dataset.removePlayer)
     renderModeMenu()
   }))
   app.querySelectorAll<HTMLButtonElement>('[data-edit-player-avatar]').forEach((button) => button.addEventListener('click', () => {
+    editingPlayerId = null
     avatarEditorPlayerId = button.dataset.editPlayerAvatar ?? null
     renderModeMenu()
   }))
@@ -747,6 +759,7 @@ function bindOfflineSetup() {
     if (players.length >= MAX_PLAYERS) return
     const player = createLocalPlayer(players.length + 1)
     players.push(player)
+    editingPlayerId = player.id
     renderModeMenu()
     focusPlayerNameInput(player.id)
   })
