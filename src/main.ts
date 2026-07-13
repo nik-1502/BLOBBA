@@ -23,7 +23,6 @@ import {
   type OnlineMember,
 } from './online.ts'
 import type { Session } from '@supabase/supabase-js'
-import userButtonImage from './assets/benutzer/4c0c56d3-a7e5-4be3-81b0-fda84fd67cbf.png'
 import busfahrerGameImage from './assets/spielbild icons/91c70169-1e14-42c9-b836-6eacc3325af0.png'
 import blobbenGameImage from './assets/spielbild icons/55490394-9fa1-45b5-adba-ce8260738e69.png'
 import heroLogo from './assets/überschrift/ebe5baf7-8dca-44a0-a5bc-ba2f48425dc2.png'
@@ -85,10 +84,6 @@ let onlineUnsubscribe: (() => void) | undefined
 let pendingInviteCode: string | null = null
 let onlineNotice = ''
 let keyboardViewportCleanup: (() => void) | undefined
-
-const viewportMeta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]')!
-const zoomableViewport = 'width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=5.0'
-const resetViewport = 'width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0'
 
 function updateIPadStandaloneMode() {
   const navigatorWithStandalone = navigator as Navigator & { standalone?: boolean }
@@ -319,18 +314,6 @@ async function loadAuthState() {
   renderPage()
 }
 
-function resetPinchZoom() {
-  if (!window.visualViewport || window.visualViewport.scale <= 1.01) return
-  viewportMeta.content = resetViewport
-  window.setTimeout(() => { viewportMeta.content = zoomableViewport }, 80)
-}
-
-document.addEventListener('dblclick', (event) => event.preventDefault(), { passive: false })
-document.addEventListener('touchend', (event) => {
-  if (event.touches.length === 0) resetPinchZoom()
-}, { passive: true })
-document.addEventListener('gestureend', resetPinchZoom, { passive: true })
-
 function escapeHtml(value: string) {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;')
 }
@@ -411,13 +394,17 @@ function renderPage() {
     profileEditorContext = { mode: 'primary', profileId: profileStore.activeProfileId }
     return renderProfileEditor()
   }
+  if (routeBase === '#settings') return renderSettingsPlaceholder()
   renderHome()
 }
 
 function renderHome() {
   app.innerHTML = `<main class="home-page">
-    <button class="home-profile-button" type="button" aria-label="Profil öffnen" title="Profil öffnen">
-      <img src="${userButtonImage}" alt="">
+    <button class="home-profile-button home-settings-button" type="button" aria-label="Einstellungen öffnen" title="Einstellungen öffnen">
+      <svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.09A1.7 1.7 0 0 0 9 19.36a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.63 15a1.7 1.7 0 0 0-1.55-1H3v-4h.09A1.7 1.7 0 0 0 4.64 9a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.63a1.7 1.7 0 0 0 1-1.55V3h4v.09A1.7 1.7 0 0 0 15 4.64a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.37 9a1.7 1.7 0 0 0 1.55 1H21v4h-.09A1.7 1.7 0 0 0 19.4 15Z"></path></svg>
+    </button>
+    <button class="home-profile-button home-user-button" type="button" aria-label="Profil öffnen" title="Profil öffnen">
+      <svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 21a7.5 7.5 0 0 1 15 0"></path></svg>
     </button>
     <header class="hero-header">
       <img class="hero-logo" src="${heroLogo}" alt="BLOBBA">
@@ -461,7 +448,8 @@ function renderHome() {
       </section>
     </div>
   </main>`
-  app.querySelector<HTMLButtonElement>('.home-profile-button')!.addEventListener('click', () => { window.location.hash = 'profile' })
+  app.querySelector<HTMLButtonElement>('.home-user-button')!.addEventListener('click', () => { window.location.hash = 'profile' })
+  app.querySelector<HTMLButtonElement>('.home-settings-button')!.addEventListener('click', () => { window.location.hash = 'settings' })
   app.querySelector<HTMLButtonElement>('.blobfahrer-home-button')!.addEventListener('click', () => {
     activeGame = 'busfahrer'
     setupMode = 'offline'
@@ -510,6 +498,10 @@ function renderHome() {
   })
   updateCategoryMenu()
   updateHomeFilters()
+}
+
+function renderSettingsPlaceholder() {
+  setupShell('<div class="setup-panel"><h2>Einstellungen</h2><p class="setup-copy">Die Einstellungen werden später ergänzt.</p></div>', '', 'EINSTELLUNGEN')
 }
 
 function normalizeGameSearch(value: string) {

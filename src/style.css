@@ -14,6 +14,12 @@
   touch-action: manipulation;
 }
 
+input,
+textarea,
+select {
+  font-size: max(16px, 1rem) !important;
+}
+
 html,
 body,
 #app {
@@ -91,24 +97,34 @@ body {
 }
 
 .home-profile-button {
-  position: absolute;
+  position: relative;
   z-index: 2;
-  top: calc(clamp(18px, 4vh, 38px) + 16px);
-  right: clamp(16px, 4vw, 40px);
   display: grid;
   width: clamp(50px, 7vw, 58px);
   height: clamp(50px, 7vw, 58px);
-  padding: 0;
-  overflow: visible;
+  padding: 11px;
+  overflow: hidden;
   isolation: isolate;
   place-items: center;
-  border: 0;
-  border-radius: 0;
+  border: 1px solid rgba(255, 255, 255, .34);
+  border-radius: 18px;
   color: #fff;
-  background: transparent;
-  box-shadow: none;
+  background: rgba(17, 10, 51, .72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), 0 0 8px rgba(255, 255, 255, .1), 0 7px 18px rgba(0, 0, 0, .2);
   cursor: pointer;
-  transition: transform 160ms ease;
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, filter 160ms ease;
+}
+
+.home-settings-button {
+  position: absolute;
+  top: clamp(16px, 4vw, 40px);
+  left: clamp(16px, 4vw, 40px);
+}
+
+.home-user-button {
+  position: absolute;
+  top: clamp(16px, 4vw, 40px);
+  right: clamp(16px, 4vw, 40px);
 }
 
 .home-profile-button img {
@@ -118,6 +134,17 @@ body {
   transform: none;
 }
 
+.home-header-icon {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: rgba(255, 255, 255, .94);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 5px rgba(255, 63, 159, .28));
+}
+
 .home-profile-button .default-profile-icon {
   width: 70%;
   height: 70%;
@@ -125,7 +152,10 @@ body {
 
 .home-profile-button:hover,
 .home-profile-button:active {
-  transform: translateY(-2px) scale(1.03);
+  border-color: rgba(255, 255, 255, .58);
+  background: rgba(29, 17, 75, .82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 0 10px rgba(255, 255, 255, .13), 0 8px 20px rgba(0, 0, 0, .24);
+  filter: brightness(1.08);
 }
 
 .home-profile-button:focus-visible {
@@ -136,9 +166,11 @@ body {
   position: relative;
   z-index: 1;
   display: grid;
-  width: min(860px, 92vw);
+  width: min(780px, 100%);
   margin-top: 0;
-  place-items: center;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
   transform: translateY(16px);
 }
 
@@ -151,7 +183,11 @@ body {
     calc(100vw - clamp(16px, 4vw, 40px) - clamp(16px, 4vw, 40px) - clamp(50px, 7vw, 58px) - clamp(50px, 7vw, 58px) - 24px)
   );
   height: auto;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  justify-self: center;
   object-fit: contain;
+  transform: translateX(-6px);
 }
 
 .busfahrer-button {
@@ -191,7 +227,7 @@ body {
 }
 
 .klatschen-home-button {
-  background: #01073f;
+  background: #02115d;
 }
 
 .busfahrer-button-label {
@@ -518,7 +554,7 @@ body {
 @media (max-width: 620px) {
   .home-page { padding-top: 76px; background-attachment: scroll; }
   .busfahrer-page.profile-page { background-attachment: scroll; }
-  .hero-header { width: min(100%, 430px); top: calc(clamp(18px, 4vh, 38px) - 76px); }
+  .hero-header { width: min(100%, 340px); top: calc(clamp(18px, 4vh, 38px) - 76px); }
   .game-list,
   .game-filters { width: min(100%, 340px); }
 }
