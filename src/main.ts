@@ -404,7 +404,7 @@ function renderHome() {
       <svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.09A1.7 1.7 0 0 0 9 19.36a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.63 15a1.7 1.7 0 0 0-1.55-1H3v-4h.09A1.7 1.7 0 0 0 4.64 9a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.63a1.7 1.7 0 0 0 1-1.55V3h4v.09A1.7 1.7 0 0 0 15 4.64a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.37 9a1.7 1.7 0 0 0 1.55 1H21v4h-.09A1.7 1.7 0 0 0 19.4 15Z"></path></svg>
     </button>
     <button class="home-profile-button home-user-button" type="button" aria-label="Profil öffnen" title="Profil öffnen">
-      <svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 21a7.5 7.5 0 0 1 15 0"></path></svg>
+      <svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 21a7.5 7.5 0 0 1 15 0c-2.2 1.25-12.8 1.25-15 0Z"></path></svg>
     </button>
     <header class="hero-header">
       <img class="hero-logo" src="${heroLogo}" alt="BLOBBA">
@@ -704,15 +704,30 @@ function bindSetupModeSwitch() {
 
 function bindOfflineSetup() {
   app.querySelectorAll<HTMLInputElement>('[data-player-name]').forEach((input) => {
-    const selectName = () => requestAnimationFrame(() => input.select())
+    const selectName = () => requestAnimationFrame(() => {
+      input.select()
+      input.setSelectionRange(0, input.value.length)
+    })
     input.addEventListener('focus', selectName)
-    input.addEventListener('click', () => input.select())
-    input.addEventListener('pointerdown', (event) => {
-      if (document.activeElement === input) return
-      event.preventDefault()
-      input.focus()
+    input.addEventListener('click', (event) => {
+      event.stopPropagation()
       selectName()
     })
+    input.addEventListener('pointerdown', (event) => {
+      event.stopPropagation()
+      input.setPointerCapture?.(event.pointerId)
+      if (document.activeElement !== input) {
+        event.preventDefault()
+        input.focus({ preventScroll: true })
+      }
+      selectName()
+    })
+    input.addEventListener('pointerup', (event) => event.stopPropagation())
+    input.addEventListener('touchstart', (event) => event.stopPropagation(), { passive: true })
+    input.addEventListener('touchend', (event) => {
+      event.stopPropagation()
+      selectName()
+    }, { passive: true })
     input.addEventListener('input', () => {
       players = players.map((player) => player.id === input.dataset.playerName ? { ...player, name: input.value } : player)
     })
