@@ -615,7 +615,7 @@ function renderOnlineSetupContent() {
       <button class="game-button" type="button" data-online-join>Gruppe beitreten</button>
     </div>` : ''}
     ${groupMatches ? `<div class="online-group-tools"><button class="game-button setup-invite-button" type="button" data-online-invite>Einladen</button></div>
-      <div class="online-invite-link"><input class="player-name-input" value="${escapeHtml(link)}" readonly aria-label="Einladungslink"><button class="game-button" type="button" data-copy-invite>Kopieren</button><a class="game-button online-share-button" href="https://wa.me/?text=${encodeURIComponent(link)}" target="_blank" rel="noreferrer">WhatsApp</a></div>
+      <div class="online-invite-link"><input class="setup-text-input" value="${escapeHtml(link)}" readonly aria-label="Einladungslink"><button class="game-button" type="button" data-copy-invite>Kopieren</button><a class="game-button online-share-button" href="https://wa.me/?text=${encodeURIComponent(link)}" target="_blank" rel="noreferrer">WhatsApp</a></div>
       ${renderPlayerTable(onlineGroup.players, { editable: false, canRemove: onlineGroup.isHost })}` : '<p class="setup-copy">Erstelle eine Gruppe oder tritt einer bestehenden Gruppe bei.</p>'}
     ${onlineNotice ? `<p class="setup-copy">${escapeHtml(onlineNotice)}</p>` : ''}
     <button class="game-button primary setup-start-game" type="button" data-start-game ${canStart ? '' : 'disabled'}>${groupMatches && onlineGroup.isHost ? 'Spiel starten' : 'Warten auf Host'}</button>
@@ -660,7 +660,7 @@ function renderPlayerAvatarEditor() {
 
 function playerNameInputMarkup(player: SetupPlayer, index: number) {
   const safeId = player.id.replace(/[^a-zA-Z0-9_-]/g, '-')
-  return `<input class="player-name-input" id="player-name-${safeId}" name="blobba-player-name" type="text" data-player-name="${player.id}" value="${escapeHtml(player.name || defaultPlayerName(index + 1))}" maxlength="24" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" inputmode="text" aria-label="Name von Spieler ${index + 1}">`
+  return `<input class="player-entry-input" id="blobba-entry-${safeId}" name="blobba-entry" type="text" data-player-entry="${player.id}" value="${escapeHtml(player.name || defaultPlayerName(index + 1))}" maxlength="24" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" inputmode="text" aria-label="Spieler ${index + 1} bearbeiten">`
 }
 
 function renderOnlineModal() {
@@ -698,7 +698,7 @@ function bindSetupModeSwitch() {
 }
 
 function bindOfflineSetup() {
-  app.querySelectorAll<HTMLInputElement>('[data-player-name]').forEach((input) => {
+  app.querySelectorAll<HTMLInputElement>('[data-player-entry]').forEach((input) => {
     const selectName = () => requestAnimationFrame(() => {
       input.select()
       input.setSelectionRange(0, input.value.length)
@@ -718,7 +718,7 @@ function bindOfflineSetup() {
       selectName()
     }, { passive: true })
     input.addEventListener('input', () => {
-      players = players.map((player) => player.id === input.dataset.playerName ? { ...player, name: input.value } : player)
+      players = players.map((player) => player.id === input.dataset.playerEntry ? { ...player, name: input.value } : player)
     })
   })
   app.querySelectorAll<HTMLButtonElement>('[data-remove-player]').forEach((button) => button.addEventListener('click', () => {
@@ -756,7 +756,7 @@ function bindOfflineSetup() {
 }
 
 function focusPlayerNameInput(playerId: string) {
-  const input = app.querySelector<HTMLInputElement>(`[data-player-name="${playerId}"]`)
+  const input = app.querySelector<HTMLInputElement>(`[data-player-entry="${playerId}"]`)
   if (!input) return
   input.focus({ preventScroll: true })
   requestAnimationFrame(() => {
