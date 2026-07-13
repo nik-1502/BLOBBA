@@ -602,7 +602,8 @@ body {
 html.is-standalone {
   position: relative;
   isolation: isolate;
-  min-height: calc(100dvh + env(safe-area-inset-bottom, 0px));
+  height: 100dvh;
+  min-height: 100dvh;
   overflow: hidden;
 }
 
@@ -631,7 +632,8 @@ html.is-standalone body {
   position: relative;
   z-index: auto;
   isolation: isolate;
-  min-height: calc(100dvh + env(safe-area-inset-bottom, 0px));
+  height: 100dvh;
+  min-height: 100dvh;
   overflow: hidden;
   background: transparent;
 }
@@ -640,7 +642,8 @@ html.is-standalone #app {
   position: relative;
   z-index: 1;
   isolation: isolate;
-  min-height: calc(100dvh + env(safe-area-inset-bottom, 0px));
+  height: 100dvh;
+  min-height: 100dvh;
   overflow: hidden;
   background: transparent;
 }
@@ -667,8 +670,8 @@ html.is-standalone #app > .busfahrer-page.profile-page::after {
 }
 
 html.is-standalone #app > .setup-page {
-  height: calc(100dvh + env(safe-area-inset-bottom, 0px));
-  min-height: calc(100dvh + env(safe-area-inset-bottom, 0px));
+  height: 100dvh;
+  min-height: 100dvh;
 }
 
 html.is-standalone #app > .setup-page > .setup-shell {
