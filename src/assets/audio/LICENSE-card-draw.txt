@@ -1,0 +1,9 @@
+card-draw.mp3
+
+Source recordings: "Playing Card Sounds" (cut.wav and contact2.wav)
+Author: Brian MacIntosh (BMacZero)
+Source: https://opengameart.org/content/playing-card-sounds
+License: CC0 / Public Domain
+
+The source recordings were trimmed, filtered, faded, volume-balanced,
+combined, and encoded as MP3 for Blobba's card-draw animation.

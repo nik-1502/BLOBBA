@@ -1,3 +1,5 @@
+import cardDrawUrl from '../assets/audio/card-draw.mp3'
+
 export type SoundName =
   | 'ui-click' | 'ui-back' | 'ui-confirm' | 'ui-delete'
   | 'game-start' | 'card-draw' | 'card-flip' | 'correct' | 'wrong'
@@ -11,6 +13,25 @@ let noiseBuffer: AudioBuffer | null = null
 let unlocked = false
 let unlockPromise: Promise<boolean> | null = null
 let mediaChannelAudio: HTMLAudioElement | null = null
+const cardDrawPool = Array.from({ length: 3 }, () => {
+  const audio = new Audio(cardDrawUrl)
+  audio.preload = 'auto'
+  audio.setAttribute('playsinline', '')
+  return audio
+})
+let cardDrawPoolIndex = 0
+
+function playCardDraw() {
+  const audio = cardDrawPool[cardDrawPoolIndex]!
+  cardDrawPoolIndex = (cardDrawPoolIndex + 1) % cardDrawPool.length
+  audio.pause()
+  audio.currentTime = 0
+  audio.muted = false
+  audio.volume = Math.min(1, readVolume() * .9)
+  void audio.play().catch((error) => {
+    if (import.meta.env.DEV) console.warn('[Audio] Kartenaufnahme konnte nicht abgespielt werden.', error)
+  })
+}
 
 function silentWavUrl() {
   const sampleRate = 8000
@@ -149,10 +170,10 @@ function renderSound(name: SoundName) {
     case 'ui-confirm': t(520, .08, .09); t(740, .12, .1, .07); break
     case 'ui-delete': n(.1, .08, 900); t(190, .13, .11, 0, 95, 'square'); break
     case 'game-start': t(260, .12, .09); t(390, .13, .1, .09); t(620, .2, .11, .18); break
-    case 'card-draw': n(.055, .09, 1800); n(.07, .11, 2400, .045); n(.09, .08, 1500, .1); t(180, .045, .035, .16, 130, 'triangle'); break
+    case 'card-draw': break
     case 'card-flip': n(.045, .07, 2600); t(620, .045, .045, .03, 390, 'triangle'); break
-    case 'correct': t(587, .11, .09); t(784, .13, .11, .075); t(1175, .2, .1, .165); break
-    case 'wrong': t(330, .16, .09, 0, 250); t(245, .2, .09, .13, 190); break
+    case 'correct': t(523, .2, .065); t(1046, .16, .018, .008, 1046, 'triangle'); t(784, .25, .08, .1); t(1568, .16, .018, .108, 1320, 'triangle'); break
+    case 'wrong': t(330, .24, .07, 0, 310, 'triangle'); t(247, .31, .075, .13, 220, 'sine'); t(123, .2, .018, .135, 110, 'sine'); break
     case 'success': t(440, .1, .08); t(660, .11, .1, .08); t(880, .2, .11, .17); break
     case 'player-change': t(360, .08, .07); t(540, .1, .08, .07); break
     case 'notification': t(720, .08, .08); t(920, .1, .07, .09); break
@@ -167,6 +188,11 @@ function renderSound(name: SoundName) {
 export function playSound(name: SoundName) {
   if (!readEnabled()) return
   ensureMediaChannel()
+  if (name === 'card-draw') {
+    playCardDraw()
+    if (!unlocked || context?.state !== 'running') void unlockAudio()
+    return
+  }
   // Web-Audio-Nodes may be queued while suspended. Creating them directly in
   // the originating event keeps iOS' user activation; resume releases them.
   renderSound(name)
