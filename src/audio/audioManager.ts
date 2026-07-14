@@ -42,16 +42,21 @@ export function unlockAudio() {
   if (unlockPromise) return unlockPromise
   unlockPromise = (async () => {
     try {
-    const ctx = audioContext()
-    if (ctx.state !== 'running') await ctx.resume()
-    const buffer = ctx.createBuffer(1, 1, ctx.sampleRate)
-    const source = ctx.createBufferSource()
-    source.buffer = buffer
-    source.connect(ctx.destination)
-    source.start()
-    unlocked = ctx.state === 'running'
-    return unlocked
-    } catch {
+      const ctx = audioContext()
+      // Scheduling a silent source synchronously inside the real touch/click is
+      // required by iOS Safari and standalone PWAs before resume() settles.
+      const buffer = ctx.createBuffer(1, 1, ctx.sampleRate)
+      const source = ctx.createBufferSource()
+      const gain = ctx.createGain()
+      gain.gain.value = 0
+      source.buffer = buffer
+      source.connect(gain).connect(ctx.destination)
+      source.start()
+      if (ctx.state !== 'running') await ctx.resume()
+      unlocked = ctx.state === 'running'
+      return unlocked
+    } catch (error) {
+      if (import.meta.env.DEV) console.warn('[Audio] AudioContext konnte nicht entsperrt werden.', error)
       return false
     } finally {
       unlockPromise = null
@@ -126,16 +131,20 @@ function renderSound(name: SoundName) {
 
 export function playSound(name: SoundName) {
   if (!readEnabled()) return
-  if (unlocked && context?.state === 'running') {
-    renderSound(name)
-    return
-  }
-  void unlockAudio().then((ready) => {
-    if (ready && readEnabled()) renderSound(name)
-  })
+  // Web-Audio-Nodes may be queued while suspended. Creating them directly in
+  // the originating event keeps iOS' user activation; resume releases them.
+  renderSound(name)
+  if (!unlocked || context?.state !== 'running') void unlockAudio()
 }
 
 const unlock = () => { void unlockAudio() }
 document.addEventListener('pointerdown', unlock, { once: true, passive: true, capture: true })
 document.addEventListener('touchstart', unlock, { once: true, passive: true, capture: true })
+document.addEventListener('click', unlock, { once: true, passive: true, capture: true })
 document.addEventListener('keydown', unlock, { once: true, capture: true })
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible' || !context || context.state === 'running') return
+  unlocked = false
+  void unlockAudio()
+})
