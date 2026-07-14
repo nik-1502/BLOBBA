@@ -442,6 +442,7 @@ body {
 
 .game-tile-wrap[hidden] { display: none; }
 .game-list .busfahrer-button { width: 100%; height: 100%; }
+.game-list .busfahrer-button { padding-top: clamp(62px, 8vw, 72px); }
 
 .favorite-heart-button {
   position: absolute;
@@ -505,7 +506,7 @@ body {
   .favorites-filter-button svg { width: 17px; height: 17px; }
   .category-menu { padding: 8px; gap: 6px; }
   .category-chip { min-height: 34px; padding: 6px 10px; font-size: .78rem; }
-  .game-list .busfahrer-button { min-width: 0; padding: 8px; }
+  .game-list .busfahrer-button { min-width: 0; padding: 54px 8px 8px; }
   .favorite-heart-button { top: 12px; right: 12px; width: 38px; height: 38px; padding: 8px; }
   .game-list .busfahrer-button-image,
   .klatschen-home-preview { height: clamp(105px,20dvh,155px); }
