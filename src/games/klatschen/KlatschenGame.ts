@@ -97,7 +97,10 @@ function cardBackMarkup(slot: number) {
 }
 
 function circleMarkup() {
-  return `<div class="klatschen-card-circle${dealAnimationActive ? ' is-dealing' : ''}" aria-label="Kartenkreis">${state.deck.map((_, slot) => cardBackMarkup(slot)).join('')}</div>`
+  const seam = state.remainingSlots.includes(0)
+    ? `<div class="klatschen-circle-slot klatschen-circle-seam" style="--slot-angle:0deg;--slot-layer:${state.deck.length + 2}" aria-hidden="true"><div class="klatschen-card-back"><span><i>B</i>B</span></div></div>`
+    : ''
+  return `<div class="klatschen-card-circle${dealAnimationActive ? ' is-dealing' : ''}" aria-label="Kartenkreis">${state.deck.map((_, slot) => cardBackMarkup(slot)).join('')}${seam}</div>`
 }
 
 function playerTurnMarkup() {
@@ -277,7 +280,7 @@ function nextTurn() {
 
 function startDealVisual(duration: number) {
   const circle = root?.querySelector<HTMLElement>('.klatschen-card-circle.is-dealing')
-  const cards = circle?.querySelectorAll<HTMLElement>('.klatschen-card-back')
+  const cards = circle?.querySelectorAll<HTMLElement>('.klatschen-circle-slot:not(.klatschen-circle-seam) .klatschen-card-back')
   if (!circle || !cards?.length) return
   const totalDuration = Number.isFinite(duration) && duration > 0 ? duration : .648
   const cardDuration = Math.min(.14, totalDuration / Math.max(2, cards.length / 2))
@@ -286,6 +289,11 @@ function startDealVisual(duration: number) {
     card.style.setProperty('--deal-delay', `${index * interval}s`)
     card.style.setProperty('--deal-card-duration', `${cardDuration}s`)
   })
+  const seamCard = circle.querySelector<HTMLElement>('.klatschen-circle-seam .klatschen-card-back')
+  if (seamCard) {
+    seamCard.style.setProperty('--deal-delay', '0s')
+    seamCard.style.setProperty('--deal-card-duration', `${cardDuration}s`)
+  }
   requestAnimationFrame(() => circle.classList.add('is-dealing-active'))
   window.clearTimeout(dealTimer)
   dealTimer = window.setTimeout(() => {
