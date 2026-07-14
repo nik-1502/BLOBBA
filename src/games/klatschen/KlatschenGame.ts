@@ -170,9 +170,9 @@ function playersDialogMarkup() {
       else result.set(card.title, { card, count: 1 })
       return result
     }, new Map())
-    const cards = [...cardCounts.values()].map(({ card, count }) => `<span>${card.symbol} ${escapeHtml(card.title)}${count > 1 ? ` ×${count}` : ''}</span>`)
+    const cards = [...cardCounts.values()].map(({ card, count }) => `<span class="klatschen-player-card-symbol" aria-label="${escapeHtml(card.title)}${count > 1 ? `, ${count} Karten` : ''}"><span aria-hidden="true">${card.symbol}</span>${count > 1 ? `<b aria-hidden="true">${count}</b>` : ''}</span>`)
     const partner = player.partnerPlayerId ? state.players.find((candidate) => candidate.id === player.partnerPlayerId) : undefined
-    if (partner && !player.heldCards.includes('clap-partner')) cards.push(`<span>🤝 Blobb-Partner: ${escapeHtml(partner.name)}</span>`)
+    if (partner && !player.heldCards.includes('clap-partner')) cards.push(`<span class="klatschen-player-card-symbol" aria-label="Blobb-Partner: ${escapeHtml(partner.name)}"><span aria-hidden="true">🤝</span></span>`)
     return `<div class="klatschen-player-card-row"><div class="klatschen-player-card-person">${avatarMarkup(player)}<strong>${escapeHtml(player.name)}</strong></div><div class="klatschen-player-card-list">${cards.length ? cards.join('') : '<span class="is-empty">Keine Karte</span>'}</div></div>`
   }).join('')
   return `<div class="klatschen-players-backdrop" data-klatschen-action="close-players"><article class="klatschen-players-dialog" role="dialog" aria-modal="true" aria-labelledby="klatschen-players-title"><h2 id="klatschen-players-title">Mitspieler</h2><div class="klatschen-player-card-table">${rows}</div><button type="button" class="game-button primary" data-klatschen-action="close-players">Schließen</button></article></div>`

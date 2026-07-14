@@ -65,8 +65,9 @@
 .klatschen-player-card-person { display: flex; min-width: 0; align-items: center; gap: 8px; }
 .klatschen-player-card-person .klatschen-avatar { width: 34px; height: 34px; flex: 0 0 34px; }
 .klatschen-player-card-person strong { overflow: hidden; color: #dda15e; text-overflow: ellipsis; white-space: nowrap; }
-.klatschen-player-card-list { display: flex; min-width: 0; flex-direction: column; gap: 4px; font-size: .85rem; font-weight: 800; }
-.klatschen-player-card-list span { overflow-wrap: anywhere; }
+.klatschen-player-card-list { display: flex; min-width: 0; align-items: center; flex-direction: row; flex-wrap: wrap; gap: 8px; font-size: .85rem; font-weight: 800; }
+.klatschen-player-card-symbol { position: relative; display: inline-grid; min-width: 34px; height: 34px; place-items: center; font-size: 1.55rem; line-height: 1; }
+.klatschen-player-card-symbol b { position: absolute; top: -3px; right: -3px; display: grid; min-width: 16px; height: 16px; padding-inline: 3px; border: 1px solid rgba(255,255,255,.75); border-radius: 999px; box-sizing: border-box; place-items: center; color: #fff; background: #b90069; box-shadow: 0 2px 5px rgba(0,0,0,.32); font-size: .62rem; line-height: 1; }
 .klatschen-player-card-list .is-empty { color: rgba(255,255,255,.58); font-weight: 600; }
 .klatschen-players-dialog > .game-button { width: min(220px,100%); min-height: 42px; margin-inline: auto; }
 
