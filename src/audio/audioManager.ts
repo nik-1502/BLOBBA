@@ -78,6 +78,8 @@ function playBlobbenCardDraw() {
   const audio = blobbenCardDrawPool[blobbenCardDrawPoolIndex]!
   blobbenCardDrawPoolIndex = (blobbenCardDrawPoolIndex + 1) % blobbenCardDrawPool.length
   audio.muted = false
+  audio.playbackRate = 1.4
+  audio.preservesPitch = false
   audio.volume = Math.min(1, readVolume() * .9)
   void audio.play().catch((error) => {
     if (import.meta.env.DEV) console.warn('[Audio] Blobben-Kartenziehsound konnte nicht abgespielt werden.', error)
