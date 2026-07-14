@@ -92,7 +92,8 @@ function publish() {
 function cardBackMarkup(slot: number) {
   const angle = (slot / state.deck.length) * 360
   const present = state.remainingSlots.includes(slot)
-  return `<div class="klatschen-circle-slot ${present ? '' : 'is-empty'}" style="--slot-angle:${angle}deg;--slot-layer:${state.deck.length - slot}" aria-hidden="${present ? 'false' : 'true'}">${present ? `<div class="klatschen-card-back"><span><i>B</i>B</span></div>` : ''}</div>`
+  const layer = slot === 0 ? 0 : state.deck.length - slot + 1
+  return `<div class="klatschen-circle-slot ${present ? '' : 'is-empty'}" style="--slot-angle:${angle}deg;--slot-layer:${layer}" aria-hidden="${present ? 'false' : 'true'}">${present ? `<div class="klatschen-card-back"><span><i>B</i>B</span></div>` : ''}</div>`
 }
 
 function circleMarkup() {
