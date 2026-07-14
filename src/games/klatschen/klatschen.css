@@ -36,6 +36,8 @@
 .klatschen-avatar .default-profile-icon { width: 68%; height: 68%; }
 .klatschen-draw-button,
 .klatschen-next-button { position: absolute; right: 0; left: 0; width: min(240px, calc(100% - 20px)); margin-inline: auto; pointer-events: auto; }
+.klatschen-players-button { position: absolute; right: 0; left: 0; z-index: 8; width: min(132px, calc(100% - 24px)); min-height: 32px; height: 32px; padding: 4px 16px; margin-inline: auto; border: 1px solid rgba(255,255,255,.34); border-radius: 14px; color: #fff; background: #352c48; box-shadow: none; font-size: .78rem; font-weight: 800; }
+.klatschen-players-button:hover { border-color: rgba(255,255,255,.58); }
 .klatschen-held-cards { position: absolute; top: 8px; right: 10px; left: 10px; z-index: 4; padding: 4px; box-sizing: border-box; overflow: auto; scrollbar-gutter: stable; }
 .klatschen-held-cards > div { display: grid; width: min(600px,calc(100% - 8px)); padding: 4px; margin-inline: auto; box-sizing: border-box; grid-template-columns: repeat(4,minmax(0,1fr)); align-content: flex-start; gap: 8px; }
 .klatschen-held-preview { position: relative; display: grid; width: 100%; min-width: 0; min-height: 48px; padding: 3px 18px 3px 7px; border: 2px solid rgba(221,161,94,.7); border-radius: 11px; box-sizing: border-box; place-items: center; gap: 0; color: #000; background: linear-gradient(145deg,#fff,#efe9f6); box-shadow: 0 3px 8px rgba(0,0,0,.2), inset 0 0 0 1px rgba(255,255,255,.7); font: inherit; cursor: pointer; }
@@ -54,6 +56,19 @@
 .klatschen-held-dialog > div { display: grid; width: 100%; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
 .klatschen-held-dialog > div .game-button { display: flex; width: 100%; min-width: 0; height: clamp(38px,7dvh,50px); min-height: clamp(38px,7dvh,50px); padding: 12px 18px; grid-column: auto; align-items: center; justify-content: center; }
 .klatschen-held-dialog .klatschen-cancel-remove { background: #b92e4b; }
+.klatschen-players-backdrop { position: absolute; inset: 0; z-index: 21; display: grid; padding: 12px; place-items: center; background: rgba(4,2,10,.72); backdrop-filter: blur(5px); }
+.klatschen-players-dialog { display: flex; width: min(560px,100%); max-height: 100%; padding: clamp(16px,4vw,28px); border: 2px solid rgba(255,255,255,.25); border-radius: 22px; box-sizing: border-box; flex-direction: column; gap: 14px; color: #fff; background: linear-gradient(145deg,#49346c,#251d33); box-shadow: 0 24px 70px rgba(0,0,0,.55); overflow: hidden; }
+.klatschen-players-dialog h2 { margin: 0; text-align: center; }
+.klatschen-player-card-table { border: 1px solid rgba(255,255,255,.14); border-radius: 14px; overflow: auto; }
+.klatschen-player-card-row { display: grid; padding: 10px 12px; grid-template-columns: minmax(110px,.8fr) minmax(130px,1.2fr); align-items: center; gap: 12px; border-top: 1px solid rgba(255,255,255,.12); }
+.klatschen-player-card-row:first-child { border-top: 0; }
+.klatschen-player-card-person { display: flex; min-width: 0; align-items: center; gap: 8px; }
+.klatschen-player-card-person .klatschen-avatar { width: 34px; height: 34px; flex: 0 0 34px; }
+.klatschen-player-card-person strong { overflow: hidden; color: #dda15e; text-overflow: ellipsis; white-space: nowrap; }
+.klatschen-player-card-list { display: flex; min-width: 0; flex-direction: column; gap: 4px; font-size: .85rem; font-weight: 800; }
+.klatschen-player-card-list span { overflow-wrap: anywhere; }
+.klatschen-player-card-list .is-empty { color: rgba(255,255,255,.58); font-weight: 600; }
+.klatschen-players-dialog > .game-button { width: min(220px,100%); min-height: 42px; margin-inline: auto; }
 
 .klatschen-drawn-card { --draw-radius: clamp(118px, min(29vw, 27dvh), 255px); position: absolute; left: 50%; top: 43%; z-index: 5; width: clamp(190px, min(50vw, 31dvh), 310px); aspect-ratio: 5 / 7; perspective: 1200px; transform: translate(-50%,-50%); }
 .klatschen-drawn-inner { position: relative; width: 100%; height: 100%; animation: klatschen-draw 900ms cubic-bezier(.2,.72,.2,1) both; -webkit-transform-style: preserve-3d; transform-style: preserve-3d; }

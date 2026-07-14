@@ -36,6 +36,7 @@ let revealTimer: number | undefined
 let dealTimer: number | undefined
 let dealAnimationActive = false
 let lastSoundedDrawIndex = 0
+let playersDialogOpen = false
 const dealAudio = new Audio(blobbenCardDealUrl)
 dealAudio.preload = 'auto'
 dealAudio.setAttribute('playsinline', '')
@@ -154,12 +155,35 @@ function heldCardDialogMarkup() {
   return `<div class="klatschen-held-dialog-backdrop" data-klatschen-action="cancel-held"><article class="klatschen-held-dialog" role="dialog" aria-modal="true" aria-labelledby="held-card-title"><h2 id="held-card-title">Blobb-Karte entfernen?</h2><span>${card.symbol}</span><h3>${escapeHtml(card.title)}</h3><p>${escapeHtml(card.description)}</p><div><button class="game-button klatschen-cancel-remove" data-klatschen-action="cancel-held">Nein</button><button class="game-button primary" data-klatschen-action="remove-held">Ja</button></div></article></div>`
 }
 
+function playersButtonMarkup() {
+  return `<button type="button" class="game-button klatschen-players-button" data-klatschen-action="players">Mitspieler</button>`
+}
+
+function playersDialogMarkup() {
+  if (!playersDialogOpen) return ''
+  const rows = state.players.map((player) => {
+    const cardCounts = player.heldCards.reduce<Map<string, { card: KlatschenCard; count: number }>>((result, cardId) => {
+      const card = klatschenCardMap.get(cardId)
+      if (!card) return result
+      const existing = result.get(card.title)
+      if (existing) existing.count += 1
+      else result.set(card.title, { card, count: 1 })
+      return result
+    }, new Map())
+    const cards = [...cardCounts.values()].map(({ card, count }) => `<span>${card.symbol} ${escapeHtml(card.title)}${count > 1 ? ` ×${count}` : ''}</span>`)
+    const partner = player.partnerPlayerId ? state.players.find((candidate) => candidate.id === player.partnerPlayerId) : undefined
+    if (partner && !player.heldCards.includes('clap-partner')) cards.push(`<span>🤝 Blobb-Partner: ${escapeHtml(partner.name)}</span>`)
+    return `<div class="klatschen-player-card-row"><div class="klatschen-player-card-person">${avatarMarkup(player)}<strong>${escapeHtml(player.name)}</strong></div><div class="klatschen-player-card-list">${cards.length ? cards.join('') : '<span class="is-empty">Keine Karte</span>'}</div></div>`
+  }).join('')
+  return `<div class="klatschen-players-backdrop" data-klatschen-action="close-players"><article class="klatschen-players-dialog" role="dialog" aria-modal="true" aria-labelledby="klatschen-players-title"><h2 id="klatschen-players-title">Mitspieler</h2><div class="klatschen-player-card-table">${rows}</div><button type="button" class="game-button primary" data-klatschen-action="close-players">Schließen</button></article></div>`
+}
+
 function renderRule() {
   return `<section class="klatschen-rule-screen"><p class="eyebrow">Grundregel</p><h2>Ab jetzt darf das Wort „trinken“ nicht mehr gesagt werden.</h2><p>Stattdessen muss immer <strong>„blobben“</strong> gesagt werden.</p><button class="game-button primary" data-klatschen-action="start">Verstanden – Spiel starten</button></section>`
 }
 
 function renderTurn() {
-  return `<section class="klatschen-play-screen">${circleMarkup()}<div class="klatschen-center-controls">${playerTurnMarkup()}<button class="game-button primary klatschen-draw-button" data-klatschen-action="draw" ${dealAnimationActive ? 'disabled' : ''}>Nächste Karte ziehen</button></div>${heldCardsMarkup()}${heldCardDialogMarkup()}</section>`
+  return `<section class="klatschen-play-screen">${circleMarkup()}<div class="klatschen-center-controls">${playerTurnMarkup()}<button class="game-button primary klatschen-draw-button" data-klatschen-action="draw" ${dealAnimationActive ? 'disabled' : ''}>Nächste Karte ziehen</button></div>${playersButtonMarkup()}${heldCardsMarkup()}${heldCardDialogMarkup()}${playersDialogMarkup()}</section>`
 }
 
 function drawnCardMarkup(card: KlatschenCard) {
@@ -181,7 +205,7 @@ function renderCard() {
   const card = state.currentCardId ? klatschenCardMap.get(state.currentCardId) : undefined
   if (!card) return renderTurn()
   const actionPending = needsTarget(card) && state.selectedTargetIndex === null
-  return `<section class="klatschen-card-screen">${circleMarkup()}${drawnCardMarkup(card)}${heldCardsMarkup()}${heldCardDialogMarkup()}<div class="klatschen-card-actions">${targetMarkup(card)}</div><button class="game-button primary klatschen-next-button" data-klatschen-action="next" ${actionPending ? 'disabled' : ''}>Weiter</button></section>`
+  return `<section class="klatschen-card-screen">${circleMarkup()}${drawnCardMarkup(card)}${playersButtonMarkup()}${heldCardsMarkup()}${heldCardDialogMarkup()}${playersDialogMarkup()}<div class="klatschen-card-actions">${targetMarkup(card)}</div><button class="game-button primary klatschen-next-button" data-klatschen-action="next" ${actionPending ? 'disabled' : ''}>Weiter</button></section>`
 }
 
 function renderFinished() {
@@ -339,6 +363,10 @@ function startGameWithDeal() {
 
 function handleClick(event: Event) {
   const target = event.target as HTMLElement
+  if (target.classList.contains('klatschen-players-backdrop')) {
+    playersDialogOpen = false
+    render(); return
+  }
   if (target.classList.contains('klatschen-held-dialog-backdrop')) {
     state.openedHeldCardId = null
     state.openedHeldCardOwnerId = null
@@ -356,6 +384,8 @@ function handleClick(event: Event) {
   }
   if (button.dataset.klatschenTarget !== undefined) return selectTarget(Number(button.dataset.klatschenTarget))
   const action = button.dataset.klatschenAction
+  if (action === 'players') { playSound('ui-click'); playersDialogOpen = true; render(); return }
+  if (action === 'close-players') { playSound('ui-back'); playersDialogOpen = false; render(); return }
   if (action === 'start') startGameWithDeal()
   if (action === 'draw') drawCard()
   if (action === 'next') nextTurn()
@@ -382,7 +412,10 @@ function handleClick(event: Event) {
 
 function applyControls() {
   if (!options.localPlayerId || canControl()) return
-  root?.querySelectorAll<HTMLButtonElement>('[data-klatschen-action], [data-klatschen-target], [data-klatschen-held]').forEach((button) => { button.disabled = true })
+  root?.querySelectorAll<HTMLButtonElement>('[data-klatschen-action], [data-klatschen-target], [data-klatschen-held]').forEach((button) => {
+    if (button.dataset.klatschenAction === 'players' || button.dataset.klatschenAction === 'close-players') return
+    button.disabled = true
+  })
 }
 
 function positionDrawAnimation() {
@@ -476,10 +509,24 @@ function positionNextButton() {
   positionHeldCards(screen, circleTop)
 }
 
+function positionPlayersButton() {
+  const screen = root?.querySelector<HTMLElement>('.klatschen-play-screen, .klatschen-card-screen')
+  const primaryButton = screen?.querySelector<HTMLElement>('.klatschen-draw-button, .klatschen-next-button')
+  const playersButton = screen?.querySelector<HTMLElement>('.klatschen-players-button')
+  if (!screen || !primaryButton || !playersButton) return
+  const screenRect = screen.getBoundingClientRect()
+  const primaryRect = primaryButton.getBoundingClientRect()
+  const buttonHeight = playersButton.getBoundingClientRect().height
+  const freeTop = primaryRect.bottom - screenRect.top
+  const freeHeight = screenRect.height - freeTop
+  playersButton.style.top = `${freeTop + Math.max(0, (freeHeight - buttonHeight) / 2)}px`
+}
+
 function updateMiddleLayout() {
   fitCurrentPlayerDisplay()
   positionMiddleLayout()
   positionNextButton()
+  positionPlayersButton()
 }
 
 function removeRevealedCardBack() {
@@ -530,6 +577,7 @@ export function applyKlatschenState(nextState: KlatschenGameState) {
 
 export function mountKlatschen(target: HTMLElement, players: KlatschenPlayerSetup[], gameOptions: KlatschenOptions = {}) {
   root = target
+  playersDialogOpen = false
   options = gameOptions
   dealAnimationActive = false
   state = gameOptions.initialState ? structuredClone(gameOptions.initialState) : createState(players)
