@@ -200,7 +200,7 @@ export function applyBusfahrerState(state: BusfahrerGameState) {
   renderGame()
   suppressStatePublish = false
   if (!previous) return
-  const drewCard = state.hand.length > previous.hand.length || state.busCards.length > previous.busCards.length || state.pyramidProgress > previous.pyramidProgress
+  const drewCard = state.pyramidProgress > previous.pyramidProgress
   if (drewCard) {
     playSound('card-draw')
     window.setTimeout(() => playSound('card-flip'), 120)
@@ -288,9 +288,7 @@ function answerQuestion(choice: string) {
   if (answered) return
   const card = drawCard()
   const correct = evaluateQuestion(choice, card)
-  playSound('card-draw')
-  window.setTimeout(() => playSound('card-flip'), 120)
-  window.setTimeout(() => playSound(correct ? 'correct' : 'wrong'), 220)
+  playSound(correct ? 'correct' : 'wrong')
   hand.push(card)
   questionResults.push(correct)
   if (!correct) currentPlayer().drinks += 1
@@ -461,8 +459,6 @@ function answerBus(choice: string) {
   if (busFailed || busLost || busFeedbackPending) return
   const previousCard = busCards[busProgress - 1]
   const card = drawBusCard()
-  playSound('card-draw')
-  window.setTimeout(() => playSound('card-flip'), 120)
   busCards.push(card)
   const correct = busProgress === 0
     ? choice === card.color
@@ -472,13 +468,13 @@ function answerBus(choice: string) {
         ? card.numericValue < previousCard!.numericValue
         : card.numericValue === previousCard!.numericValue
   if (!correct) {
-    window.setTimeout(() => playSound('wrong'), 220)
+    playSound('wrong')
     feedback = { text: 'Falsch – trinken.', kind: 'error' }
     currentPlayer().drinks += 1
     busFailed = true; renderGame(); return
   }
   busProgress += 1
-  window.setTimeout(() => playSound(busProgress === busRoundLength ? 'success' : 'correct'), 220)
+  playSound('correct')
   feedback = busProgress === busRoundLength
     ? { text: 'Geschafft! Du bist aus dem Bus.', kind: 'success' }
     : { text: 'Richtig!', kind: 'success' }
