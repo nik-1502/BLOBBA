@@ -217,8 +217,6 @@ function applyAutomaticDrinks(card: KlatschenCard) {
   if (card.id === 'left') addDrinks((state.currentPlayerIndex - 1 + state.players.length) % state.players.length, amount)
   if (card.id === 'right') addDrinks((state.currentPlayerIndex + 1) % state.players.length, amount)
   if (card.exclusiveRole) {
-    const existingOwner = state.players.find((player) => player.heldCards.some((cardId) => klatschenCardMap.get(cardId)?.exclusiveRole === card.exclusiveRole))
-    if (existingOwner?.id === currentPlayer().id) return
     state.players.forEach((player) => {
       player.heldCards = player.heldCards.filter((cardId) => klatschenCardMap.get(cardId)?.exclusiveRole !== card.exclusiveRole)
     })
