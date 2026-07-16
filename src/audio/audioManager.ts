@@ -12,7 +12,7 @@ const ENABLED_KEY = 'blobbaSoundEffectsEnabled'
 const VOLUME_KEY = 'blobbaSoundEffectsVolume'
 let context: AudioContext | null = null
 let noiseBuffer: AudioBuffer | null = null
-let reverbBuffer: AudioBuffer | null = null
+let correctSoundBufferPromise: Promise<AudioBuffer> | null = null
 let unlocked = false
 let unlockPromise: Promise<boolean> | null = null
 let mediaChannelAudio: HTMLAudioElement | null = null
@@ -61,6 +61,71 @@ function playCorrectSound() {
   void audio.play().catch((error) => {
     if (import.meta.env.DEV) console.warn('[Audio] Richtig-Sound konnte nicht abgespielt werden.', error)
   })
+}
+
+function loadCorrectSoundBuffer(ctx: AudioContext) {
+  correctSoundBufferPromise ??= fetch(correctSoundUrl)
+    .then((response) => {
+      if (!response.ok) throw new Error(`Audio konnte nicht geladen werden (${response.status}).`)
+      return response.arrayBuffer()
+    })
+    .then((data) => ctx.decodeAudioData(data))
+  return correctSoundBufferPromise
+}
+
+function quietBoundary(buffer: AudioBuffer, fromRatio: number, toRatio: number) {
+  const from = Math.floor(buffer.length * fromRatio)
+  const to = Math.floor(buffer.length * toRatio)
+  const windowSize = Math.max(64, Math.floor(buffer.sampleRate * .012))
+  let quietestPosition = from
+  let quietestEnergy = Number.POSITIVE_INFINITY
+  for (let position = from; position < to; position += windowSize) {
+    let energy = 0
+    let samples = 0
+    const windowEnd = Math.min(to, position + windowSize)
+    for (let channel = 0; channel < buffer.numberOfChannels; channel += 1) {
+      const data = buffer.getChannelData(channel)
+      for (let index = position; index < windowEnd; index += 1) {
+        energy += data[index]! * data[index]!
+        samples += 1
+      }
+    }
+    const averageEnergy = samples ? energy / samples : 0
+    if (averageEnergy < quietestEnergy) {
+      quietestEnergy = averageEnergy
+      quietestPosition = position + Math.floor((windowEnd - position) / 2)
+    }
+  }
+  return quietestPosition / buffer.sampleRate
+}
+
+async function playWrongSound() {
+  try {
+    const ctx = audioContext()
+    const buffer = await loadCorrectSoundBuffer(ctx)
+    const firstBoundary = quietBoundary(buffer, .2, .46)
+    const secondBoundary = quietBoundary(buffer, .54, .8)
+    const segments = [[0, firstBoundary], [firstBoundary, secondBoundary], [secondBoundary, buffer.duration]] as const
+    let start = ctx.currentTime
+    const volume = readVolume()
+    for (const [offset, end] of [...segments].reverse()) {
+      const duration = end - offset
+      const source = ctx.createBufferSource()
+      const gain = ctx.createGain()
+      source.buffer = buffer
+      gain.gain.setValueAtTime(0.0001, start)
+      gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume), start + Math.min(.008, duration / 4))
+      gain.gain.setValueAtTime(Math.max(0.0001, volume), start + Math.max(.009, duration - .012))
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration)
+      source.connect(gain).connect(ctx.destination)
+      activeWebAudioSources.add(source)
+      source.addEventListener('ended', () => activeWebAudioSources.delete(source), { once: true })
+      source.start(start, offset, duration)
+      start += duration
+    }
+  } catch (error) {
+    if (import.meta.env.DEV) console.warn('[Audio] Falsch-Sound konnte nicht abgespielt werden.', error)
+  }
 }
 
 function playBlobbenCardDraw() {
@@ -192,42 +257,6 @@ function tone(ctx: AudioContext, frequency: number, duration: number, gainValue:
   oscillator.stop(start + duration + 0.02)
 }
 
-function hallTone(ctx: AudioContext, frequency: number, duration: number, gainValue: number, delay = 0, endFrequency = frequency) {
-  if (!reverbBuffer || reverbBuffer.sampleRate !== ctx.sampleRate) {
-    const reverbDuration = 0.72
-    reverbBuffer = ctx.createBuffer(2, Math.ceil(ctx.sampleRate * reverbDuration), ctx.sampleRate)
-    for (let channel = 0; channel < reverbBuffer.numberOfChannels; channel += 1) {
-      const impulse = reverbBuffer.getChannelData(channel)
-      for (let index = 0; index < impulse.length; index += 1) {
-        const decay = Math.pow(1 - (index / impulse.length), 2.7)
-        impulse[index] = ((Math.random() * 2) - 1) * decay
-      }
-    }
-  }
-  const start = ctx.currentTime + delay
-  const oscillator = ctx.createOscillator()
-  const envelope = ctx.createGain()
-  const dry = ctx.createGain()
-  const wet = ctx.createGain()
-  const convolver = ctx.createConvolver()
-  oscillator.type = 'triangle'
-  oscillator.frequency.setValueAtTime(frequency, start)
-  oscillator.frequency.exponentialRampToValueAtTime(Math.max(20, endFrequency), start + duration)
-  envelope.gain.setValueAtTime(0.0001, start)
-  envelope.gain.exponentialRampToValueAtTime(Math.max(0.0001, gainValue), start + 0.012)
-  envelope.gain.exponentialRampToValueAtTime(0.0001, start + duration)
-  dry.gain.value = 0.78
-  wet.gain.value = 0.28
-  convolver.buffer = reverbBuffer
-  oscillator.connect(envelope)
-  envelope.connect(dry).connect(ctx.destination)
-  envelope.connect(convolver).connect(wet).connect(ctx.destination)
-  activeWebAudioSources.add(oscillator)
-  oscillator.addEventListener('ended', () => activeWebAudioSources.delete(oscillator), { once: true })
-  oscillator.start(start)
-  oscillator.stop(start + duration + 0.02)
-}
-
 function noise(ctx: AudioContext, duration: number, gainValue: number, frequency: number, delay = 0) {
   if (!noiseBuffer || noiseBuffer.sampleRate !== ctx.sampleRate) {
     noiseBuffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate)
@@ -256,7 +285,6 @@ function renderSound(name: SoundName) {
   const ctx = audioContext()
   const volume = readVolume()
   const t = (frequency: number, duration: number, gain: number, delay = 0, end = frequency, type: OscillatorType = 'sine') => tone(ctx, frequency, duration, gain * volume, delay, end, type)
-  const h = (frequency: number, duration: number, gain: number, delay = 0, end = frequency) => hallTone(ctx, frequency, duration, gain * volume, delay, end)
   const n = (duration: number, gain: number, frequency: number, delay = 0) => noise(ctx, duration, gain * volume, frequency, delay)
 
   switch (name) {
@@ -269,7 +297,7 @@ function renderSound(name: SoundName) {
     case 'blobben-card-draw': break
     case 'card-flip': n(.045, .07, 2600); t(620, .045, .045, .03, 390, 'triangle'); break
     case 'correct': break
-    case 'wrong': h(520, .18, .32, 0, 470); h(380, .18, .32, .23, 340); h(245, .26, .32, .46, 210); break
+    case 'wrong': break
     case 'success': t(440, .1, .08); t(660, .11, .1, .08); t(880, .2, .11, .17); break
     case 'player-change': t(360, .08, .07); t(540, .1, .08, .07); break
     case 'notification': t(720, .08, .08); t(920, .1, .07, .09); break
@@ -296,6 +324,11 @@ export function playSound(name: SoundName) {
   }
   if (name === 'correct') {
     playCorrectSound()
+    if (!unlocked || context?.state !== 'running') void unlockAudio()
+    return
+  }
+  if (name === 'wrong') {
+    void playWrongSound()
     if (!unlocked || context?.state !== 'running') void unlockAudio()
     return
   }
