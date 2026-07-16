@@ -76,8 +76,8 @@ function playWrongSound() {
   audio.pause()
   audio.currentTime = 0
   audio.muted = false
-  audio.playbackRate = 0.276
-  audio.preservesPitch = false
+  audio.playbackRate = 1.15
+  audio.preservesPitch = true
   audio.volume = Math.min(1, readVolume())
   void audio.play().catch((error) => {
     if (import.meta.env.DEV) console.warn('[Audio] Falsch-Sound konnte nicht abgespielt werden.', error)
