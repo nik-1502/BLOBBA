@@ -133,7 +133,7 @@ function heldCardsMarkup() {
       return result
     }, [])
     stacks.forEach(({ card, count }) => {
-      cards.push(`<button type="button" class="klatschen-held-preview" data-klatschen-held="${escapeHtml(card.id)}" data-klatschen-owner="${escapeHtml(player.id)}">${count > 1 ? `<b class="klatschen-held-count" aria-label="${count} Karten">${count}</b>` : ''}<span>${card.symbol}</span><strong>${escapeHtml(heldCardLabel(card))}</strong></button>`)
+      cards.push(`<button type="button" class="klatschen-held-preview" data-klatschen-held="${escapeHtml(card.id)}" data-klatschen-owner="${escapeHtml(player.id)}" aria-label="${escapeHtml(heldCardLabel(card))}${count > 1 ? `, ${count} Karten` : ''}">${count > 1 ? `<b class="klatschen-held-count" aria-hidden="true">${count}</b>` : ''}<span aria-hidden="true">${card.symbol}</span></button>`)
     })
   })
   const renderedPairs = new Set<string>()
@@ -143,7 +143,7 @@ function heldCardsMarkup() {
     const pairKey = [player.id, partner.id].sort().join('|')
     if (renderedPairs.has(pairKey)) return
     renderedPairs.add(pairKey)
-    cards.push(`<button type="button" class="klatschen-held-preview" data-klatschen-held="partner-status" data-klatschen-owner="${escapeHtml(player.id)}" aria-label="Blobb-Partner: ${escapeHtml(partner.name)}"><span>🤝</span><strong>${escapeHtml(partner.name)}</strong></button>`)
+    cards.push(`<button type="button" class="klatschen-held-preview" data-klatschen-held="partner-status" data-klatschen-owner="${escapeHtml(player.id)}" aria-label="Blobb-Partner: ${escapeHtml(partner.name)}"><span aria-hidden="true">🤝</span></button>`)
   })
   if (!cards.length) return ''
   return `<section class="klatschen-held-cards" aria-label="Aktive Blobb-Karten und Zustände"><div>${cards.join('')}</div></section>`
