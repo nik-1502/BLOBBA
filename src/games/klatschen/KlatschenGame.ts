@@ -197,15 +197,17 @@ function needsTarget(card: KlatschenCard) {
 
 function targetMarkup(card: KlatschenCard) {
   if (!needsTarget(card)) return ''
-  if (state.selectedTargetIndex !== -1) {
-    return '<button class="game-button primary klatschen-partner-select-button" data-klatschen-action="choose-partner">Partner wählen</button>'
-  }
-  return `<div class="klatschen-partner-picker"><p>Wer soll dein Blobb-Partner sein?</p><div class="klatschen-targets" aria-label="Partner auswählen">${state.players.map((player, index) => `<button class="game-button klatschen-target" data-klatschen-target="${index}" ${index === state.currentPlayerIndex ? 'disabled' : ''}>${avatarMarkup(player)}<span>${escapeHtml(player.name)}</span></button>`).join('')}</div></div>`
+  return '<button class="game-button primary klatschen-partner-select-button" data-klatschen-action="choose-partner">Partner wählen</button>'
+}
+
+function renderPartnerTargetScreen() {
+  return `<section class="klatschen-partner-target-screen"><p class="eyebrow">Blobb-Partner</p><h2>Wer soll dein Blobb-Partner sein?</h2><div class="klatschen-partner-player-list" aria-label="Partner auswählen">${state.players.map((player, index) => `<button class="game-button" data-klatschen-target="${index}" ${index === state.currentPlayerIndex ? 'disabled' : ''}>${avatarMarkup(player)}<span>${escapeHtml(player.name)}</span></button>`).join('')}</div></section>`
 }
 
 function renderCard() {
   const card = state.currentCardId ? klatschenCardMap.get(state.currentCardId) : undefined
   if (!card) return renderTurn()
+  if (card.id === 'clap-partner' && state.selectedTargetIndex === -1) return renderPartnerTargetScreen()
   const nextButton = needsTarget(card) ? '' : '<button class="game-button primary klatschen-next-button" data-klatschen-action="next">Weiter</button>'
   return `<section class="klatschen-card-screen">${circleMarkup()}${drawnCardMarkup(card)}${playersButtonMarkup()}${heldCardsMarkup()}${heldCardDialogMarkup()}${playersDialogMarkup()}<div class="klatschen-card-actions">${targetMarkup(card)}</div>${nextButton}</section>`
 }

@@ -83,8 +83,13 @@
 .klatschen-amount { color: #b92e4b; font-size: clamp(1.12rem, 3vw, 1.5rem); }
 .klatschen-card-actions { position: absolute; left: 0; right: 0; bottom: clamp(8px, 1.6vh, 16px); z-index: 7; display: grid; width: auto; padding-inline: 10px; gap: 8px; animation: klatschen-actions-in .35s 750ms both; }
 .klatschen-partner-select-button { width: min(240px,100%); margin-inline: auto; }
-.klatschen-partner-picker { display: grid; width: min(620px,100%); margin-inline: auto; gap: 5px; }
-.klatschen-partner-picker > p { margin: 0; color: #fff; font-size: clamp(.8rem,2vw,.95rem); font-weight: 850; text-align: center; }
+.klatschen-partner-target-screen { display: flex; width: min(760px,100%); height: 100%; min-height: 0; padding: clamp(16px,3dvh,30px); margin: auto; border: 1px solid rgba(255,255,255,.1); border-radius: 24px; box-sizing: border-box; flex-direction: column; align-items: center; justify-content: flex-start; color: #f8f5ff; background: rgba(31,25,44,.9); box-shadow: 0 24px 70px rgba(0,0,0,.28); text-align: center; overflow: auto; }
+.klatschen-partner-target-screen > .eyebrow { margin: 0 0 5px; }
+.klatschen-partner-target-screen h2 { margin: 0 0 clamp(18px,4dvh,32px); color: #fff; font-size: clamp(1.35rem,4vw,2rem); }
+.klatschen-partner-player-list { display: grid; width: min(440px,100%); gap: 10px; }
+.klatschen-partner-player-list .game-button { display: flex; width: 100%; min-height: 50px; align-items: center; justify-content: flex-start; gap: 12px; text-align: left; }
+.klatschen-partner-player-list .klatschen-avatar { width: 34px; height: 34px; flex: 0 0 34px; }
+.klatschen-partner-player-list span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .klatschen-targets { display: flex; width: min(620px,100%); max-height: clamp(86px, 13vh, 112px); margin-inline: auto; padding: 4px; gap: 7px; overflow-x: auto; }
 .klatschen-target { display: flex; min-width: 145px; min-height: 48px; padding: 7px 10px; align-items: center; justify-content: flex-start; gap: 8px; }
 .klatschen-target.is-selected { outline: 3px solid #dda15e; background: #584170; }
