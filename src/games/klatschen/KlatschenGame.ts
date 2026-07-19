@@ -152,8 +152,17 @@ function effectIconMarkup(cardId: string) {
   return `<img class="klatschen-effect-icon" src="${effectIcons[name]}" alt="" aria-hidden="true" draggable="false">`
 }
 
+function effectCardPriority(cardId: string) {
+  if (cardId.startsWith('nose-clapper')) return 0
+  if (cardId.startsWith('thumb-clapper')) return 1
+  if (cardId.startsWith('double-clap')) return 2
+  if (cardId === 'clap-partner' || cardId === 'partner-status') return 3
+  if (cardId.startsWith('question-rule')) return 4
+  return 5
+}
+
 function heldCardsMarkup() {
-  const cards: string[] = []
+  const cards: Array<{ priority: number; markup: string }> = []
   const visiblePlayers = [currentPlayer()]
   visiblePlayers.forEach((player) => {
     const stacks = player.heldCards.reduce<Array<{ card: KlatschenCard; count: number }>>((result, cardId) => {
@@ -165,7 +174,7 @@ function heldCardsMarkup() {
       return result
     }, [])
     stacks.forEach(({ card, count }) => {
-      cards.push(`<button type="button" class="klatschen-held-preview" data-klatschen-held="${escapeHtml(card.id)}" data-klatschen-owner="${escapeHtml(player.id)}" aria-label="${escapeHtml(heldCardLabel(card))}${count > 1 ? `, ${count} Karten` : ''}">${count > 1 ? `<b class="klatschen-held-count" aria-hidden="true">${count}</b>` : ''}${effectIconMarkup(card.id)}</button>`)
+      cards.push({ priority: effectCardPriority(card.id), markup: `<button type="button" class="klatschen-held-preview" data-klatschen-held="${escapeHtml(card.id)}" data-klatschen-owner="${escapeHtml(player.id)}" aria-label="${escapeHtml(heldCardLabel(card))}${count > 1 ? `, ${count} Karten` : ''}">${count > 1 ? `<b class="klatschen-held-count" aria-hidden="true">${count}</b>` : ''}${effectIconMarkup(card.id)}</button>` })
     })
   })
   const renderedPairs = new Set<string>()
@@ -176,10 +185,11 @@ function heldCardsMarkup() {
     if (renderedPairs.has(groupKey)) return
     renderedPairs.add(groupKey)
     const partnerNames = partners.map((partner) => partner.name).join(', ')
-    cards.push(`<button type="button" class="klatschen-held-preview" data-klatschen-held="partner-status" data-klatschen-owner="${escapeHtml(player.id)}" aria-label="Blobb-Partner: ${escapeHtml(partnerNames)}"><b class="klatschen-held-count" aria-hidden="true">${partners.length}</b>${effectIconMarkup('clap-partner')}</button>`)
+    cards.push({ priority: effectCardPriority('partner-status'), markup: `<button type="button" class="klatschen-held-preview" data-klatschen-held="partner-status" data-klatschen-owner="${escapeHtml(player.id)}" aria-label="Blobb-Partner: ${escapeHtml(partnerNames)}"><b class="klatschen-held-count" aria-hidden="true">${partners.length}</b>${effectIconMarkup('clap-partner')}</button>` })
   })
   if (!cards.length) return ''
-  return `<section class="klatschen-held-cards" aria-label="Aktive Blobb-Karten und Zustände"><div>${cards.join('')}</div></section>`
+  cards.sort((a, b) => a.priority - b.priority)
+  return `<section class="klatschen-held-cards" aria-label="Aktive Blobb-Karten und Zustände"><div>${cards.map((card) => card.markup).join('')}</div></section>`
 }
 
 function heldCardDialogMarkup() {
