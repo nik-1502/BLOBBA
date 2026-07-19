@@ -5,7 +5,7 @@ import { klatschenCardMap, klatschenCards, type KlatschenCard } from './klatsche
 import blobbenCardDealUrl from '../../assets/audio/blobben-card-deal.mp3'
 
 export type KlatschenPlayerSetup = { id?: string; name: string; avatar: string; avatarColor: string }
-export type KlatschenPlayer = KlatschenPlayerSetup & { id: string; drinks: number; heldCards: string[]; partnerPlayerId: string | null }
+export type KlatschenPlayer = KlatschenPlayerSetup & { id: string; drinks: number; heldCards: string[]; partnerIds: string[] }
 export type KlatschenPhase = 'rule' | 'turn' | 'card' | 'finished'
 
 export type KlatschenGameState = {
@@ -56,7 +56,7 @@ function escapeHtml(value: string) {
 }
 
 function createState(setups: KlatschenPlayerSetup[]): KlatschenGameState {
-  const players = setups.map((player, index) => ({ ...player, id: player.id ?? `${index}-${player.name}`, drinks: 0, heldCards: [], partnerPlayerId: null }))
+  const players = setups.map((player, index) => ({ ...player, id: player.id ?? `${index}-${player.name}`, drinks: 0, heldCards: [], partnerIds: [] }))
   const partnerCardCount = Math.floor(players.length / 2)
   const deck = klatschenCards.filter((card) => card.id !== 'clap-partner').map((card) => card.id)
   deck.push(...Array.from({ length: partnerCardCount }, () => 'clap-partner'))
@@ -138,18 +138,26 @@ function heldCardsMarkup() {
   })
   const renderedPairs = new Set<string>()
   visiblePlayers.forEach((player) => {
-    const partner = player.partnerPlayerId ? state.players.find((item) => item.id === player.partnerPlayerId) : undefined
-    if (!partner) return
-    const pairKey = [player.id, partner.id].sort().join('|')
-    if (renderedPairs.has(pairKey)) return
-    renderedPairs.add(pairKey)
-    cards.push(`<button type="button" class="klatschen-held-preview" data-klatschen-held="partner-status" data-klatschen-owner="${escapeHtml(player.id)}" aria-label="Blobb-Partner: ${escapeHtml(partner.name)}"><span aria-hidden="true">🤝</span></button>`)
+    const partners = player.partnerIds.map((id) => state.players.find((item) => item.id === id)).filter((item): item is KlatschenPlayer => Boolean(item))
+    if (!partners.length) return
+    const groupKey = [player.id, ...partners.map((partner) => partner.id)].sort().join('|')
+    if (renderedPairs.has(groupKey)) return
+    renderedPairs.add(groupKey)
+    const partnerNames = partners.map((partner) => partner.name).join(', ')
+    cards.push(`<button type="button" class="klatschen-held-preview" data-klatschen-held="partner-status" data-klatschen-owner="${escapeHtml(player.id)}" aria-label="Blobb-Partner: ${escapeHtml(partnerNames)}"><b class="klatschen-held-count" aria-hidden="true">${partners.length}</b><span aria-hidden="true">🤝</span></button>`)
   })
   if (!cards.length) return ''
   return `<section class="klatschen-held-cards" aria-label="Aktive Blobb-Karten und Zustände"><div>${cards.join('')}</div></section>`
 }
 
 function heldCardDialogMarkup() {
+  if (state.openedHeldCardId === 'partner-status') {
+    const owner = state.players.find((player) => player.id === state.openedHeldCardOwnerId)
+    const partners = owner?.partnerIds.map((id) => state.players.find((player) => player.id === id)).filter((player): player is KlatschenPlayer => Boolean(player)) ?? []
+    if (!owner || !partners.length) return ''
+    const heading = partners.length === 1 ? 'Diese Person ist dein Blobb-Partner:' : 'Diese Personen sind deine Blobb-Partner:'
+    return `<div class="klatschen-held-dialog-backdrop" data-klatschen-action="cancel-held"><article class="klatschen-held-dialog klatschen-partner-dialog" role="dialog" aria-modal="true" aria-labelledby="partner-dialog-title"><span aria-hidden="true">🤝</span><h2 id="partner-dialog-title">${heading}</h2><div class="klatschen-partner-dialog-list">${partners.map((partner) => `<div>${avatarMarkup(partner)}<strong>${escapeHtml(partner.name)}</strong></div>`).join('')}</div><button class="game-button primary" data-klatschen-action="cancel-held">Schließen</button></article></div>`
+  }
   const cardId = state.openedHeldCardId === 'partner-status' ? 'clap-partner' : state.openedHeldCardId
   const card = cardId ? klatschenCardMap.get(cardId) : undefined
   if (!card) return ''
@@ -165,15 +173,15 @@ function playersDialogMarkup() {
   const rows = state.players.map((player) => {
     const cardCounts = player.heldCards.reduce<Map<string, { card: KlatschenCard; count: number }>>((result, cardId) => {
       const card = klatschenCardMap.get(cardId)
-      if (!card) return result
+      if (!card || card.id === 'clap-partner') return result
       const existing = result.get(card.title)
       if (existing) existing.count += 1
       else result.set(card.title, { card, count: 1 })
       return result
     }, new Map())
     const cards = [...cardCounts.values()].map(({ card, count }) => `<span class="klatschen-player-card-symbol" aria-label="${escapeHtml(card.title)}${count > 1 ? `, ${count} Karten` : ''}"><span aria-hidden="true">${card.symbol}</span>${count > 1 ? `<b aria-hidden="true">${count}</b>` : ''}</span>`)
-    const partner = player.partnerPlayerId ? state.players.find((candidate) => candidate.id === player.partnerPlayerId) : undefined
-    if (partner && !player.heldCards.includes('clap-partner')) cards.push(`<span class="klatschen-player-card-symbol" aria-label="Blobb-Partner: ${escapeHtml(partner.name)}"><span aria-hidden="true">🤝</span></span>`)
+    const partners = player.partnerIds.map((id) => state.players.find((candidate) => candidate.id === id)).filter((candidate): candidate is KlatschenPlayer => Boolean(candidate))
+    if (partners.length) cards.push(`<span class="klatschen-player-card-symbol" aria-label="${partners.length} Blobb-Partner"><span aria-hidden="true">🤝</span>${partners.length > 1 ? `<b aria-hidden="true">${partners.length}</b>` : ''}</span>`)
     return `<div class="klatschen-player-card-row"><div class="klatschen-player-card-person">${avatarMarkup(player)}<strong>${escapeHtml(player.name)}</strong></div><div class="klatschen-player-card-list">${cards.length ? cards.join('') : '<span class="is-empty">Keine Karte</span>'}</div></div>`
   }).join('')
   return `<div class="klatschen-players-backdrop" data-klatschen-action="close-players"><article class="klatschen-players-dialog" role="dialog" aria-modal="true" aria-labelledby="klatschen-players-title"><h2 id="klatschen-players-title">Mitspieler</h2><div class="klatschen-player-card-table">${rows}</div><button type="button" class="game-button primary" data-klatschen-action="close-players">Schließen</button></article></div>`
@@ -225,20 +233,53 @@ function addDrinks(playerIndex: number, amount: number, includePartner = true) {
   const player = state.players[playerIndex]
   if (!player || amount <= 0) return
   player.drinks += amount
-  if (!includePartner || !player.partnerPlayerId) return
-  const partnerIndex = state.players.findIndex((item) => item.id === player.partnerPlayerId)
-  if (partnerIndex >= 0 && partnerIndex !== playerIndex) state.players[partnerIndex]!.drinks += amount
+  if (!includePartner) return
+  new Set(player.partnerIds).forEach((partnerId) => {
+    const partner = state.players.find((item) => item.id === partnerId)
+    if (partner && partner.id !== player.id) partner.drinks += amount
+  })
 }
 
-function clearPartnership(player: KlatschenPlayer) {
-  if (!player.partnerPlayerId) return
-  const partner = state.players.find((item) => item.id === player.partnerPlayerId)
-  player.heldCards = player.heldCards.filter((cardId) => cardId !== 'clap-partner')
-  if (partner?.partnerPlayerId === player.id) {
-    partner.partnerPlayerId = null
-    partner.heldCards = partner.heldCards.filter((cardId) => cardId !== 'clap-partner')
+function normalizePartnerGroups(players: KlatschenPlayer[]) {
+  const playerIds = new Set(players.map((player) => player.id))
+  const connections = new Map(players.map((player) => [player.id, new Set<string>()]))
+  players.forEach((player) => {
+    const legacyPartnerId = (player as KlatschenPlayer & { partnerPlayerId?: string | null }).partnerPlayerId
+    const storedPartnerIds = Array.isArray(player.partnerIds) ? player.partnerIds : []
+    ;[...storedPartnerIds, legacyPartnerId].filter((id): id is string => Boolean(id && playerIds.has(id) && id !== player.id)).forEach((id) => {
+      connections.get(player.id)?.add(id)
+      connections.get(id)?.add(player.id)
+    })
+    delete (player as KlatschenPlayer & { partnerPlayerId?: string | null }).partnerPlayerId
+  })
+  const visited = new Set<string>()
+  players.forEach((player) => {
+    if (visited.has(player.id)) return
+    const groupIds: string[] = []
+    const queue = [player.id]
+    while (queue.length) {
+      const id = queue.shift()!
+      if (visited.has(id)) continue
+      visited.add(id)
+      groupIds.push(id)
+      connections.get(id)?.forEach((connectedId) => { if (!visited.has(connectedId)) queue.push(connectedId) })
+    }
+    groupIds.forEach((id) => {
+      const member = players.find((candidate) => candidate.id === id)
+      if (member) member.partnerIds = groupIds.filter((partnerId) => partnerId !== id)
+    })
+  })
+}
+
+function mergePartnerGroups(owner: KlatschenPlayer, selected: KlatschenPlayer) {
+  const memberIds = new Set([owner.id, selected.id, ...owner.partnerIds, ...selected.partnerIds])
+  const members = state.players.filter((player) => memberIds.has(player.id))
+  members.forEach((member) => {
+    member.partnerIds = members.filter((partner) => partner.id !== member.id).map((partner) => partner.id)
+  })
+  if (!owner.heldCards.includes('clap-partner')) {
+    owner.heldCards.push('clap-partner')
   }
-  player.partnerPlayerId = null
 }
 
 function applyAutomaticDrinks(card: KlatschenCard) {
@@ -287,11 +328,7 @@ function selectTarget(index: number) {
   state.selectedTargetIndex = index
   const owner = currentPlayer()
   const partner = state.players[index]!
-  clearPartnership(owner)
-  clearPartnership(partner)
-  owner.partnerPlayerId = partner.id
-  partner.partnerPlayerId = owner.id
-  owner.heldCards.push('clap-partner')
+  mergePartnerGroups(owner, partner)
   nextTurn()
 }
 
@@ -383,7 +420,7 @@ function handleClick(event: Event) {
   if (!button) return
   if (button.dataset.klatschenHeld) {
     const owner = state.players.find((player) => player.id === button.dataset.klatschenOwner)
-    const isPartnerStatus = button.dataset.klatschenHeld === 'partner-status' && Boolean(owner?.partnerPlayerId)
+    const isPartnerStatus = button.dataset.klatschenHeld === 'partner-status' && Boolean(owner?.partnerIds.length)
     if (!canControl() || !owner || (!isPartnerStatus && !owner.heldCards.includes(button.dataset.klatschenHeld))) return
     state.openedHeldCardId = button.dataset.klatschenHeld
     state.openedHeldCardOwnerId = owner.id
@@ -404,13 +441,10 @@ function handleClick(event: Event) {
   if (action === 'remove-held' && canControl() && state.openedHeldCardId) {
     const owner = state.players.find((player) => player.id === state.openedHeldCardOwnerId)
     if (!owner) return
-    const cardId = state.openedHeldCardId === 'partner-status' ? 'clap-partner' : state.openedHeldCardId
-    if (cardId === 'clap-partner') {
-      clearPartnership(owner)
-    } else {
-      const heldCardIndex = owner.heldCards.indexOf(cardId)
-      if (heldCardIndex >= 0) owner.heldCards.splice(heldCardIndex, 1)
-    }
+    const cardId = state.openedHeldCardId
+    if (cardId === 'partner-status') return
+    const heldCardIndex = owner.heldCards.indexOf(cardId)
+    if (heldCardIndex >= 0) owner.heldCards.splice(heldCardIndex, 1)
     state.openedHeldCardId = null
     state.openedHeldCardOwnerId = null
     playSound('remove-card')
@@ -570,8 +604,9 @@ export function applyKlatschenState(nextState: KlatschenGameState) {
   state = structuredClone(nextState)
   state.players.forEach((player) => {
     player.heldCards ??= []
-    player.partnerPlayerId ??= null
+    player.partnerIds ??= []
   })
+  normalizePartnerGroups(state.players)
   state.openedHeldCardId ??= null
   state.openedHeldCardOwnerId ??= null
   render()
@@ -595,8 +630,9 @@ export function mountKlatschen(target: HTMLElement, players: KlatschenPlayerSetu
   state = gameOptions.initialState ? structuredClone(gameOptions.initialState) : createState(players)
   state.players.forEach((player) => {
     player.heldCards ??= []
-    player.partnerPlayerId ??= null
+    player.partnerIds ??= []
   })
+  normalizePartnerGroups(state.players)
   state.openedHeldCardId ??= null
   state.openedHeldCardOwnerId ??= null
   lastSoundedDrawIndex = state.drawIndex
