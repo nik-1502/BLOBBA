@@ -57,7 +57,7 @@ function escapeHtml(value: string) {
 
 function createState(setups: KlatschenPlayerSetup[]): KlatschenGameState {
   const players = setups.map((player, index) => ({ ...player, id: player.id ?? `${index}-${player.name}`, drinks: 0, heldCards: [], partnerIds: [] }))
-  const partnerCardCount = Math.max(0, players.length - 1)
+  const partnerCardCount = Math.max(0, players.length - 2)
   const deck = klatschenCards.filter((card) => card.id !== 'clap-partner').map((card) => card.id)
   deck.push(...Array.from({ length: partnerCardCount }, () => 'clap-partner'))
   return {
