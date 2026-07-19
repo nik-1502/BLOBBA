@@ -5,7 +5,7 @@ import blobbenCardDrawUrl from '../assets/audio/blobben-card-draw.mp3'
 
 export type SoundName =
   | 'ui-click' | 'ui-back' | 'ui-confirm' | 'ui-delete'
-  | 'game-start' | 'card-draw' | 'blobben-card-draw' | 'card-flip' | 'correct' | 'wrong'
+  | 'game-start' | 'card-draw' | 'blobben-card-draw' | 'pyramid-card-reveal' | 'card-flip' | 'correct' | 'wrong'
   | 'success' | 'player-change' | 'notification' | 'favorite-on'
   | 'favorite-off' | 'collect-card' | 'remove-card' | 'game-finish'
 
@@ -45,6 +45,13 @@ const blobbenCardDrawPool = Array.from({ length: 3 }, () => {
   return audio
 })
 let blobbenCardDrawPoolIndex = 0
+const pyramidCardRevealPool = Array.from({ length: 3 }, () => {
+  const audio = new Audio(blobbenCardDrawUrl)
+  audio.preload = 'auto'
+  audio.setAttribute('playsinline', '')
+  return audio
+})
+let pyramidCardRevealPoolIndex = 0
 
 function playCardDraw() {
   const audio = cardDrawPool[cardDrawPoolIndex]!
@@ -103,6 +110,20 @@ function playBlobbenCardDraw() {
   audio.volume = Math.min(1, readVolume() * .9)
   void audio.play().catch((error) => {
     if (import.meta.env.DEV) console.warn('[Audio] Blobben-Kartenziehsound konnte nicht abgespielt werden.', error)
+  })
+}
+
+function playPyramidCardReveal() {
+  const audio = pyramidCardRevealPool[pyramidCardRevealPoolIndex]!
+  pyramidCardRevealPoolIndex = (pyramidCardRevealPoolIndex + 1) % pyramidCardRevealPool.length
+  audio.pause()
+  audio.currentTime = 0
+  audio.muted = false
+  audio.playbackRate = 2.2
+  audio.preservesPitch = false
+  audio.volume = Math.min(1, readVolume() * .9)
+  void audio.play().catch((error) => {
+    if (import.meta.env.DEV) console.warn('[Audio] Pyramiden-Aufdecksound konnte nicht abgespielt werden.', error)
   })
 }
 
@@ -249,6 +270,7 @@ function renderSound(name: SoundName) {
     case 'game-start': t(260, .12, .09); t(390, .13, .1, .09); t(620, .2, .11, .18); break
     case 'card-draw': break
     case 'blobben-card-draw': break
+    case 'pyramid-card-reveal': break
     case 'card-flip': n(.045, .07, 2600); t(620, .045, .045, .03, 390, 'triangle'); break
     case 'correct': break
     case 'wrong': break
@@ -273,6 +295,11 @@ export function playSound(name: SoundName) {
   }
   if (name === 'blobben-card-draw') {
     playBlobbenCardDraw()
+    if (!unlocked || context?.state !== 'running') void unlockAudio()
+    return
+  }
+  if (name === 'pyramid-card-reveal') {
+    playPyramidCardReveal()
     if (!unlocked || context?.state !== 'running') void unlockAudio()
     return
   }

@@ -201,10 +201,7 @@ export function applyBusfahrerState(state: BusfahrerGameState) {
   suppressStatePublish = false
   if (!previous) return
   const drewCard = state.pyramidProgress > previous.pyramidProgress
-  if (drewCard) {
-    playSound('card-draw')
-    window.setTimeout(() => playSound('card-flip'), 120)
-  }
+  if (drewCard) playSound('pyramid-card-reveal')
   if (state.feedback.text !== previous.feedback.text && state.feedback.kind !== 'info') playSound(state.feedback.kind === 'success' ? 'correct' : 'wrong')
   if (state.currentPlayerIndex !== previous.currentPlayerIndex) playSound('player-change')
   if (state.phase === 'final' && previous.phase !== 'final') playSound('game-finish')
@@ -338,8 +335,7 @@ function revealPyramid() {
   if (pyramidProgress >= 10 || pyramidDecision) return
   const index = pyramidOrder[pyramidProgress]!
   const card = pyramidCards[index]!
-  playSound('card-draw')
-  window.setTimeout(() => playSound('card-flip'), 120)
+  playSound('pyramid-card-reveal')
   const matchingCard = hand.find((heldCard) => heldCard.value === card.value)
   const match = Boolean(matchingCard)
   if (match) pyramidHits.add(index)
