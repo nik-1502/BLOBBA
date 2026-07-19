@@ -1,5 +1,6 @@
 import cardDrawUrl from '../assets/audio/card-draw.mp3'
 import correctSoundUrl from '../assets/audio/richtig-sound.mp3'
+import wrongSoundUrl from '../assets/audio/falsch-sound.mp3'
 import blobbenCardDrawUrl from '../assets/audio/blobben-card-draw.mp3'
 
 export type SoundName =
@@ -12,7 +13,6 @@ const ENABLED_KEY = 'blobbaSoundEffectsEnabled'
 const VOLUME_KEY = 'blobbaSoundEffectsVolume'
 let context: AudioContext | null = null
 let noiseBuffer: AudioBuffer | null = null
-let correctSoundBufferPromise: Promise<AudioBuffer> | null = null
 let unlocked = false
 let unlockPromise: Promise<boolean> | null = null
 let mediaChannelAudio: HTMLAudioElement | null = null
@@ -31,6 +31,13 @@ const correctSoundPool = Array.from({ length: 3 }, () => {
   return audio
 })
 let correctSoundPoolIndex = 0
+const wrongSoundPool = Array.from({ length: 3 }, () => {
+  const audio = new Audio(wrongSoundUrl)
+  audio.preload = 'auto'
+  audio.setAttribute('playsinline', '')
+  return audio
+})
+let wrongSoundPoolIndex = 0
 const blobbenCardDrawPool = Array.from({ length: 3 }, () => {
   const audio = new Audio(blobbenCardDrawUrl)
   audio.preload = 'auto'
@@ -63,69 +70,16 @@ function playCorrectSound() {
   })
 }
 
-function loadCorrectSoundBuffer(ctx: AudioContext) {
-  correctSoundBufferPromise ??= fetch(correctSoundUrl)
-    .then((response) => {
-      if (!response.ok) throw new Error(`Audio konnte nicht geladen werden (${response.status}).`)
-      return response.arrayBuffer()
-    })
-    .then((data) => ctx.decodeAudioData(data))
-  return correctSoundBufferPromise
-}
-
-function quietBoundary(buffer: AudioBuffer, fromRatio: number, toRatio: number) {
-  const from = Math.floor(buffer.length * fromRatio)
-  const to = Math.floor(buffer.length * toRatio)
-  const windowSize = Math.max(64, Math.floor(buffer.sampleRate * .012))
-  let quietestPosition = from
-  let quietestEnergy = Number.POSITIVE_INFINITY
-  for (let position = from; position < to; position += windowSize) {
-    let energy = 0
-    let samples = 0
-    const windowEnd = Math.min(to, position + windowSize)
-    for (let channel = 0; channel < buffer.numberOfChannels; channel += 1) {
-      const data = buffer.getChannelData(channel)
-      for (let index = position; index < windowEnd; index += 1) {
-        energy += data[index]! * data[index]!
-        samples += 1
-      }
-    }
-    const averageEnergy = samples ? energy / samples : 0
-    if (averageEnergy < quietestEnergy) {
-      quietestEnergy = averageEnergy
-      quietestPosition = position + Math.floor((windowEnd - position) / 2)
-    }
-  }
-  return quietestPosition / buffer.sampleRate
-}
-
-async function playWrongSound() {
-  try {
-    const ctx = audioContext()
-    const buffer = await loadCorrectSoundBuffer(ctx)
-    const firstBoundary = quietBoundary(buffer, .2, .46)
-    const secondBoundary = quietBoundary(buffer, .54, .8)
-    const segments = [[0, firstBoundary], [firstBoundary, secondBoundary], [secondBoundary, buffer.duration]] as const
-    let start = ctx.currentTime
-    const volume = readVolume()
-    for (const [offset, end] of [...segments].reverse()) {
-      const duration = end - offset
-      const source = ctx.createBufferSource()
-      const gain = ctx.createGain()
-      source.buffer = buffer
-      gain.gain.setValueAtTime(0.0001, start)
-      gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, volume), start + Math.min(.008, duration / 4))
-      gain.gain.setValueAtTime(Math.max(0.0001, volume), start + Math.max(.009, duration - .012))
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration)
-      source.connect(gain).connect(ctx.destination)
-      activeWebAudioSources.add(source)
-      source.addEventListener('ended', () => activeWebAudioSources.delete(source), { once: true })
-      source.start(start, offset, duration)
-      start += duration
-    }
-  } catch (error) {
+function playWrongSound() {
+  const audio = wrongSoundPool[wrongSoundPoolIndex]!
+  wrongSoundPoolIndex = (wrongSoundPoolIndex + 1) % wrongSoundPool.length
+  audio.pause()
+  audio.currentTime = 0
+  audio.muted = false
+  audio.volume = Math.min(1, readVolume())
+  void audio.play().catch((error) => {
     if (import.meta.env.DEV) console.warn('[Audio] Falsch-Sound konnte nicht abgespielt werden.', error)
-  }
+  })
 }
 
 function playBlobbenCardDraw() {
@@ -133,7 +87,7 @@ function playBlobbenCardDraw() {
     try { source.stop() } catch { /* Source has already ended. */ }
   })
   activeWebAudioSources.clear()
-  ;[...cardDrawPool, ...correctSoundPool].forEach((entry) => {
+  ;[...cardDrawPool, ...correctSoundPool, ...wrongSoundPool].forEach((entry) => {
     entry.pause()
     entry.currentTime = 0
   })
@@ -328,7 +282,7 @@ export function playSound(name: SoundName) {
     return
   }
   if (name === 'wrong') {
-    void playWrongSound()
+    playWrongSound()
     if (!unlocked || context?.state !== 'running') void unlockAudio()
     return
   }
