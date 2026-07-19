@@ -36,6 +36,7 @@ let revealTimer: number | undefined
 let dealTimer: number | undefined
 let dealAnimationActive = false
 let lastSoundedDrawIndex = 0
+let lastAnimatedDrawIndex = 0
 let playersDialogOpen = false
 const dealAudio = new Audio(blobbenCardDealUrl)
 dealAudio.preload = 'auto'
@@ -188,7 +189,8 @@ function renderTurn() {
 
 function drawnCardMarkup(card: KlatschenCard) {
   const angle = ((state.drawnSlot ?? 0) / state.deck.length) * 360
-  return `<article class="klatschen-drawn-card" style="--draw-angle:${angle}deg;--draw-counter-angle:${-angle}deg"><div class="klatschen-drawn-inner"><div class="klatschen-drawn-back" aria-hidden="true"></div><div class="klatschen-drawn-front"><h2>${escapeHtml(card.title)}</h2><span class="klatschen-card-symbol" aria-hidden="true">${card.symbol}</span><p>${escapeHtml(card.description)}</p>${card.suggestedRule ? `<small>Vorschlag: ${escapeHtml(card.suggestedRule)}</small>` : ''}${card.amount ? `<strong class="klatschen-amount">${card.amount} Schluck${card.amount === 1 ? '' : 'e'}</strong>` : ''}</div></div></article>`
+  const settled = state.drawIndex <= lastAnimatedDrawIndex
+  return `<article class="klatschen-drawn-card" style="--draw-angle:${angle}deg;--draw-counter-angle:${-angle}deg"><div class="klatschen-drawn-inner${settled ? ' is-settled' : ''}"><div class="klatschen-drawn-back" aria-hidden="true"></div><div class="klatschen-drawn-front"><h2>${escapeHtml(card.title)}</h2><span class="klatschen-card-symbol" aria-hidden="true">${card.symbol}</span><p>${escapeHtml(card.description)}</p>${card.suggestedRule ? `<small>Vorschlag: ${escapeHtml(card.suggestedRule)}</small>` : ''}${card.amount ? `<strong class="klatschen-amount">${card.amount} Schluck${card.amount === 1 ? '' : 'e'}</strong>` : ''}</div></div></article>`
 }
 
 function needsTarget(card: KlatschenCard) {
@@ -196,19 +198,21 @@ function needsTarget(card: KlatschenCard) {
 }
 
 function targetMarkup(card: KlatschenCard) {
-  if (!needsTarget(card)) return ''
-  return '<button class="game-button primary klatschen-partner-select-button" data-klatschen-action="choose-partner">Partner wählen</button>'
+  void card
+  return ''
 }
 
 function renderPartnerTargetScreen() {
-  return `<section class="klatschen-partner-target-screen"><p class="eyebrow">Blobb-Partner</p><h2>Wer soll dein Blobb-Partner sein?</h2><div class="klatschen-partner-player-list" aria-label="Partner auswählen">${state.players.map((player, index) => `<button class="game-button" data-klatschen-target="${index}" ${index === state.currentPlayerIndex ? 'disabled' : ''}>${avatarMarkup(player)}<span>${escapeHtml(player.name)}</span></button>`).join('')}</div></section>`
+  return `<section class="klatschen-partner-target-screen"><p class="eyebrow">Blobb-Partner</p><h2>Wer soll dein Blobb-Partner sein?</h2><div class="klatschen-partner-player-list" aria-label="Partner auswählen">${state.players.map((player, index) => `<button class="game-button${index === state.currentPlayerIndex ? ' is-self' : ''}" data-klatschen-target="${index}" ${index === state.currentPlayerIndex ? 'disabled aria-label="Du kannst dich nicht selbst wählen"' : ''}>${avatarMarkup(player)}<span>${escapeHtml(player.name)}</span></button>`).join('')}</div></section>`
 }
 
 function renderCard() {
   const card = state.currentCardId ? klatschenCardMap.get(state.currentCardId) : undefined
   if (!card) return renderTurn()
   if (card.id === 'clap-partner' && state.selectedTargetIndex === -1) return renderPartnerTargetScreen()
-  const nextButton = needsTarget(card) ? '' : '<button class="game-button primary klatschen-next-button" data-klatschen-action="next">Weiter</button>'
+  const nextButton = needsTarget(card)
+    ? '<button class="game-button primary klatschen-next-button klatschen-partner-select-button" data-klatschen-action="choose-partner">Partner wählen</button>'
+    : '<button class="game-button primary klatschen-next-button" data-klatschen-action="next">Weiter</button>'
   return `<section class="klatschen-card-screen">${circleMarkup()}${drawnCardMarkup(card)}${playersButtonMarkup()}${heldCardsMarkup()}${heldCardDialogMarkup()}${playersDialogMarkup()}<div class="klatschen-card-actions">${targetMarkup(card)}</div>${nextButton}</section>`
 }
 
@@ -552,6 +556,7 @@ function render() {
   positionDrawAnimation()
   removeRevealedCardBack()
   applyControls()
+  if (state.phase === 'card') lastAnimatedDrawIndex = Math.max(lastAnimatedDrawIndex, state.drawIndex)
 }
 
 export function getKlatschenState() {
@@ -595,6 +600,7 @@ export function mountKlatschen(target: HTMLElement, players: KlatschenPlayerSetu
   state.openedHeldCardId ??= null
   state.openedHeldCardOwnerId ??= null
   lastSoundedDrawIndex = state.drawIndex
+  lastAnimatedDrawIndex = state.phase === 'card' ? state.drawIndex : 0
   root.addEventListener('click', handleClick)
   window.addEventListener('resize', updateMiddleLayout)
   render()

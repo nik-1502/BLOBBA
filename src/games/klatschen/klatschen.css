@@ -73,6 +73,7 @@
 
 .klatschen-drawn-card { --draw-radius: clamp(118px, min(29vw, 27dvh), 255px); position: absolute; left: 50%; top: 43%; z-index: 5; width: clamp(190px, min(50vw, 31dvh), 310px); aspect-ratio: 5 / 7; perspective: 1200px; transform: translate(-50%,-50%); }
 .klatschen-drawn-inner { position: relative; width: 100%; height: 100%; animation: klatschen-draw 900ms cubic-bezier(.2,.72,.2,1) both; -webkit-transform-style: preserve-3d; transform-style: preserve-3d; }
+.klatschen-drawn-inner.is-settled { animation: none; transform: rotateY(180deg); }
 .klatschen-drawn-back,
 .klatschen-drawn-front { position: absolute; inset: 0; border-radius: clamp(15px, 3vw, 24px); -webkit-backface-visibility: hidden; backface-visibility: hidden; }
 .klatschen-drawn-front { display: flex; padding: clamp(16px, 3vw, 26px); box-sizing: border-box; border: 4px solid var(--blobba-yellow); flex-direction: column; align-items: center; justify-content: space-between; color: #271d35; background: linear-gradient(145deg,#fff,#efe9f6); box-shadow: 0 22px 55px rgba(0,0,0,.45), inset 0 0 0 2px rgba(255,255,255,.7); text-align: center; -webkit-transform: rotateY(180deg); transform: rotateY(180deg); overflow: hidden; }
@@ -82,12 +83,13 @@
 .klatschen-drawn-front small { color: #6d45c4; font-size: clamp(.7rem,1.8vw,.9rem); font-weight: 800; line-height: 1.15; }
 .klatschen-amount { color: #b92e4b; font-size: clamp(1.12rem, 3vw, 1.5rem); }
 .klatschen-card-actions { position: absolute; left: 0; right: 0; bottom: clamp(8px, 1.6vh, 16px); z-index: 7; display: grid; width: auto; padding-inline: 10px; gap: 8px; animation: klatschen-actions-in .35s 750ms both; }
-.klatschen-partner-select-button { width: min(240px,100%); margin-inline: auto; }
+.klatschen-partner-select-button { width: min(240px,calc(100% - 20px)); margin-inline: auto; }
 .klatschen-partner-target-screen { display: flex; width: min(760px,100%); height: 100%; min-height: 0; padding: clamp(16px,3dvh,30px); margin: auto; border: 1px solid rgba(255,255,255,.1); border-radius: 24px; box-sizing: border-box; flex-direction: column; align-items: center; justify-content: flex-start; color: #f8f5ff; background: rgba(31,25,44,.9); box-shadow: 0 24px 70px rgba(0,0,0,.28); text-align: center; overflow: auto; }
 .klatschen-partner-target-screen > .eyebrow { margin: 0 0 5px; }
 .klatschen-partner-target-screen h2 { margin: 0 0 clamp(18px,4dvh,32px); color: #fff; font-size: clamp(1.35rem,4vw,2rem); }
 .klatschen-partner-player-list { display: grid; width: min(440px,100%); gap: 10px; }
 .klatschen-partner-player-list .game-button { display: flex; width: 100%; min-height: 50px; align-items: center; justify-content: flex-start; gap: 12px; text-align: left; }
+.klatschen-partner-player-list .game-button.is-self { border-color: rgba(255,255,255,.08); color: rgba(255,255,255,.34); background: rgba(8,6,14,.82); box-shadow: none; opacity: 1; filter: saturate(.25) brightness(.58); }
 .klatschen-partner-player-list .klatschen-avatar { width: 34px; height: 34px; flex: 0 0 34px; }
 .klatschen-partner-player-list span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .klatschen-targets { display: flex; width: min(620px,100%); max-height: clamp(86px, 13vh, 112px); margin-inline: auto; padding: 4px; gap: 7px; overflow-x: auto; }
