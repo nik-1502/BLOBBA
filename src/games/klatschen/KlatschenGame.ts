@@ -188,7 +188,10 @@ function heldCardsMarkup() {
     cards.push({ priority: effectCardPriority('partner-status'), markup: `<button type="button" class="klatschen-held-preview" data-klatschen-held="partner-status" data-klatschen-owner="${escapeHtml(player.id)}" aria-label="Blobb-Partner: ${escapeHtml(partnerNames)}"><b class="klatschen-held-count" aria-hidden="true">${partners.length}</b>${effectIconMarkup('clap-partner')}</button>` })
   })
   cards.sort((a, b) => a.priority - b.priority)
-  return `<section class="klatschen-held-cards" aria-label="Aktive Blobb-Karten und Zustände"><div>${cards.map((card) => card.markup).join('')}</div></section>`
+  const content = cards.length
+    ? cards.map((card) => card.markup).join('')
+    : '<span class="klatschen-held-placeholder" aria-hidden="true"></span>'
+  return `<section class="klatschen-held-cards" aria-label="Aktive Blobb-Karten und Zustände"><div>${content}</div></section>`
 }
 
 function heldCardDialogMarkup() {
@@ -566,7 +569,7 @@ function positionMiddleLayout() {
   const buttonTop = ((freeBottomTop + screenRect.bottom) / 2) - screenRect.top - (buttonHeight / 2) - (buttonHeight * .4)
   drawButton.style.top = `${buttonTop}px`
 
-  const effectCards = heldCards?.querySelectorAll<HTMLElement>('.klatschen-held-preview')
+  const effectCards = heldCards?.querySelectorAll<HTMLElement>('.klatschen-held-preview, .klatschen-held-placeholder')
   const effectCardsBottom = effectCards?.length
     ? Math.max(...[...effectCards].map((card) => card.getBoundingClientRect().bottom))
     : heldCards?.getBoundingClientRect().bottom ?? screenRect.top
@@ -616,7 +619,7 @@ function positionNextButton() {
   const buttonTop = ((freeBottomTop + screenRect.bottom) / 2) - screenRect.top - (buttonHeight / 2) - (buttonHeight * .4)
   nextButton.style.top = `${buttonTop}px`
 
-  const effectCards = heldCards.querySelectorAll<HTMLElement>('.klatschen-held-preview')
+  const effectCards = heldCards.querySelectorAll<HTMLElement>('.klatschen-held-preview, .klatschen-held-placeholder')
   const availableTop = effectCards.length
     ? Math.max(...[...effectCards].map((card) => card.getBoundingClientRect().bottom))
     : heldCards.getBoundingClientRect().bottom
