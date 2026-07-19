@@ -125,6 +125,17 @@ function escapeHtml(value: string) {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;')
 }
 
+function playerNameColor(player: GamePlayer) {
+  return `style="--player-name-color:${escapeHtml(player.avatarColor)}"`
+}
+
+function playerNameInText(text: string) {
+  const player = gamePlayers.find((candidate) => text.includes(candidate.name))
+  if (!player) return escapeHtml(text)
+  const nameIndex = text.indexOf(player.name)
+  return `${escapeHtml(text.slice(0, nameIndex))}<span class="player-name-color" ${playerNameColor(player)}>${escapeHtml(player.name)}</span>${escapeHtml(text.slice(nameIndex + player.name.length))}`
+}
+
 function cardMarkup(card: Card, revealed = true, extraClass = '') {
   const face = `<span class="card-value">${card.label}</span><span class="card-symbol">${card.symbol}</span>`
   return `<div class="playing-card ${revealed ? 'is-revealed' : ''} ${extraClass}" aria-label="${revealed ? `${card.label} ${card.suitLabel}` : 'Verdeckte Karte'}">
@@ -143,7 +154,8 @@ function phaseHeader(current: number, subtitle: string) {
 function feedbackMarkup() {
   if (!feedback.text) return '<div class="feedback is-empty" aria-live="polite"></div>'
   if (feedback.playerName && feedback.drinks) {
-    return `<div class="feedback feedback-${feedback.kind} feedback-drinks" aria-live="polite"><strong>${escapeHtml(feedback.playerName)}</strong><span>${feedback.drinks} Schluck${feedback.drinks === 1 ? '' : 'e'}</span></div>`
+    const player = gamePlayers.find((candidate) => candidate.name === feedback.playerName)
+    return `<div class="feedback feedback-${feedback.kind} feedback-drinks" aria-live="polite"><strong class="player-name-color" ${player ? playerNameColor(player) : ''}>${escapeHtml(feedback.playerName)}</strong><span>${feedback.drinks} Schluck${feedback.drinks === 1 ? '' : 'e'}</span></div>`
   }
   return `<div class="feedback feedback-${feedback.kind}" aria-live="polite">${escapeHtml(feedback.text)}</div>`
 }
@@ -218,14 +230,14 @@ function syncCurrentPlayerCards() {
 }
 
 function handMarkup() {
-  return `<section class="player-hand" data-question-hand-title="${escapeHtml(`${currentPlayer().name} – Deine Karten`)}"><h3><strong class="hand-player-name">${escapeHtml(currentPlayer().name)}</strong><span class="hand-title-colon">:</span> <span class="hand-title-label">Deine Karten</span></h3><div class="hand-cards">${hand.length ? hand.map((card, index) => cardMarkup(card, true, questionResults[index] ? 'answer-correct' : 'answer-wrong')).join('') : '<p>Noch keine Karten gezogen.</p>'}</div></section>`
+  return `<section class="player-hand" data-question-hand-title="${escapeHtml(`${currentPlayer().name} – Deine Karten`)}"><div class="player-hand-caption"><strong class="player-name-color" ${playerNameColor(currentPlayer())}>${escapeHtml(currentPlayer().name)}</strong><span> – Deine Karten</span></div><h3><strong class="hand-player-name player-name-color" ${playerNameColor(currentPlayer())}>${escapeHtml(currentPlayer().name)}</strong><span class="hand-title-colon">:</span> <span class="hand-title-label">Deine Karten</span></h3><div class="hand-cards">${hand.length ? hand.map((card, index) => cardMarkup(card, true, questionResults[index] ? 'answer-correct' : 'answer-wrong')).join('') : '<p>Noch keine Karten gezogen.</p>'}</div></section>`
 }
 
 function renderPlayerIntro() {
   const player = currentPlayer()
   const avatar = player.avatar ? `<img src="${player.avatar}" alt="Profilbild von ${escapeHtml(player.name)}">` : defaultProfileIconMarkup()
   const playerImage = `<span class="player-turn-avatar ${player.avatar ? '' : 'is-default'}" style="--avatar-ring:${player.avatarColor}">${avatar}</span>`
-  return `<div class="player-turn-wrap">${playerImage}<section class="player-turn-screen"><p>Spieler ${currentPlayerIndex + 1} von ${gamePlayers.length}</p><h2><strong class="turn-player-name">${escapeHtml(player.name)}</strong><span>ist dran</span></h2>
+  return `<div class="player-turn-wrap">${playerImage}<section class="player-turn-screen"><p>Spieler ${currentPlayerIndex + 1} von ${gamePlayers.length}</p><h2><strong class="turn-player-name player-name-color" ${playerNameColor(player)}>${escapeHtml(player.name)}</strong><span>ist dran</span></h2>
     <div class="player-turn-actions"><button class="game-button primary" data-action="start-player-round">Jetzt starten</button></div></section></div>`
 }
 
@@ -240,7 +252,7 @@ function currentPlayerFooterMarkup() {
     || (phase === 'pyramid' && pyramidDecision?.step !== 'target')
   if (!isActiveGameScreen) return ''
   const player = currentPlayer()
-  return `<div class="current-player-footer">${playerTargetAvatarMarkup(player)}<strong>${escapeHtml(player.name)}</strong></div>`
+  return `<div class="current-player-footer">${playerTargetAvatarMarkup(player)}<strong class="player-name-color" ${playerNameColor(player)}>${escapeHtml(player.name)}</strong></div>`
 }
 
 function busUsedCardsMarkup() {
@@ -254,7 +266,7 @@ function busUsedCardsMarkup() {
         : `<span class="placeholder-card">${label}</span>`}
     </div>`
   }).join('')
-  return `<section class="used-cards" aria-label="Gezogene Karten"><h3><strong class="hand-player-name">${escapeHtml(currentPlayer().name)}</strong><span class="hand-title-colon">:</span> <span class="hand-title-label">Gezogene Karten</span></h3><div class="used-card-list">${stacks}</div></section>`
+  return `<section class="used-cards" aria-label="Gezogene Karten"><h3><strong class="hand-player-name player-name-color" ${playerNameColor(currentPlayer())}>${escapeHtml(currentPlayer().name)}</strong><span class="hand-title-colon">:</span> <span class="hand-title-label">Gezogene Karten</span></h3><div class="used-card-list">${stacks}</div></section>`
 }
 
 function renderQuestions() {
@@ -317,13 +329,13 @@ function nextQuestion() {
 function renderPyramid() {
   if (pyramidDecision?.step === 'target') {
     return `${phaseHeader(2, `${currentPlayer().name} · Spieler auswählen`)}<section class="pyramid-target-screen"><p class="eyebrow">Pyramide</p><h2>Wer soll <span class="drink-count-highlight">${pyramidDecision.drinks}</span> Schluck${pyramidDecision.drinks === 1 ? '' : 'e'} trinken?</h2>
-      <div class="pyramid-player-list">${gamePlayers.map((player, index) => `<button class="game-button" data-pyramid-target="${index}">${playerTargetAvatarMarkup(player)}<span>${escapeHtml(player.name)}</span></button>`).join('')}</div></section>`
+      <div class="pyramid-player-list">${gamePlayers.map((player, index) => `<button class="game-button" data-pyramid-target="${index}">${playerTargetAvatarMarkup(player)}<span class="player-name-color" ${playerNameColor(player)}>${escapeHtml(player.name)}</span></button>`).join('')}</div></section>`
   }
   const rows = [[0], [1, 2], [3, 4, 5], [6, 7, 8, 9]]
   const complete = pyramidProgress === 10
   const pyramidAction = pyramidDecision?.step === 'offer'
     ? `<div class="pyramid-offer"><button class="game-button choice-red pyramid-side-choice pyramid-choice-no" data-action="keep-pyramid-card">Nein</button><div class="pyramid-offer-question">Möchtest du die Karte ${escapeHtml(pyramidDecision.label)} setzen?</div><button class="game-button choice-blue pyramid-side-choice pyramid-choice-yes" data-action="use-pyramid-card">Ja</button></div>`
-    : `<button class="game-button primary" data-action="${complete ? 'finish-player-pyramid' : 'reveal-pyramid'}">${complete ? `${currentPlayer().name} ist fertig` : 'Nächste Karte aufdecken'}</button>`
+    : `<button class="game-button primary" data-action="${complete ? 'finish-player-pyramid' : 'reveal-pyramid'}">${complete ? `<span class="player-name-color" ${playerNameColor(currentPlayer())}>${escapeHtml(currentPlayer().name)}</span> ist fertig` : 'Nächste Karte aufdecken'}</button>`
   return `${phaseHeader(2, `${currentPlayer().name} · ${pyramidProgress} von 10 Karten`)}<section class="pyramid-panel">
     <h2>Pyramide</h2><div class="pyramid">${rows.map((row, rowIndex) =>
       `<div class="pyramid-row" data-drinks="${4 - rowIndex} Schluck${rowIndex === 3 ? '' : 'e'}">${row.map((index) => cardMarkup(pyramidCards[index]!, pyramidOrder.slice(0, pyramidProgress).includes(index), pyramidHits.has(index) ? 'pyramid-hit' : '')).join('')}</div>`).join('')}</div>
@@ -411,12 +423,12 @@ function playerStatsMarkup() {
   const sortedPlayers = gamePlayers
     .map((player, index) => ({ player, index }))
     .sort((left, right) => right.player.drinks - left.player.drinks || left.index - right.index)
-  return `<div class="game-stats-table"><div class="game-stats-head"><span>Spieler</span><span>Schlücke</span></div>${sortedPlayers.map(({ player, index }) => `<div class="game-stats-row ${index === busDriverIndex ? 'is-bus-driver' : ''}"><div class="game-stats-player">${playerTargetAvatarMarkup(player)}<strong>${escapeHtml(player.name)}</strong></div><span>${player.drinks}</span></div>`).join('')}</div>`
+  return `<div class="game-stats-table"><div class="game-stats-head"><span>Spieler</span><span>Schlücke</span></div>${sortedPlayers.map(({ player, index }) => `<div class="game-stats-row ${index === busDriverIndex ? 'is-bus-driver' : ''}"><div class="game-stats-player">${playerTargetAvatarMarkup(player)}<strong class="player-name-color" ${playerNameColor(player)}>${escapeHtml(player.name)}</strong></div><span>${player.drinks}</span></div>`).join('')}</div>`
 }
 
 function renderSummary(final = false) {
   const title = final ? finalResult : `${gamePlayers[busDriverIndex]!.name} ist BLOBB-FAHRER`
-  return `${phaseHeader(final ? 3 : 2, final ? 'Endstand' : 'Auswertung')}<section class="game-summary-panel"><h2>${escapeHtml(title)}</h2>${playerStatsMarkup()}
+  return `${phaseHeader(final ? 3 : 2, final ? 'Endstand' : 'Auswertung')}<section class="game-summary-panel"><h2>${playerNameInText(title)}</h2>${playerStatsMarkup()}
     <button class="game-button primary" data-action="${final ? 'restart' : 'start-bus'}">${final ? 'Neu starten' : 'Phase 3 starten'}</button></section>`
 }
 

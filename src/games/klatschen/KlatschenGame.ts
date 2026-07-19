@@ -55,6 +55,10 @@ function escapeHtml(value: string) {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;')
 }
 
+function playerNameColor(player: KlatschenPlayer) {
+  return `style="--player-name-color:${escapeHtml(player.avatarColor)}"`
+}
+
 function createState(setups: KlatschenPlayerSetup[]): KlatschenGameState {
   const players = setups.map((player, index) => ({ ...player, id: player.id ?? `${index}-${player.name}`, drinks: 0, heldCards: [], partnerIds: [] }))
   const partnerCardCount = Math.max(0, players.length - 2)
@@ -156,7 +160,7 @@ function heldCardDialogMarkup() {
     const partners = owner?.partnerIds.map((id) => state.players.find((player) => player.id === id)).filter((player): player is KlatschenPlayer => Boolean(player)) ?? []
     if (!owner || !partners.length) return ''
     const heading = partners.length === 1 ? 'Dein Blobb-Partner:' : 'Deine Blobb-Partner:'
-    return `<div class="klatschen-held-dialog-backdrop" data-klatschen-action="cancel-held"><article class="klatschen-held-dialog klatschen-partner-dialog" role="dialog" aria-modal="true" aria-labelledby="partner-dialog-title"><span aria-hidden="true">🤝</span><h2 id="partner-dialog-title">${heading}</h2><div class="klatschen-partner-dialog-list">${partners.map((partner) => `<div>${avatarMarkup(partner)}<strong>${escapeHtml(partner.name)}</strong></div>`).join('')}</div><button class="game-button primary" data-klatschen-action="cancel-held">Schließen</button></article></div>`
+    return `<div class="klatschen-held-dialog-backdrop" data-klatschen-action="cancel-held"><article class="klatschen-held-dialog klatschen-partner-dialog" role="dialog" aria-modal="true" aria-labelledby="partner-dialog-title"><span aria-hidden="true">🤝</span><h2 id="partner-dialog-title">${heading}</h2><div class="klatschen-partner-dialog-list">${partners.map((partner) => `<div>${avatarMarkup(partner)}<strong class="player-name-color" ${playerNameColor(partner)}>${escapeHtml(partner.name)}</strong></div>`).join('')}</div><button class="game-button primary" data-klatschen-action="cancel-held">Schließen</button></article></div>`
   }
   const cardId = state.openedHeldCardId === 'partner-status' ? 'clap-partner' : state.openedHeldCardId
   const card = cardId ? klatschenCardMap.get(cardId) : undefined
@@ -182,7 +186,7 @@ function playersDialogMarkup() {
     const cards = [...cardCounts.values()].map(({ card, count }) => `<span class="klatschen-player-card-symbol" aria-label="${escapeHtml(card.title)}${count > 1 ? `, ${count} Karten` : ''}"><span aria-hidden="true">${card.symbol}</span>${count > 1 ? `<b aria-hidden="true">${count}</b>` : ''}</span>`)
     const partners = player.partnerIds.map((id) => state.players.find((candidate) => candidate.id === id)).filter((candidate): candidate is KlatschenPlayer => Boolean(candidate))
     if (partners.length) cards.push(`<span class="klatschen-player-card-symbol" aria-label="${partners.length} Blobb-Partner"><span aria-hidden="true">🤝</span>${partners.length > 1 ? `<b aria-hidden="true">${partners.length}</b>` : ''}</span>`)
-    return `<div class="klatschen-player-card-row"><div class="klatschen-player-card-person">${avatarMarkup(player)}<strong>${escapeHtml(player.name)}</strong></div><div class="klatschen-player-card-list">${cards.length ? cards.join('') : '<span class="is-empty">Keine Karte</span>'}</div></div>`
+    return `<div class="klatschen-player-card-row"><div class="klatschen-player-card-person">${avatarMarkup(player)}<strong class="player-name-color" ${playerNameColor(player)}>${escapeHtml(player.name)}</strong></div><div class="klatschen-player-card-list">${cards.length ? cards.join('') : '<span class="is-empty">Keine Karte</span>'}</div></div>`
   }).join('')
   return `<div class="klatschen-players-backdrop" data-klatschen-action="close-players"><article class="klatschen-players-dialog" role="dialog" aria-modal="true" aria-labelledby="klatschen-players-title"><h2 id="klatschen-players-title">Mitspieler</h2><div class="klatschen-player-card-table">${rows}</div><button type="button" class="game-button primary" data-klatschen-action="close-players">Schließen</button></article></div>`
 }
@@ -217,7 +221,7 @@ function renderPartnerTargetScreen() {
     const isExistingPartner = owner.partnerIds.includes(player.id)
     const unavailable = isSelf || isExistingPartner
     const unavailableLabel = isSelf ? 'Du kannst dich nicht selbst wählen' : `${player.name} ist bereits dein Blobb-Partner`
-    return `<button class="game-button${unavailable ? ' is-unavailable' : ''}" data-klatschen-target="${index}" ${unavailable ? `disabled aria-label="${escapeHtml(unavailableLabel)}"` : ''}>${avatarMarkup(player)}<span>${escapeHtml(player.name)}</span></button>`
+    return `<button class="game-button${unavailable ? ' is-unavailable' : ''}" data-klatschen-target="${index}" ${unavailable ? `disabled aria-label="${escapeHtml(unavailableLabel)}"` : ''}>${avatarMarkup(player)}<span class="player-name-color" ${playerNameColor(player)}>${escapeHtml(player.name)}</span></button>`
   }).join('')}</div></section>`
 }
 
@@ -233,7 +237,7 @@ function renderCard() {
 
 function renderFinished() {
   const sorted = [...state.players].sort((left, right) => right.drinks - left.drinks)
-  return `<section class="klatschen-summary"><h2>Alle Karten wurden gezogen</h2><div class="klatschen-stats">${sorted.map((player) => `<div>${avatarMarkup(player)}<strong>${escapeHtml(player.name)}</strong><span>${player.drinks} Schluck${player.drinks === 1 ? '' : 'e'}</span></div>`).join('')}</div><div class="klatschen-summary-actions"><button class="game-button primary ipad-pwa-end-button" data-klatschen-action="exit">Beenden</button><button class="game-button primary ipad-pwa-end-button" data-klatschen-action="restart">Neustarten</button></div></section>`
+  return `<section class="klatschen-summary"><h2>Alle Karten wurden gezogen</h2><div class="klatschen-stats">${sorted.map((player) => `<div>${avatarMarkup(player)}<strong class="player-name-color" ${playerNameColor(player)}>${escapeHtml(player.name)}</strong><span>${player.drinks} Schluck${player.drinks === 1 ? '' : 'e'}</span></div>`).join('')}</div><div class="klatschen-summary-actions"><button class="game-button primary ipad-pwa-end-button" data-klatschen-action="exit">Beenden</button><button class="game-button primary ipad-pwa-end-button" data-klatschen-action="restart">Neustarten</button></div></section>`
 }
 
 function addDrinks(playerIndex: number, amount: number, includePartner = true) {
