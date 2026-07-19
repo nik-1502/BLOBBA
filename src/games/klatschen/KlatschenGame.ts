@@ -38,6 +38,7 @@ let root: HTMLElement | null = null
 let state: KlatschenGameState
 let options: KlatschenOptions = {}
 let revealTimer: number | undefined
+let layoutFrame: number | undefined
 let dealTimer: number | undefined
 let dealAnimationActive = false
 let lastSoundedDrawIndex = 0
@@ -606,6 +607,7 @@ function positionNextButton() {
   const screen = root?.querySelector<HTMLElement>('.klatschen-card-screen')
   const nextButton = root?.querySelector<HTMLElement>('.klatschen-next-button')
   const circle = screen?.querySelector<HTMLElement>('.klatschen-card-circle')
+  const drawnCard = screen?.querySelector<HTMLElement>('.klatschen-drawn-card')
   const heldCards = screen?.querySelector<HTMLElement>('.klatschen-held-cards')
   const slots = screen?.querySelectorAll<HTMLElement>('.klatschen-circle-slot')
   if (!screen || !nextButton || !circle || !heldCards || !slots?.length) return
@@ -624,11 +626,13 @@ function positionNextButton() {
     ? Math.max(...[...effectCards].map((card) => card.getBoundingClientRect().bottom))
     : heldCards.getBoundingClientRect().bottom
   const availableBottom = screenRect.top + buttonTop
+  const availableCenter = availableTop + ((availableBottom - availableTop) / 2)
   const circleHeight = circleBottom - circleTop
-  const centeredCircleTop = availableTop + ((availableBottom - availableTop - circleHeight) / 2)
+  const centeredCircleTop = availableCenter - (circleHeight / 2)
   const circleShift = centeredCircleTop - circleTop
   const currentCircleCenter = circle.getBoundingClientRect().top - screenRect.top
   circle.style.top = `${currentCircleCenter + circleShift}px`
+  if (drawnCard) drawnCard.style.top = `${availableCenter - screenRect.top}px`
 }
 
 function positionPlayersButton() {
@@ -665,6 +669,11 @@ function render() {
   root.innerHTML = `<div class="busfahrer-shell klatschen-shell"><header class="busfahrer-header"><button class="back-button bus-back ipad-pwa-header-button" type="button" data-action="back">Beenden</button><div><p>BLOBBA präsentiert</p><h1>BLOBBEN</h1></div><button class="restart-button ipad-pwa-header-button" type="button" data-klatschen-action="restart">Neu starten</button></header><div class="klatschen-global-rule">Sag nicht „trinken“ – sag „blobben“.</div><div class="klatschen-stage">${content}</div></div>`
   updateMiddleLayout()
   positionDrawAnimation()
+  window.cancelAnimationFrame(layoutFrame ?? 0)
+  layoutFrame = window.requestAnimationFrame(() => {
+    updateMiddleLayout()
+    positionDrawAnimation()
+  })
   removeRevealedCardBack()
   applyControls()
   if (state.phase === 'card') lastAnimatedDrawIndex = Math.max(lastAnimatedDrawIndex, state.drawIndex)
@@ -717,5 +726,5 @@ export function mountKlatschen(target: HTMLElement, players: KlatschenPlayerSetu
   root.addEventListener('click', handleClick)
   window.addEventListener('resize', updateMiddleLayout)
   render()
-  return () => { window.clearTimeout(revealTimer); window.clearTimeout(dealTimer); dealAudio.pause(); dealAudio.currentTime = 0; dealAnimationActive = false; root?.removeEventListener('click', handleClick); window.removeEventListener('resize', updateMiddleLayout); root = null; options = {} }
+  return () => { window.clearTimeout(revealTimer); window.clearTimeout(dealTimer); window.cancelAnimationFrame(layoutFrame ?? 0); dealAudio.pause(); dealAudio.currentTime = 0; dealAnimationActive = false; root?.removeEventListener('click', handleClick); window.removeEventListener('resize', updateMiddleLayout); root = null; options = {} }
 }
