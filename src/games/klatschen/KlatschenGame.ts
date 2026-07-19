@@ -250,7 +250,8 @@ function drawnCardMarkup(card: KlatschenCard) {
   const angle = ((state.drawnSlot ?? 0) / state.deck.length) * 360
   const settled = state.drawIndex <= lastAnimatedDrawIndex
   const effectClass = effectIconName(card.id) ? ' is-effect-card' : ''
-  return `<article class="klatschen-drawn-card${effectClass}" style="--draw-angle:${angle}deg;--draw-counter-angle:${-angle}deg"><div class="klatschen-drawn-inner${settled ? ' is-settled' : ''}"><div class="klatschen-drawn-back" aria-hidden="true"></div><div class="klatschen-drawn-front"><h2>${escapeHtml(card.title)}</h2><span class="klatschen-card-symbol" aria-hidden="true">${cardSymbolMarkup(card)}</span><p>${escapeHtml(card.description)}</p>${card.suggestedRule ? `<small>Vorschlag: ${escapeHtml(card.suggestedRule)}</small>` : ''}${card.amount ? `<strong class="klatschen-amount">${card.amount} Schluck${card.amount === 1 ? '' : 'e'}</strong>` : ''}</div></div></article>`
+  const ruleClass = card.type === 'temporary-rule' ? ' is-rule-card' : ''
+  return `<article class="klatschen-drawn-card${effectClass}${ruleClass}" style="--draw-angle:${angle}deg;--draw-counter-angle:${-angle}deg"><div class="klatschen-drawn-inner${settled ? ' is-settled' : ''}"><div class="klatschen-drawn-back" aria-hidden="true"></div><div class="klatschen-drawn-front"><h2>${escapeHtml(card.title)}</h2><span class="klatschen-card-symbol" aria-hidden="true">${cardSymbolMarkup(card)}</span><p>${escapeHtml(card.description)}</p>${card.suggestedRule ? `<small>Vorschlag: ${escapeHtml(card.suggestedRule)}</small>` : ''}${card.amount ? `<strong class="klatschen-amount">${card.amount} Schluck${card.amount === 1 ? '' : 'e'}</strong>` : ''}</div></div></article>`
 }
 
 function needsTarget(card: KlatschenCard) {
