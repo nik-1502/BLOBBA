@@ -56,10 +56,9 @@
 .klatschen-held-dialog > div .game-button { display: flex; width: 100%; min-width: 0; height: clamp(38px,7dvh,50px); min-height: clamp(38px,7dvh,50px); padding: 12px 18px; grid-column: auto; align-items: center; justify-content: center; }
 .klatschen-held-dialog .klatschen-cancel-remove { background: #b92e4b; }
 .klatschen-partner-dialog { width: min(500px,100%); }
-.klatschen-partner-dialog > .klatschen-partner-dialog-list { display: grid; width: 100%; max-height: min(42dvh,320px); grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; overflow: auto; }
-.klatschen-partner-dialog-list > div { display: flex; min-width: 0; padding: 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; align-items: center; gap: 10px; background: rgba(255,255,255,.06); }
-.klatschen-partner-dialog-list .klatschen-avatar { width: 42px; height: 42px; flex: 0 0 42px; }
-.klatschen-partner-dialog-list strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.klatschen-partner-dialog > .klatschen-partner-dialog-list { width: min(440px,100%); max-height: min(48dvh,390px); grid-template-columns: minmax(0,1fr); overflow: auto; }
+.klatschen-partner-dialog > .klatschen-partner-dialog-list .game-button { height: auto; min-height: 88px; padding: 10px 16px; flex-direction: column; gap: 7px; }
+.klatschen-partner-dialog-list .klatschen-partner-dialog-player { cursor: default; pointer-events: none; }
 .klatschen-partner-dialog > .game-button { width: min(220px,100%); min-height: 44px; }
 .klatschen-players-backdrop { position: absolute; inset: 0; z-index: 21; display: grid; padding: 12px; place-items: center; background: rgba(4,2,10,.72); backdrop-filter: blur(5px); }
 .klatschen-players-dialog { display: flex; width: min(560px,100%); max-height: 100%; padding: clamp(16px,4vw,28px); border: 2px solid rgba(255,255,255,.25); border-radius: 22px; box-sizing: border-box; flex-direction: column; gap: 14px; color: #fff; background: linear-gradient(145deg,#49346c,#251d33); box-shadow: 0 24px 70px rgba(0,0,0,.55); overflow: hidden; }
@@ -93,10 +92,11 @@
 .klatschen-partner-target-screen > .eyebrow { margin: 0 0 5px; }
 .klatschen-partner-target-screen h2 { margin: 0 0 clamp(18px,4dvh,32px); color: #fff; font-size: clamp(1.35rem,4vw,2rem); }
 .klatschen-partner-player-list { display: grid; width: min(440px,100%); gap: 10px; }
-.klatschen-partner-player-list .game-button { display: flex; width: 100%; min-height: 50px; align-items: center; justify-content: flex-start; gap: 12px; text-align: left; }
+.klatschen-partner-player-list .game-button { display: flex; width: 100%; min-height: 88px; padding: 10px 16px; align-items: center; justify-content: center; flex-direction: column; gap: 7px; text-align: center; }
 .klatschen-partner-player-list .game-button.is-unavailable { border-color: rgba(255,255,255,.08); color: rgba(255,255,255,.34); background: rgba(8,6,14,.82); box-shadow: none; opacity: 1; filter: saturate(.25) brightness(.58); }
-.klatschen-partner-player-list .klatschen-avatar { width: 34px; height: 34px; flex: 0 0 34px; }
-.klatschen-partner-player-list span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.klatschen-partner-player-list .klatschen-avatar { width: 42px; height: 42px; flex: 0 0 42px; }
+.klatschen-partner-player-list span,
+.klatschen-partner-player-list strong { max-width: 100%; overflow: hidden; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
 .klatschen-targets { display: flex; width: min(620px,100%); max-height: clamp(86px, 13vh, 112px); margin-inline: auto; padding: 4px; gap: 7px; overflow-x: auto; }
 .klatschen-target { display: flex; min-width: 145px; min-height: 48px; padding: 7px 10px; align-items: center; justify-content: flex-start; gap: 8px; }
 .klatschen-target.is-selected { outline: 3px solid #dda15e; background: #584170; }

@@ -153,10 +153,11 @@ function heldCardsMarkup() {
 function heldCardDialogMarkup() {
   if (state.openedHeldCardId === 'partner-status') {
     const owner = state.players.find((player) => player.id === state.openedHeldCardOwnerId)
-    const partners = owner?.partnerIds.map((id) => state.players.find((player) => player.id === id)).filter((player): player is KlatschenPlayer => Boolean(player)) ?? []
+    const partnerIds = [...new Set(owner?.partnerIds ?? [])]
+    const partners = partnerIds.map((id) => state.players.find((player) => player.id === id)).filter((player): player is KlatschenPlayer => Boolean(player && player.id !== owner?.id))
     if (!owner || !partners.length) return ''
-    const heading = partners.length === 1 ? 'Diese Person ist dein Blobb-Partner:' : 'Diese Personen sind deine Blobb-Partner:'
-    return `<div class="klatschen-held-dialog-backdrop" data-klatschen-action="cancel-held"><article class="klatschen-held-dialog klatschen-partner-dialog" role="dialog" aria-modal="true" aria-labelledby="partner-dialog-title"><span aria-hidden="true">🤝</span><h2 id="partner-dialog-title">${heading}</h2><div class="klatschen-partner-dialog-list">${partners.map((partner) => `<div>${avatarMarkup(partner)}<strong>${escapeHtml(partner.name)}</strong></div>`).join('')}</div><button class="game-button primary" data-klatschen-action="cancel-held">Schließen</button></article></div>`
+    const heading = partners.length === 1 ? 'Dein Blobb-Partner:' : 'Deine Blobb-Partner:'
+    return `<div class="klatschen-held-dialog-backdrop" data-klatschen-action="cancel-held"><article class="klatschen-held-dialog klatschen-partner-dialog" role="dialog" aria-modal="true" aria-labelledby="partner-dialog-title"><span aria-hidden="true">🤝</span><h2 id="partner-dialog-title">${heading}</h2><div class="klatschen-partner-player-list klatschen-partner-dialog-list">${partners.map((partner) => `<div class="game-button klatschen-partner-dialog-player">${avatarMarkup(partner)}<strong>${escapeHtml(partner.name)}</strong></div>`).join('')}</div><button class="game-button primary" data-klatschen-action="cancel-held">Schließen</button></article></div>`
   }
   const cardId = state.openedHeldCardId === 'partner-status' ? 'clap-partner' : state.openedHeldCardId
   const card = cardId ? klatschenCardMap.get(cardId) : undefined
