@@ -77,7 +77,7 @@
 .klatschen-player-card-row { display: flex; width: 100%; padding: 12px; border: 1px solid rgba(255,255,255,.2); border-radius: 14px; box-sizing: border-box; flex-direction: column; gap: 10px; background: rgba(255,255,255,.055); }
 .klatschen-player-card-person { display: flex; min-width: 0; align-items: center; gap: 8px; }
 .klatschen-player-card-person .klatschen-avatar { width: 34px; height: 34px; flex: 0 0 34px; }
-.klatschen-player-card-person strong { overflow: hidden; color: #dda15e; text-overflow: ellipsis; white-space: nowrap; }
+.klatschen-player-card-person strong { overflow: hidden; color: #dda15e; font-size: clamp(1.12rem,3.8vw,1.4rem); line-height: 1.15; text-overflow: ellipsis; white-space: nowrap; }
 .klatschen-player-card-list { display: grid; width: 100%; min-width: 0; grid-template-columns: repeat(5,minmax(0,1fr)); gap: clamp(4px,1.2vw,8px); }
 .klatschen-player-card-list .klatschen-effect-slot { width: 100%; min-height: clamp(40px,10vw,52px); }
 .klatschen-player-card-list .klatschen-effect-icon { width: clamp(28px,7vw,40px); height: clamp(28px,7vw,40px); }
