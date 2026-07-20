@@ -571,6 +571,41 @@ function fitCurrentPlayerDisplay() {
   name.style.fontSize = `${nameFontSize * scale}px`
 }
 
+function positionGameSequence(
+  screen: HTMLElement,
+  circle: HTMLElement,
+  primaryButton: HTMLElement,
+  heldCards: HTMLElement,
+  slots: NodeListOf<HTMLElement>,
+) {
+  const playersButton = screen.querySelector<HTMLElement>('.klatschen-players-button')
+  if (!playersButton || !slots.length) return null
+
+  circle.style.removeProperty('top')
+  const screenRect = screen.getBoundingClientRect()
+  const screenStyle = window.getComputedStyle(screen)
+  const innerBottom = screenRect.bottom - (Number.parseFloat(screenStyle.borderBottomWidth) || 0)
+  const slotRects = [...slots].map((slot) => slot.getBoundingClientRect())
+  const naturalCircleTop = Math.min(...slotRects.map((rect) => rect.top))
+  const circleHeight = Math.max(...slotRects.map((rect) => rect.bottom)) - naturalCircleTop
+  const effectCards = heldCards.querySelectorAll<HTMLElement>('.klatschen-effect-slot')
+  const heldBottom = effectCards.length
+    ? Math.max(...[...effectCards].map((card) => card.getBoundingClientRect().bottom))
+    : heldCards.getBoundingClientRect().bottom
+  const primaryHeight = primaryButton.getBoundingClientRect().height
+  const playersHeight = playersButton.getBoundingClientRect().height
+  const gap = Math.max(0, (innerBottom - heldBottom - circleHeight - primaryHeight - playersHeight) / 4)
+  const circleTop = heldBottom + gap
+  const circleAnchorTop = circle.getBoundingClientRect().top - screenRect.top
+
+  screen.style.setProperty('--blobben-vertical-gap', `${gap}px`)
+  circle.style.top = `${circleAnchorTop + circleTop - naturalCircleTop}px`
+  primaryButton.style.top = `${circleTop + circleHeight + gap - screenRect.top}px`
+  playersButton.style.top = `${circleTop + circleHeight + gap + primaryHeight + gap - screenRect.top}px`
+
+  return { circleTop, circleBottom: circleTop + circleHeight }
+}
+
 function positionMiddleLayout() {
   const screen = root?.querySelector<HTMLElement>('.klatschen-play-screen')
   const circle = screen?.querySelector<HTMLElement>('.klatschen-card-circle')
@@ -580,35 +615,13 @@ function positionMiddleLayout() {
   const drawButton = screen?.querySelector<HTMLElement>('.klatschen-draw-button')
   const heldCards = screen?.querySelector<HTMLElement>('.klatschen-held-cards')
   const slots = screen?.querySelectorAll<HTMLElement>('.klatschen-circle-slot')
-  if (!screen || !circle || !turn || !avatar || !name || !drawButton || !slots?.length) return
+  if (!screen || !circle || !turn || !avatar || !name || !drawButton || !heldCards || !slots?.length) return
 
-  circle.style.removeProperty('top')
   avatar.style.removeProperty('width')
   avatar.style.removeProperty('height')
   const screenRect = screen.getBoundingClientRect()
-  let slotRects = [...slots].map((slot) => slot.getBoundingClientRect())
-  let circleTop = Math.min(...slotRects.map((rect) => rect.top))
-  let circleBottom = Math.max(...slotRects.map((rect) => rect.bottom))
-
-  const buttonHeight = drawButton.getBoundingClientRect().height
-  const freeBottomTop = Math.min(screenRect.bottom, circleBottom)
-  const buttonTop = ((freeBottomTop + screenRect.bottom) / 2) - screenRect.top - (buttonHeight / 2) - (buttonHeight * .4)
-  drawButton.style.top = `${buttonTop}px`
-
-  const effectCards = heldCards?.querySelectorAll<HTMLElement>('.klatschen-effect-slot')
-  const effectCardsBottom = effectCards?.length
-    ? Math.max(...[...effectCards].map((card) => card.getBoundingClientRect().bottom))
-    : heldCards?.getBoundingClientRect().bottom ?? screenRect.top
-  const circleHeight = circleBottom - circleTop
-  const drawButtonTop = screenRect.top + buttonTop
-  const centeredCircleTop = effectCardsBottom + ((drawButtonTop - effectCardsBottom - circleHeight) / 2)
-  const circleShift = centeredCircleTop - circleTop
-  const currentCircleCenter = circle.getBoundingClientRect().top - screenRect.top
-  circle.style.top = `${currentCircleCenter + circleShift}px`
-
-  slotRects = [...slots].map((slot) => slot.getBoundingClientRect())
-  circleTop = Math.min(...slotRects.map((rect) => rect.top))
-  circleBottom = Math.max(...slotRects.map((rect) => rect.bottom))
+  const sequence = positionGameSequence(screen, circle, drawButton, heldCards, slots)
+  if (!sequence) return
 
   const turnStyle = window.getComputedStyle(turn)
   const turnGap = Number.parseFloat(turnStyle.rowGap || turnStyle.gap) || 0
@@ -621,7 +634,7 @@ function positionMiddleLayout() {
   avatar.style.width = `${avatarSize}px`
   avatar.style.height = `${avatarSize}px`
 
-  const circleCenter = ((circleTop + circleBottom) / 2) - screenRect.top
+  const circleCenter = ((sequence.circleTop + sequence.circleBottom) / 2) - screenRect.top
   const previousTurnHeight = turn.getBoundingClientRect().height + (previousAvatarSize - avatarSize)
   const turnTop = circleCenter - (previousTurnHeight / 2)
   turn.style.top = `${turnTop}px`
@@ -636,48 +649,15 @@ function positionNextButton() {
   const heldCards = screen?.querySelector<HTMLElement>('.klatschen-held-cards')
   const slots = screen?.querySelectorAll<HTMLElement>('.klatschen-circle-slot')
   if (!screen || !nextButton || !circle || !heldCards || !slots?.length) return
-  circle.style.removeProperty('top')
   const screenRect = screen.getBoundingClientRect()
-  const slotRects = [...slots].map((slot) => slot.getBoundingClientRect())
-  const circleBottom = Math.max(...slotRects.map((rect) => rect.bottom))
-  const circleTop = Math.min(...slotRects.map((rect) => rect.top))
-  const freeBottomTop = Math.min(screenRect.bottom, circleBottom)
-  const buttonHeight = nextButton.getBoundingClientRect().height
-  const buttonTop = ((freeBottomTop + screenRect.bottom) / 2) - screenRect.top - (buttonHeight / 2) - (buttonHeight * .4)
-  nextButton.style.top = `${buttonTop}px`
-
-  const effectCards = heldCards.querySelectorAll<HTMLElement>('.klatschen-effect-slot')
-  const availableTop = effectCards.length
-    ? Math.max(...[...effectCards].map((card) => card.getBoundingClientRect().bottom))
-    : heldCards.getBoundingClientRect().bottom
-  const availableBottom = screenRect.top + buttonTop
-  const availableCenter = availableTop + ((availableBottom - availableTop) / 2)
-  const circleHeight = circleBottom - circleTop
-  const centeredCircleTop = availableCenter - (circleHeight / 2)
-  const circleShift = centeredCircleTop - circleTop
-  const currentCircleCenter = circle.getBoundingClientRect().top - screenRect.top
-  circle.style.top = `${currentCircleCenter + circleShift}px`
-  if (drawnCard) drawnCard.style.top = `${availableCenter - screenRect.top}px`
-}
-
-function positionPlayersButton() {
-  const screen = root?.querySelector<HTMLElement>('.klatschen-play-screen, .klatschen-card-screen')
-  const primaryButton = screen?.querySelector<HTMLElement>('.klatschen-draw-button, .klatschen-next-button')
-  const playersButton = screen?.querySelector<HTMLElement>('.klatschen-players-button')
-  if (!screen || !primaryButton || !playersButton) return
-  const screenRect = screen.getBoundingClientRect()
-  const primaryRect = primaryButton.getBoundingClientRect()
-  const buttonHeight = playersButton.getBoundingClientRect().height
-  const freeTop = primaryRect.bottom - screenRect.top
-  const freeHeight = screenRect.height - freeTop
-  playersButton.style.top = `${freeTop + Math.max(0, (freeHeight - buttonHeight) / 2)}px`
+  const sequence = positionGameSequence(screen, circle, nextButton, heldCards, slots)
+  if (drawnCard && sequence) drawnCard.style.top = `${((sequence.circleTop + sequence.circleBottom) / 2) - screenRect.top}px`
 }
 
 function updateMiddleLayout() {
   fitCurrentPlayerDisplay()
   positionMiddleLayout()
   positionNextButton()
-  positionPlayersButton()
 }
 
 function removeRevealedCardBack() {
