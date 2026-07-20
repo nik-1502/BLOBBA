@@ -852,7 +852,7 @@ html.is-standalone #app > .setup-page > .setup-shell {
 /* Freundlicher, natürlicher Startseitenhintergrund ohne Neonwirkung */
 .home-page,
 html.is-standalone #app > .home-page {
-  --home-sun-size: clamp(300px, 65vw, 640px);
+  --home-sun-size: clamp(280px, 62vw, 610px);
   background: #9ddcf7;
   background-attachment: local;
 }
@@ -881,8 +881,9 @@ html.is-standalone #app > .home-page {
   transform: translate(-50%, -50%);
   background: url('./assets/background/blobba-sun.png') center / contain no-repeat;
   filter:
-    drop-shadow(0 0 18px rgba(255, 231, 128, .42))
-    drop-shadow(0 0 36px rgba(255, 238, 164, .22));
+    drop-shadow(0 0 16px rgba(255, 247, 183, .78))
+    drop-shadow(0 0 38px rgba(255, 232, 112, .48))
+    drop-shadow(0 0 68px rgba(255, 239, 153, .24));
   pointer-events: none;
 }
 
