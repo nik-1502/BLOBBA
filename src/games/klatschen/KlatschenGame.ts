@@ -44,6 +44,7 @@ let dealAnimationActive = false
 let lastSoundedDrawIndex = 0
 let lastAnimatedDrawIndex = 0
 let playersDialogOpen = false
+const partnerGroupLabelByPlayer = new Map<string, string>()
 const dealAudio = new Audio(blobbenCardDealUrl)
 dealAudio.preload = 'auto'
 dealAudio.setAttribute('playsinline', '')
@@ -63,6 +64,26 @@ function escapeHtml(value: string) {
 
 function playerNameColor(player: KlatschenPlayer) {
   return `style="--player-name-color:${escapeHtml(player.avatarColor)}"`
+}
+
+function partnerGroupDisplay(player: KlatschenPlayer) {
+  const playerIds = new Set(state.players.map((candidate) => candidate.id))
+  const members = [...new Set([player.id, ...player.partnerIds])].filter((id) => playerIds.has(id)).sort()
+  if (members.length < 2) return null
+  if (members.length > 4) {
+    if (import.meta.env.DEV) console.warn('[Blobben] Ungültige Partnergruppengröße:', members.length, members)
+    return null
+  }
+  const existingLabels = members.map((id) => partnerGroupLabelByPlayer.get(id)).filter((label): label is string => Boolean(label)).sort()
+  let label = existingLabels[0]
+  if (!label) {
+    const usedLabels = new Set(partnerGroupLabelByPlayer.values())
+    let labelIndex = 0
+    while (usedLabels.has(String.fromCharCode(65 + labelIndex))) labelIndex += 1
+    label = String.fromCharCode(65 + labelIndex)
+  }
+  members.forEach((id) => partnerGroupLabelByPlayer.set(id, label))
+  return { size: members.length, label }
 }
 
 function createState(setups: KlatschenPlayerSetup[]): KlatschenGameState {
@@ -231,14 +252,15 @@ function playersDialogMarkup() {
       if (slots[slot]) slots[slot]!.count += 1
       else slots[slot] = { cardId: card.id, count: 1 }
     })
-    const partners = player.partnerIds.map((id) => state.players.find((candidate) => candidate.id === id)).filter((candidate): candidate is KlatschenPlayer => Boolean(candidate))
-    if (partners.length) slots[3] = { cardId: 'clap-partner', count: partners.length }
+    const partnerGroup = partnerGroupDisplay(player)
+    if (partnerGroup) slots[3] = { cardId: 'clap-partner', count: partnerGroup.size }
     const slotNames: EffectIconName[] = ['nose', 'thumb', 'double', 'partner', 'question-master']
     const cards = slots.flatMap((entry, index) => {
       if (!entry) return []
       const count = entry.count
       const countMarkup = count > 1 || (index === 3 && count === 1) ? `<b class="klatschen-held-count" aria-hidden="true">${count}</b>` : ''
-      const content = `<span class="klatschen-held-preview" aria-label="${escapeHtml(heldCardLabel(klatschenCardMap.get(entry.cardId)!))}${count > 1 ? `, ${count} Karten` : ''}">${countMarkup}${effectIconMarkup(entry.cardId)}</span>`
+      const groupLabel = index === 3 && partnerGroup ? `<i class="klatschen-partner-group-label" aria-label="Partnergruppe ${partnerGroup.label}">${partnerGroup.label}</i>` : ''
+      const content = `<span class="klatschen-held-preview" aria-label="${escapeHtml(heldCardLabel(klatschenCardMap.get(entry.cardId)!))}${index === 3 ? `, Partnergruppe ${partnerGroup?.label}, ${count} Spieler` : count > 1 ? `, ${count} Karten` : ''}">${countMarkup}${groupLabel}${effectIconMarkup(entry.cardId)}</span>`
       return [`<div class="klatschen-effect-slot effect-${slotNames[index]} is-filled">${content}</div>`]
     }).join('')
     return `<section class="klatschen-player-card-row"><div class="klatschen-player-card-person">${avatarMarkup(player)}<strong class="player-name-color" ${playerNameColor(player)}>${escapeHtml(player.name)}</strong></div><div class="klatschen-player-card-list">${cards}</div></section>`
@@ -728,6 +750,7 @@ export function applyKlatschenState(nextState: KlatschenGameState) {
 export function mountKlatschen(target: HTMLElement, players: KlatschenPlayerSetup[], gameOptions: KlatschenOptions = {}) {
   root = target
   playersDialogOpen = false
+  partnerGroupLabelByPlayer.clear()
   options = gameOptions
   dealAnimationActive = false
   state = gameOptions.initialState ? structuredClone(gameOptions.initialState) : createState(players)
