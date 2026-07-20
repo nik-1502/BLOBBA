@@ -312,7 +312,7 @@ function renderCard() {
 }
 
 function renderFinished() {
-  return `<section class="klatschen-summary"><div class="klatschen-summary-message"><h2>Ihr habt's überlebt.</h2><p>Nochmal oder Feierabend?</p></div><div class="klatschen-summary-actions"><button class="game-button primary ipad-pwa-end-button" data-klatschen-action="exit">Beenden</button><button class="game-button primary ipad-pwa-end-button" data-klatschen-action="restart">Neustarten</button></div></section>`
+  return `<section class="klatschen-play-screen klatschen-summary"><div class="klatschen-summary-content"><div class="klatschen-summary-message"><h2>Ihr habt's überlebt.</h2><p>Nochmal oder Feierabend?</p></div><div class="klatschen-summary-actions"><button class="game-button primary ipad-pwa-end-button" data-klatschen-action="exit">Beenden</button><button class="game-button primary ipad-pwa-end-button" data-klatschen-action="restart">Neustarten</button></div></div></section>`
 }
 
 function addDrinks(playerIndex: number, amount: number, includePartner = true) {

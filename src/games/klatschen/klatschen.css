@@ -135,7 +135,8 @@
 .klatschen-target .klatschen-avatar { width: 31px; height: 31px; }
 .klatschen-target span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .klatschen-summary-message { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.klatschen-summary-message h2 { margin: 0; font-size: clamp(1.8rem,6vw,3.2rem); font-weight: 900; }
+.klatschen-summary-content { display: flex; width: min(520px,100%); flex-direction: column; align-items: center; gap: clamp(16px,3vh,28px); }
+.klatschen-summary-message h2 { margin: 0; color: var(--blobba-yellow); font-size: clamp(1.8rem,6vw,3.2rem); font-weight: 900; }
 .klatschen-summary-message p { margin: 0; color: #d8d0e4; font-size: clamp(1rem,3.2vw,1.3rem); font-style: italic; }
 .klatschen-summary-actions { display: grid; width: min(520px,100%); grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
 .klatschen-summary-actions .game-button { display: flex; width: 100%; height: 100%; min-width: 0; grid-column: auto; align-items: center; justify-content: center; }
