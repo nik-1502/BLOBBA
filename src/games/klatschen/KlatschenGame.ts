@@ -693,7 +693,7 @@ function render() {
   const content = state.phase === 'rule' || state.phase === 'turn' ? renderTurn() : state.phase === 'card' ? renderCard() : renderFinished()
   const isFinished = state.phase === 'finished'
   if (isFinished) {
-    root.innerHTML = `<div class="busfahrer-shell setup-shell klatschen-shell is-finished"><section class="setup-stage"><div class="setup-stack"><h1 class="setup-title">BLOBBEN</h1>${content}</div></section></div>`
+    root.innerHTML = `<div class="busfahrer-shell setup-shell klatschen-shell is-finished"><section class="setup-stage"><div class="setup-stack"><h1 class="setup-title klatschen-end-title">BLOBBEN</h1>${content}</div></section></div>`
   } else {
     const header = '<header class="busfahrer-header"><button class="back-button bus-back ipad-pwa-header-button" type="button" data-action="back">Beenden</button><div><p>BLOBBA präsentiert</p><h1>BLOBBEN</h1></div><button class="restart-button ipad-pwa-header-button" type="button" data-klatschen-action="restart">Neu starten</button></header>'
     const globalRule = '<div class="klatschen-global-rule">Sag nicht „trinken“ – sag „blobben“.</div>'
