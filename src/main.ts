@@ -499,6 +499,7 @@ function renderHome() {
         ${(['Alle', ...HOME_GAME_CATEGORIES] as HomeGameCategory[]).map((category) => `<button class="category-chip${selectedHomeCategory === category ? ' is-selected' : ''}" type="button" data-home-category="${category}" aria-pressed="${selectedHomeCategory === category}">${category}</button>`).join('')}
       </div>
       </section>
+      <h2 class="home-section-title">Spiele</h2>
       <section class="game-list" aria-label="Spiele">
       <div class="game-tile-wrap" data-home-game="blobfahrer">
         <button class="busfahrer-button blobfahrer-home-button" type="button" aria-label="Busfahrer öffnen">
