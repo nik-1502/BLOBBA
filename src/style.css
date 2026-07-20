@@ -880,7 +880,9 @@ html.is-standalone #app > .home-page {
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   background: url('./assets/background/blobba-sun.png') center / contain no-repeat;
-  filter: drop-shadow(0 0 18px rgba(255, 221, 92, .34));
+  filter:
+    drop-shadow(0 0 18px rgba(255, 231, 128, .42))
+    drop-shadow(0 0 36px rgba(255, 238, 164, .22));
   pointer-events: none;
 }
 
