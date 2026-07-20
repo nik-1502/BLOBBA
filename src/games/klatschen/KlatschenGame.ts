@@ -196,7 +196,8 @@ function heldCardsMarkup() {
     cards[effectCardPriority('partner-status')] = `<button type="button" class="klatschen-held-preview" data-klatschen-held="partner-status" data-klatschen-owner="${escapeHtml(player.id)}" aria-label="Blobb-Partner: ${escapeHtml(partnerNames)}"><b class="klatschen-held-count" aria-hidden="true">${partners.length}</b>${effectIconMarkup('clap-partner')}</button>`
   })
   const slotCardIds = ['nose-clapper-1', 'thumb-clapper-1', 'double-clap', 'clap-partner', 'question-rule']
-  const content = cards.map((card, index) => `<div class="klatschen-effect-slot${card ? ' is-filled' : ''}">${card ?? `<span class="klatschen-effect-placeholder" aria-hidden="true">${effectIconMarkup(slotCardIds[index]!)}</span>`}</div>`).join('')
+  const slotNames: EffectIconName[] = ['nose', 'thumb', 'double', 'partner', 'question-master']
+  const content = cards.map((card, index) => `<div class="klatschen-effect-slot effect-${slotNames[index]}${card ? ' is-filled' : ''}">${card ?? `<span class="klatschen-effect-placeholder" aria-hidden="true">${effectIconMarkup(slotCardIds[index]!)}</span>`}</div>`).join('')
   return `<section class="klatschen-held-cards" aria-label="Aktive Blobb-Karten und Zustände"><div>${content}</div></section>`
 }
 
@@ -248,7 +249,8 @@ function renderTurn() {
 function drawnCardMarkup(card: KlatschenCard) {
   const angle = ((state.drawnSlot ?? 0) / state.deck.length) * 360
   const settled = state.drawIndex <= lastAnimatedDrawIndex
-  const effectClass = effectIconName(card.id) ? ' is-effect-card' : ''
+  const activeEffect = effectIconName(card.id)
+  const effectClass = activeEffect ? ` is-effect-card effect-${activeEffect}` : ''
   const ruleClass = card.type === 'temporary-rule' ? ' is-rule-card' : ''
   return `<article class="klatschen-drawn-card${effectClass}${ruleClass}" style="--draw-angle:${angle}deg;--draw-counter-angle:${-angle}deg"><div class="klatschen-drawn-inner${settled ? ' is-settled' : ''}"><div class="klatschen-drawn-back" aria-hidden="true"></div><div class="klatschen-drawn-front"><h2>${escapeHtml(card.title)}</h2><span class="klatschen-card-symbol" aria-hidden="true">${cardSymbolMarkup(card)}</span><p>${escapeHtml(card.description)}</p>${card.suggestedRule ? `<small>Vorschlag: ${escapeHtml(card.suggestedRule)}</small>` : ''}${card.amount ? `<strong class="klatschen-amount">${card.amount} Schluck${card.amount === 1 ? '' : 'e'}</strong>` : ''}</div></div></article>`
 }
