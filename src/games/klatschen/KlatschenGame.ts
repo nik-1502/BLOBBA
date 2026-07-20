@@ -44,7 +44,9 @@ let dealAnimationActive = false
 let lastSoundedDrawIndex = 0
 let lastAnimatedDrawIndex = 0
 let playersDialogOpen = false
-const partnerGroupLabelByPlayer = new Map<string, string>()
+type PartnerGroupIdentity = { id: string; creationIndex: number }
+const partnerGroupIdentityByPlayer = new Map<string, PartnerGroupIdentity>()
+let nextPartnerGroupIndex = 0
 const dealAudio = new Audio(blobbenCardDealUrl)
 dealAudio.preload = 'auto'
 dealAudio.setAttribute('playsinline', '')
@@ -70,20 +72,17 @@ function partnerGroupDisplay(player: KlatschenPlayer) {
   const playerIds = new Set(state.players.map((candidate) => candidate.id))
   const members = [...new Set([player.id, ...player.partnerIds])].filter((id) => playerIds.has(id)).sort()
   if (members.length < 2) return null
-  if (members.length > 4) {
-    if (import.meta.env.DEV) console.warn('[Blobben] Ungültige Partnergruppengröße:', members.length, members)
-    return null
+  const existingGroups = members
+    .map((id) => partnerGroupIdentityByPlayer.get(id))
+    .filter((group): group is PartnerGroupIdentity => Boolean(group))
+    .sort((left, right) => left.creationIndex - right.creationIndex)
+  let group = existingGroups[0]
+  if (!group) {
+    group = { id: `partner-group-${nextPartnerGroupIndex + 1}`, creationIndex: nextPartnerGroupIndex }
+    nextPartnerGroupIndex += 1
   }
-  const existingLabels = members.map((id) => partnerGroupLabelByPlayer.get(id)).filter((label): label is string => Boolean(label)).sort()
-  let label = existingLabels[0]
-  if (!label) {
-    const usedLabels = new Set(partnerGroupLabelByPlayer.values())
-    let labelIndex = 0
-    while (usedLabels.has(String.fromCharCode(65 + labelIndex))) labelIndex += 1
-    label = String.fromCharCode(65 + labelIndex)
-  }
-  members.forEach((id) => partnerGroupLabelByPlayer.set(id, label))
-  return { size: members.length, label }
+  members.forEach((id) => partnerGroupIdentityByPlayer.set(id, group))
+  return { size: members.length, colorIndex: group.creationIndex % 5 }
 }
 
 function createState(setups: KlatschenPlayerSetup[]): KlatschenGameState {
@@ -259,9 +258,9 @@ function playersDialogMarkup() {
       if (!entry) return []
       const count = entry.count
       const countMarkup = count > 1 || (index === 3 && count === 1) ? `<b class="klatschen-held-count" aria-hidden="true">${count}</b>` : ''
-      const groupLabel = index === 3 && partnerGroup ? `<i class="klatschen-partner-group-label" aria-label="Partnergruppe ${partnerGroup.label}">${partnerGroup.label}</i>` : ''
-      const content = `<span class="klatschen-held-preview" aria-label="${escapeHtml(heldCardLabel(klatschenCardMap.get(entry.cardId)!))}${index === 3 ? `, Partnergruppe ${partnerGroup?.label}, ${count} Spieler` : count > 1 ? `, ${count} Karten` : ''}">${countMarkup}${groupLabel}${effectIconMarkup(entry.cardId)}</span>`
-      return [`<div class="klatschen-effect-slot effect-${slotNames[index]} is-filled">${content}</div>`]
+      const content = `<span class="klatschen-held-preview" aria-label="${escapeHtml(heldCardLabel(klatschenCardMap.get(entry.cardId)!))}${index === 3 ? `, ${count} Spieler` : count > 1 ? `, ${count} Karten` : ''}">${countMarkup}${effectIconMarkup(entry.cardId)}</span>`
+      const partnerGroupClass = index === 3 && partnerGroup ? ` partner-group-${partnerGroup.colorIndex}` : ''
+      return [`<div class="klatschen-effect-slot effect-${slotNames[index]} is-filled${partnerGroupClass}">${content}</div>`]
     }).join('')
     return `<section class="klatschen-player-card-row"><div class="klatschen-player-card-person">${avatarMarkup(player)}<strong class="player-name-color" ${playerNameColor(player)}>${escapeHtml(player.name)}</strong></div><div class="klatschen-player-card-list">${cards}</div></section>`
   }).join('')
@@ -421,6 +420,7 @@ function selectTarget(index: number) {
   const owner = currentPlayer()
   const partner = state.players[index]!
   mergePartnerGroups(owner, partner)
+  partnerGroupDisplay(owner)
   nextTurn()
 }
 
@@ -750,7 +750,8 @@ export function applyKlatschenState(nextState: KlatschenGameState) {
 export function mountKlatschen(target: HTMLElement, players: KlatschenPlayerSetup[], gameOptions: KlatschenOptions = {}) {
   root = target
   playersDialogOpen = false
-  partnerGroupLabelByPlayer.clear()
+  partnerGroupIdentityByPlayer.clear()
+  nextPartnerGroupIndex = 0
   options = gameOptions
   dealAnimationActive = false
   state = gameOptions.initialState ? structuredClone(gameOptions.initialState) : createState(players)
