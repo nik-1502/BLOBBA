@@ -694,8 +694,8 @@ html.is-standalone #app > .setup-page > .setup-shell {
 .home-page {
   --home-content-width: 820px;
   --home-control-radius: 20px;
-  --home-glass-border: rgba(255, 255, 255, .40);
-  --home-glass-shadow: 0 10px 26px rgba(2, 0, 24, .30), 0 0 18px rgba(138, 67, 255, .11);
+  --home-glass-border: rgba(255, 255, 255, .68);
+  --home-glass-shadow: 0 14px 34px rgba(35, 132, 174, .16), 0 4px 12px rgba(35, 132, 174, .10);
   padding-right: max(clamp(14px, 3.4vw, 48px), env(safe-area-inset-right, 0px));
   padding-bottom: calc(clamp(28px, 6vh, 64px) + env(safe-area-inset-bottom, 0px));
   padding-left: max(clamp(14px, 3.4vw, 48px), env(safe-area-inset-left, 0px));
@@ -751,21 +751,22 @@ html.is-standalone #app > .setup-page > .setup-shell {
 .home-page .favorites-filter-button {
   border-color: var(--home-glass-border);
   border-radius: var(--home-control-radius);
-  background: linear-gradient(112deg, rgba(1, 155, 251, .62), rgba(0, 70, 170, .62));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .17), var(--home-glass-shadow);
+  background: linear-gradient(180deg, rgba(73, 199, 240, .88), rgba(20, 161, 211, .82));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .66), inset 0 -1px 0 rgba(12, 125, 174, .16), var(--home-glass-shadow);
 }
 
 .home-page .games-search-bar {
-  border-color: rgba(255, 255, 255, .44);
-  background: linear-gradient(112deg, rgba(1, 155, 251, .31), rgba(0, 70, 170, .31));
-  backdrop-filter: blur(8px);
+  border-color: rgba(255, 255, 255, .72);
+  background: linear-gradient(180deg, rgba(236, 251, 255, .70), rgba(106, 214, 224, .52));
+  -webkit-backdrop-filter: blur(12px) saturate(1.08);
+  backdrop-filter: blur(12px) saturate(1.08);
 }
 
-.home-page .game-search input::placeholder { color: rgba(255, 255, 255, .84); }
+.home-page .game-search input::placeholder { color: rgba(255, 255, 255, .92); }
 
 .home-page .game-search:focus-within {
-  border-color: rgba(255, 255, 255, .84);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .20), 0 0 0 3px rgba(171, 105, 255, .16), 0 0 22px rgba(82, 129, 255, .20), 0 8px 20px rgba(0, 0, 0, .24);
+  border-color: rgba(255, 255, 255, .94);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .72), 0 0 0 3px rgba(73, 199, 240, .20), 0 0 24px rgba(29, 175, 218, .24), 0 10px 26px rgba(35, 132, 174, .15);
 }
 
 .home-page .categories-filter-button,
@@ -775,6 +776,13 @@ html.is-standalone #app > .setup-page > .setup-shell {
 
 .home-page .categories-filter-button:active,
 .home-page .favorites-filter-button:active { transform: scale(.98); }
+
+.home-page .categories-filter-button.is-active,
+.home-page .favorites-filter-button.is-active {
+  border-color: rgba(255, 255, 255, .82);
+  background: linear-gradient(180deg, rgba(60, 206, 229, .94), rgba(13, 151, 201, .90));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .68), 0 12px 30px rgba(28, 145, 186, .20);
+}
 
 .home-section-title {
   z-index: 1;
@@ -853,21 +861,41 @@ html.is-standalone #app > .setup-page > .setup-shell {
 .home-page,
 html.is-standalone #app > .home-page {
   --home-sun-size: clamp(305px, 68vw, 670px);
-  background: #9ddcf7;
+  background:
+    linear-gradient(180deg,
+      #fff9d9 0%,
+      #fff1c2 25%,
+      #f5f4dd 43%,
+      #e6f7ff 65%,
+      #89d2f2 100%);
   background-attachment: local;
 }
 
 .home-page::before {
   position: fixed;
-  background: none;
-  opacity: 0;
-  filter: none;
+  background:
+    linear-gradient(109deg, transparent 20%, rgba(255, 255, 255, .22) 34%, transparent 48%),
+    linear-gradient(71deg, transparent 28%, rgba(255, 255, 255, .15) 40%, transparent 53%),
+    radial-gradient(ellipse 28% 9% at 16% 27%, rgba(255, 255, 255, .22), transparent 72%),
+    radial-gradient(ellipse 34% 10% at 79% 34%, rgba(255, 255, 255, .18), transparent 74%),
+    radial-gradient(ellipse 26% 8% at 48% 48%, rgba(255, 255, 255, .12), transparent 76%);
+  opacity: .58;
+  filter: blur(15px);
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .home-page::after {
   position: fixed;
-  background: none;
-  opacity: 0;
+  background:
+    radial-gradient(ellipse 42% 3% at 18% 83%, rgba(255, 255, 255, .20), transparent 72%),
+    radial-gradient(ellipse 48% 3% at 78% 90%, rgba(255, 255, 255, .16), transparent 74%),
+    radial-gradient(ellipse 35% 2.5% at 48% 96%, rgba(33, 161, 213, .14), transparent 76%),
+    linear-gradient(180deg, transparent 60%, rgba(25, 167, 219, .08) 100%);
+  opacity: .58;
+  filter: blur(10px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 50%, #000 78%);
+  mask-image: linear-gradient(to bottom, transparent 50%, #000 78%);
 }
 
 .home-page .hero-header::before {
