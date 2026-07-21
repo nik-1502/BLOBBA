@@ -694,8 +694,12 @@ html.is-standalone #app > .setup-page > .setup-shell {
 .home-page {
   --home-content-width: 820px;
   --home-control-radius: 20px;
-  --home-glass-border: rgba(255, 255, 255, .68);
-  --home-glass-shadow: 0 14px 34px rgba(164, 92, 0, .20), 0 4px 12px rgba(164, 92, 0, .12);
+  --home-glass-border: rgba(255, 255, 255, .90);
+  --home-glass-shadow:
+    0 6px 12px rgba(112, 40, 0, .38),
+    0 2px 4px rgba(112, 40, 0, .22),
+    inset 0 1px 1px rgba(255, 255, 255, .42),
+    inset 0 -2px 3px rgba(120, 35, 0, .28);
   padding-right: max(clamp(14px, 3.4vw, 48px), env(safe-area-inset-right, 0px));
   padding-bottom: calc(clamp(28px, 6vh, 64px) + env(safe-area-inset-bottom, 0px));
   padding-left: max(clamp(14px, 3.4vw, 48px), env(safe-area-inset-left, 0px));
@@ -749,17 +753,22 @@ html.is-standalone #app > .setup-page > .setup-shell {
 .home-page .game-search,
 .home-page .categories-filter-button,
 .home-page .favorites-filter-button {
-  border-color: var(--home-glass-border);
+  border: 1.5px solid var(--home-glass-border);
   border-radius: var(--home-control-radius);
-  background: linear-gradient(180deg, rgba(255, 187, 45, .88), rgba(253, 166, 1, .84) 48%, rgba(213, 124, 0, .84));
-  box-shadow: inset 0 1px 0 rgba(255, 248, 204, .66), inset 0 -1px 0 rgba(155, 82, 0, .22), var(--home-glass-shadow);
+  background: linear-gradient(180deg, #ff7a1a 0%, #f75b04 50%, #d94a00 100%);
+  box-shadow: var(--home-glass-shadow);
 }
 
 .home-page .games-search-bar {
-  border-color: rgba(255, 255, 255, .72);
-  background: linear-gradient(180deg, rgba(255, 191, 55, .80), rgba(253, 166, 1, .76) 48%, rgba(214, 126, 0, .76));
-  -webkit-backdrop-filter: blur(12px) saturate(1.08);
-  backdrop-filter: blur(12px) saturate(1.08);
+  border: 1.5px solid rgba(255, 255, 255, .90);
+  background: linear-gradient(180deg, #ff7a1a 0%, #f75b04 50%, #d94a00 100%);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow:
+    0 7px 15px rgba(105, 35, 0, .42),
+    0 2px 4px rgba(105, 35, 0, .25),
+    inset 0 1px 1px rgba(255, 255, 255, .48),
+    inset 0 -2px 3px rgba(120, 35, 0, .30);
 }
 
 .home-page .game-search input::placeholder { color: rgba(255, 255, 255, .92); }
@@ -771,17 +780,25 @@ html.is-standalone #app > .setup-page > .setup-shell {
 
 .home-page .categories-filter-button,
 .home-page .favorites-filter-button {
-  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 120ms ease, filter 160ms ease;
+  transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
 }
 
+.home-page .game-search {
+  transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+}
+
+.home-page .game-search:active,
 .home-page .categories-filter-button:active,
-.home-page .favorites-filter-button:active { transform: scale(.98); }
+.home-page .favorites-filter-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 5px rgba(105, 35, 0, .30), inset 0 2px 4px rgba(105, 35, 0, .30);
+}
 
 .home-page .categories-filter-button.is-active,
 .home-page .favorites-filter-button.is-active {
   border-color: rgba(255, 255, 255, .82);
-  background: linear-gradient(180deg, rgba(255, 191, 50, .94), rgba(253, 166, 1, .92) 48%, rgba(207, 116, 0, .92));
-  box-shadow: inset 0 1px 0 rgba(255, 249, 205, .68), 0 12px 30px rgba(125, 79, 8, .24);
+  background: linear-gradient(180deg, #ff8329 0%, #f75b04 50%, #cf4200 100%);
+  box-shadow: var(--home-glass-shadow);
 }
 
 .home-section-title {
@@ -819,10 +836,17 @@ html.is-standalone #app > .setup-page > .setup-shell {
 .home-page .favorite-heart-button:active { transform: scale(.9); }
 
 @media (hover: hover) {
+  .home-page .game-search:hover,
   .home-page .categories-filter-button:hover,
   .home-page .favorites-filter-button:hover {
-    border-color: rgba(255, 255, 255, .60);
-    filter: brightness(1.12);
+    border-color: rgba(255, 255, 255, .94);
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+    box-shadow:
+      0 8px 16px rgba(112, 40, 0, .42),
+      0 3px 5px rgba(112, 40, 0, .24),
+      inset 0 1px 1px rgba(255, 255, 255, .46),
+      inset 0 -2px 3px rgba(120, 35, 0, .28);
   }
 }
 
