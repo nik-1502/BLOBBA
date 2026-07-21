@@ -862,14 +862,14 @@ html.is-standalone #app > .setup-page > .setup-shell {
 html.is-standalone #app > .home-page {
   --home-sun-size: clamp(305px, 68vw, 670px);
   background:
-    radial-gradient(ellipse 78% 72% at 50% 43%, transparent 48%, rgba(190, 91, 0, .18) 72%, rgba(130, 54, 0, .48) 100%),
+    radial-gradient(ellipse 72% 64% at 50% 39%, rgba(232, 125, 0, .13) 0%, rgba(222, 111, 0, .20) 42%, rgba(207, 87, 0, .46) 70%, rgba(157, 52, 0, .78) 100%),
     radial-gradient(ellipse 92% 58% at 50% 8%, rgba(255, 251, 174, .96) 0%, rgba(255, 235, 62, .70) 36%, rgba(255, 199, 35, .27) 68%, transparent 100%),
     radial-gradient(ellipse 48% 28% at 18% 45%, rgba(255, 242, 109, .32) 0%, rgba(255, 194, 27, .12) 66%, transparent 100%),
     radial-gradient(ellipse 48% 28% at 82% 45%, rgba(255, 242, 109, .32) 0%, rgba(255, 194, 27, .12) 66%, transparent 100%),
     radial-gradient(ellipse 76% 34% at 50% 66%, rgba(255, 222, 45, .36) 0%, rgba(246, 158, 18, .18) 70%, transparent 100%),
     radial-gradient(ellipse 38% 20% at 22% 88%, rgba(255, 190, 25, .22), transparent 80%),
     radial-gradient(ellipse 38% 20% at 78% 88%, rgba(255, 190, 25, .22), transparent 80%),
-    linear-gradient(180deg, #fff6a8 0%, #ffe542 30%, #ffd12f 55%, #ffbd22 77%, #f5a51b 100%);
+    linear-gradient(180deg, #ffe975 0%, #ffda35 27%, #ffc126 52%, #f69a12 75%, #dc6800 100%);
   background-attachment: local;
 }
 
@@ -896,7 +896,7 @@ html.is-standalone #app > .home-page {
     radial-gradient(ellipse 42% 7% at 18% 84%, rgba(255, 242, 132, .16), transparent 76%),
     radial-gradient(ellipse 42% 7% at 82% 91%, rgba(255, 229, 89, .14), transparent 76%),
     radial-gradient(ellipse 34% 6% at 50% 97%, rgba(228, 132, 12, .10), transparent 78%),
-    linear-gradient(180deg, transparent 58%, rgba(229, 132, 14, .08) 100%);
+    linear-gradient(180deg, transparent 48%, rgba(210, 92, 0, .24) 78%, rgba(157, 52, 0, .38) 100%);
   opacity: .54;
   filter: blur(14px);
   -webkit-mask-image: none;
