@@ -862,6 +862,7 @@ html.is-standalone #app > .setup-page > .setup-shell {
 html.is-standalone #app > .home-page {
   --home-sun-size: clamp(305px, 68vw, 670px);
   background:
+    radial-gradient(ellipse 78% 72% at 50% 43%, transparent 48%, rgba(190, 91, 0, .18) 72%, rgba(130, 54, 0, .48) 100%),
     radial-gradient(ellipse 92% 58% at 50% 8%, rgba(255, 251, 174, .96) 0%, rgba(255, 235, 62, .70) 36%, rgba(255, 199, 35, .27) 68%, transparent 100%),
     radial-gradient(ellipse 48% 28% at 18% 45%, rgba(255, 242, 109, .32) 0%, rgba(255, 194, 27, .12) 66%, transparent 100%),
     radial-gradient(ellipse 48% 28% at 82% 45%, rgba(255, 242, 109, .32) 0%, rgba(255, 194, 27, .12) 66%, transparent 100%),
@@ -904,6 +905,7 @@ html.is-standalone #app > .home-page {
 
 .home-page .hero-header::before {
   content: "";
+  display: none;
   position: absolute;
   top: 50%;
   left: 50%;
