@@ -858,7 +858,9 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
   --setup-line: rgba(255, 255, 255, .22);
   --setup-text-muted: rgba(255, 245, 237, .76);
   background-color: #f75b04;
-  background-image: url('./assets/background/blobba-background-clean.png');
+  background-image:
+    linear-gradient(rgba(0, 0, 0, .2), rgba(0, 0, 0, .2)),
+    url('./assets/background/blobba-background-clean.png');
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -881,7 +883,9 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
    reach iOS safe areas. Restore this page's own artwork above that layer. */
 html.is-standalone #app > .busfahrer-page.player-selection-page {
   background-color: #f75b04;
-  background-image: url('./assets/background/blobba-background-clean.png');
+  background-image:
+    linear-gradient(rgba(0, 0, 0, .2), rgba(0, 0, 0, .2)),
+    url('./assets/background/blobba-background-clean.png');
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
