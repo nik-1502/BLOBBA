@@ -832,9 +832,9 @@ html.is-standalone #app > .setup-page > .setup-shell {
     inset 0 -7px 9px rgba(0, 30, 91, .52),
     inset 5px 0 6px rgba(128, 224, 255, .28),
     inset -5px 0 6px rgba(0, 40, 116, .34),
-    0 0 16px rgba(71, 184, 244, .34),
-    0 9px 15px rgba(0, 42, 105, .54),
-    0 14px 29px rgba(0, 0, 0, .38);
+    0 0 9px rgba(71, 184, 244, .32),
+    0 8px 10px rgba(0, 42, 105, .52),
+    0 12px 19px rgba(0, 0, 0, .36);
   transition: transform 150ms ease, box-shadow 160ms ease, filter 160ms ease;
 }
 
@@ -846,9 +846,9 @@ html.is-standalone #app > .setup-page > .setup-shell {
     inset 0 -7px 9px rgba(0, 38, 108, .52),
     inset 5px 0 6px rgba(150, 233, 255, .34),
     inset -5px 0 6px rgba(0, 55, 142, .34),
-    0 0 19px rgba(75, 193, 255, .40),
-    0 11px 18px rgba(0, 42, 105, .56),
-    0 18px 35px rgba(0, 35, 88, .38);
+    0 0 11px rgba(75, 193, 255, .38),
+    0 10px 12px rgba(0, 42, 105, .54),
+    0 15px 23px rgba(0, 35, 88, .36);
 }
 .home-page .busfahrer-button:active { transform: scale(.985); }
 
