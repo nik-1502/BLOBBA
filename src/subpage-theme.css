@@ -332,6 +332,7 @@ html.is-ipad-standalone .busfahrer-page :is(.end-actions, .klatschen-summary-act
 
 .busfahrer-page .player-turn-actions {
   order: initial;
+  width: min(520px, 100%);
   flex: 0 0 auto;
   align-self: center;
   margin-top: auto;
