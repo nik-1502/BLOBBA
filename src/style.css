@@ -276,13 +276,9 @@ body {
 
 .blobfahrer-home-button,
 .klatschen-home-button {
-  background: linear-gradient(
-    180deg,
-    #12a9ec 0%,
-    #0b8bda 34%,
-    #0870c9 68%,
-    #0648a2 100%
-  );
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .24) 0%, rgba(255, 255, 255, .05) 10%, transparent 24%),
+    linear-gradient(180deg, #12b9f5 0%, #079ee8 31%, #087ccc 66%, #0750aa 100%);
 }
 
 .busfahrer-button-label {
@@ -829,29 +825,34 @@ html.is-standalone #app > .setup-page > .setup-shell {
 .home-page .game-list { gap: clamp(9px, 1.8vw, 16px); }
 
 .home-page .busfahrer-button {
-  border-color: rgba(255, 255, 255, .58);
+  border-color: rgba(4, 50, 133, .96);
   box-shadow:
-    inset 0 4px 3px rgba(244, 253, 255, .76),
-    inset 0 -6px 8px rgba(0, 31, 91, .48),
-    inset 4px 0 5px rgba(124, 218, 255, .26),
-    inset -4px 0 5px rgba(0, 42, 112, .30),
-    0 0 0 1px rgba(191, 241, 255, .24),
-    0 0 15px rgba(41, 130, 223, .25),
-    0 8px 14px rgba(0, 42, 105, .50),
-    0 12px 28px rgba(0, 0, 0, .36);
+    inset 0 0 0 2px rgba(189, 241, 255, .72),
+    inset 0 5px 4px rgba(255, 255, 255, .82),
+    inset 0 -7px 9px rgba(0, 30, 91, .52),
+    inset 5px 0 6px rgba(128, 224, 255, .28),
+    inset -5px 0 6px rgba(0, 40, 116, .34),
+    0 0 0 2px rgba(145, 224, 255, .88),
+    0 0 0 4px rgba(3, 43, 119, .90),
+    0 0 16px rgba(71, 184, 244, .34),
+    0 9px 15px rgba(0, 42, 105, .54),
+    0 14px 29px rgba(0, 0, 0, .38);
   transition: transform 150ms ease, box-shadow 160ms ease, filter 160ms ease;
 }
 
 .home-page .busfahrer-button:hover {
   transform: translateY(-4px);
   box-shadow:
-    inset 0 4px 3px rgba(255, 255, 255, .86),
-    inset 0 -6px 8px rgba(0, 44, 118, .48),
-    inset 4px 0 5px rgba(145, 232, 255, .32),
-    inset -4px 0 5px rgba(0, 64, 151, .30),
-    0 0 0 1px rgba(205, 246, 255, .28),
-    0 10px 17px rgba(0, 42, 105, .52),
-    0 16px 34px rgba(0, 38, 90, .34);
+    inset 0 0 0 2px rgba(207, 247, 255, .80),
+    inset 0 5px 4px rgba(255, 255, 255, .90),
+    inset 0 -7px 9px rgba(0, 38, 108, .52),
+    inset 5px 0 6px rgba(150, 233, 255, .34),
+    inset -5px 0 6px rgba(0, 55, 142, .34),
+    0 0 0 2px rgba(171, 235, 255, .94),
+    0 0 0 4px rgba(3, 49, 132, .94),
+    0 0 19px rgba(75, 193, 255, .40),
+    0 11px 18px rgba(0, 42, 105, .56),
+    0 18px 35px rgba(0, 35, 88, .38);
 }
 .home-page .busfahrer-button:active { transform: scale(.985); }
 
