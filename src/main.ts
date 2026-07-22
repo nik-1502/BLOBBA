@@ -25,7 +25,7 @@ import {
 } from './online.ts'
 import type { Session } from '@supabase/supabase-js'
 import busfahrerGameImage from './assets/spielbild icons/blobb-fahrer-cover-clean.png'
-import blobbenGameImage from './assets/spielbild icons/blobben-cover-clean.png'
+import blobbenGameImage from './assets/spielbild icons/blobben-cover-clean-v2.png'
 import heroLogo from './assets/überschrift/blobba-logo-clean.png'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
