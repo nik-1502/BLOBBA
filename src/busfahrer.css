@@ -857,34 +857,35 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
   --setup-ink-soft: rgba(52, 43, 40, .78);
   --setup-line: rgba(255, 255, 255, .22);
   --setup-text-muted: rgba(255, 245, 237, .76);
-  --setup-selection-background:
-    radial-gradient(ellipse 64% 50% at 50% 45%, rgba(255, 193, 76, .68) 0%, rgba(255, 137, 28, .28) 48%, transparent 76%),
-    linear-gradient(180deg, rgba(81, 18, 0, .16), transparent 19%, transparent 72%, rgba(83, 19, 0, .28)),
-    url('./assets/background/blobba-orange-comic-background.png') center / cover no-repeat,
-    #e85a08;
-  background: var(--setup-selection-background);
+  background-color: #f75b04;
+  background-image: url('./assets/background/blobba-background-clean.png');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 .player-selection-page::before {
-  opacity: .3;
-  background:
-    repeating-conic-gradient(from -4deg at 50% 46%, rgba(255, 238, 180, .15) 0deg 5deg, transparent 5deg 15deg),
-    radial-gradient(ellipse 62% 50% at 50% 46%, rgba(255, 223, 130, .26), transparent 70%);
-  -webkit-mask-image: radial-gradient(ellipse 88% 78% at 50% 46%, #000 0 48%, transparent 79%);
-  mask-image: radial-gradient(ellipse 88% 78% at 50% 46%, #000 0 48%, transparent 79%);
+  background: none;
+  opacity: 0;
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .player-selection-page::after {
-  opacity: 1;
-  background:
-    radial-gradient(ellipse 72% 68% at 50% 45%, transparent 42%, rgba(100, 24, 0, .2) 78%, rgba(59, 12, 0, .5) 100%),
-    radial-gradient(circle at center, rgba(255, 255, 255, .035) 0 1px, transparent 1.3px) 0 0 / 13px 13px;
+  background: none;
+  opacity: 0;
 }
 
 /* The global standalone shell is transparent so the legacy neon layer can
    reach iOS safe areas. Restore this page's own artwork above that layer. */
 html.is-standalone #app > .busfahrer-page.player-selection-page {
-  background: var(--setup-selection-background);
+  background-color: #f75b04;
+  background-image: url('./assets/background/blobba-background-clean.png');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 html.is-standalone #app > .busfahrer-page.player-selection-page::before,
