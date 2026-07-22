@@ -134,13 +134,13 @@ body {
 .home-settings-button {
   position: absolute;
   top: calc(clamp(16px, 4vw, 40px) + 2px);
-  left: clamp(16px, 4vw, 40px);
+  left: calc(clamp(16px, 4vw, 40px) + 6px);
 }
 
 .home-user-button {
   position: absolute;
   top: calc(clamp(16px, 4vw, 40px) + 2px);
-  right: clamp(16px, 4vw, 40px);
+  right: calc(clamp(16px, 4vw, 40px) + 6px);
 }
 
 @media (display-mode: standalone) {

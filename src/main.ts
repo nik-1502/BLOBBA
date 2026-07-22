@@ -100,6 +100,19 @@ function updateIPadStandaloneMode() {
 updateIPadStandaloneMode()
 window.addEventListener('resize', updateIPadStandaloneMode)
 
+function alignHomeHeaderButtons() {
+  const logo = app.querySelector<HTMLImageElement>('.home-page .hero-logo')
+  const buttons = app.querySelectorAll<HTMLButtonElement>('.home-page .home-profile-button')
+  if (!logo || buttons.length === 0 || logo.getBoundingClientRect().height === 0) return
+  const logoRect = logo.getBoundingClientRect()
+  const centerY = logoRect.top + (logoRect.height / 2)
+  buttons.forEach((button) => {
+    button.style.top = `${centerY - (button.offsetHeight / 2)}px`
+  })
+}
+
+window.addEventListener('resize', () => requestAnimationFrame(alignHomeHeaderButtons))
+
 function preventDesktopZoom() {
   const isDesktopPointer = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches
   window.addEventListener('wheel', (event) => {
@@ -520,6 +533,9 @@ function renderHome() {
       </section>
     </div>
   </main>`
+  const homeLogo = app.querySelector<HTMLImageElement>('.hero-logo')!
+  homeLogo.addEventListener('load', alignHomeHeaderButtons, { once: true })
+  requestAnimationFrame(alignHomeHeaderButtons)
   app.querySelector<HTMLButtonElement>('.home-user-button')!.addEventListener('click', () => { playSound('ui-click'); window.location.hash = 'profile' })
   app.querySelector<HTMLButtonElement>('.home-settings-button')!.addEventListener('click', () => { playSound('ui-click'); window.location.hash = 'settings' })
   app.querySelector<HTMLButtonElement>('.blobfahrer-home-button')!.addEventListener('click', () => {
