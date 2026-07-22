@@ -845,3 +845,348 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
   .avatar-choice-visual { width: 50px; height: 50px; }
   .profile-preview { width: 92px; height: 92px; margin-bottom: 18px; }
 }
+
+/* Shared player selection for Blobb-Fahrer and Blobben. The page marker is
+   deliberately applied only by renderModeMenu(), so other setup screens and
+   all active game views retain their existing visual system. */
+.player-selection-page {
+  --setup-orange-top: #ff922f;
+  --setup-orange: #f75b04;
+  --setup-orange-bottom: #c83d00;
+  --setup-ink: rgba(31, 27, 29, .9);
+  --setup-ink-soft: rgba(52, 43, 40, .78);
+  --setup-line: rgba(255, 255, 255, .22);
+  --setup-text-muted: rgba(255, 245, 237, .76);
+  --setup-selection-background:
+    radial-gradient(ellipse 64% 50% at 50% 45%, rgba(255, 193, 76, .68) 0%, rgba(255, 137, 28, .28) 48%, transparent 76%),
+    linear-gradient(180deg, rgba(81, 18, 0, .16), transparent 19%, transparent 72%, rgba(83, 19, 0, .28)),
+    url('./assets/background/blobba-orange-comic-background.png') center / cover no-repeat,
+    #e85a08;
+  background: var(--setup-selection-background);
+}
+
+.player-selection-page::before {
+  opacity: .3;
+  background:
+    repeating-conic-gradient(from -4deg at 50% 46%, rgba(255, 238, 180, .15) 0deg 5deg, transparent 5deg 15deg),
+    radial-gradient(ellipse 62% 50% at 50% 46%, rgba(255, 223, 130, .26), transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 88% 78% at 50% 46%, #000 0 48%, transparent 79%);
+  mask-image: radial-gradient(ellipse 88% 78% at 50% 46%, #000 0 48%, transparent 79%);
+}
+
+.player-selection-page::after {
+  opacity: 1;
+  background:
+    radial-gradient(ellipse 72% 68% at 50% 45%, transparent 42%, rgba(100, 24, 0, .2) 78%, rgba(59, 12, 0, .5) 100%),
+    radial-gradient(circle at center, rgba(255, 255, 255, .035) 0 1px, transparent 1.3px) 0 0 / 13px 13px;
+}
+
+/* The global standalone shell is transparent so the legacy neon layer can
+   reach iOS safe areas. Restore this page's own artwork above that layer. */
+html.is-standalone #app > .busfahrer-page.player-selection-page {
+  background: var(--setup-selection-background);
+}
+
+html.is-standalone #app > .busfahrer-page.player-selection-page::before,
+html.is-standalone #app > .busfahrer-page.player-selection-page::after {
+  z-index: 0;
+}
+
+.player-selection-page .setup-shell {
+  --setup-panel-top: clamp(12px, 2.6dvh, 30px);
+  width: min(1180px, 100%);
+}
+
+.player-selection-page .busfahrer-header {
+  min-height: 48px;
+}
+
+.player-selection-page .bus-back {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, .78);
+  color: #fff;
+  background: linear-gradient(180deg, rgba(255, 145, 47, .82), rgba(201, 61, 0, .78));
+  box-shadow: 0 8px 22px rgba(93, 29, 0, .25), inset 0 1px rgba(255, 255, 255, .32);
+}
+
+.player-selection-page .bus-back:hover {
+  filter: brightness(1.06);
+}
+
+.player-selection-page .bus-back:focus-visible,
+.player-selection-page .game-button:focus-visible,
+.player-selection-page .player-remove:focus-visible,
+.player-selection-page .player-entry-trigger:focus-visible,
+.player-selection-page .player-avatar-trigger:focus-visible,
+.player-selection-page input:focus-visible,
+.player-selection-page a:focus-visible {
+  outline: 3px solid rgba(255, 240, 210, .92);
+  outline-offset: 3px;
+}
+
+.player-selection-page .setup-stage {
+  padding-right: clamp(4px, 1vw, 12px);
+  padding-left: clamp(4px, 1vw, 12px);
+  scrollbar-color: rgba(255, 151, 55, .76) rgba(38, 29, 27, .28);
+}
+
+.player-selection-page .setup-stack,
+.player-selection-page .setup-panel {
+  width: min(700px, 100%);
+}
+
+.player-selection-page .setup-title {
+  color: #fff;
+  font-family: 'Fredoka', Inter, system-ui, sans-serif;
+  font-size: clamp(2rem, 6vw, 3.7rem);
+  letter-spacing: .015em;
+  text-shadow: 0 3px 0 rgba(120, 38, 0, .36), 0 8px 22px rgba(83, 22, 0, .28);
+}
+
+.player-selection-page .setup-panel {
+  min-height: 0;
+  padding: clamp(18px, 4vw, 34px);
+  border: 1px solid var(--setup-line);
+  border-radius: clamp(24px, 4vw, 30px);
+  color: #fff;
+  background: linear-gradient(160deg, rgba(61, 51, 48, .9), var(--setup-ink));
+  box-shadow: 0 26px 64px rgba(82, 24, 0, .3), inset 0 1px rgba(255, 255, 255, .08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.player-selection-page .setup-panel h2 {
+  color: #fff;
+}
+
+.player-selection-page .setup-copy {
+  color: var(--setup-text-muted);
+  line-height: 1.45;
+}
+
+.player-selection-page .setup-mode-switch .game-button,
+.player-selection-page .online-actions .game-button,
+.player-selection-page .online-group-tools .game-button,
+.player-selection-page .online-invite-link .game-button,
+.player-selection-page .setup-add-player,
+.player-selection-page .setup-modal .game-button {
+  border-color: rgba(255, 255, 255, .24);
+  background: linear-gradient(180deg, rgba(75, 63, 59, .94), rgba(42, 34, 33, .94));
+  box-shadow: 0 8px 18px rgba(22, 13, 10, .2), inset 0 1px rgba(255, 255, 255, .1);
+}
+
+.player-selection-page .setup-mode-switch .is-active,
+.player-selection-page .game-button.primary {
+  border-color: rgba(255, 255, 255, .72);
+  color: #fff;
+  background: linear-gradient(180deg, var(--setup-orange-top), var(--setup-orange) 52%, var(--setup-orange-bottom));
+  box-shadow: 0 10px 24px rgba(119, 35, 0, .34), inset 0 1px rgba(255, 255, 255, .36), inset 0 -2px rgba(116, 30, 0, .22);
+}
+
+.player-selection-page .setup-mode-switch .is-inactive {
+  color: rgba(255, 247, 240, .72);
+}
+
+.player-selection-page .game-button {
+  min-height: 48px;
+  transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+}
+
+.player-selection-page .game-button:hover:not(:disabled) {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.player-selection-page .game-button:active:not(:disabled) {
+  filter: brightness(.96);
+  transform: translateY(1px);
+  box-shadow: 0 3px 8px rgba(65, 20, 0, .24), inset 0 2px 4px rgba(79, 22, 0, .24);
+}
+
+.player-selection-page .setup-start-game {
+  min-height: 54px;
+}
+
+.player-selection-page .player-table {
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  gap: 10px;
+}
+
+.player-selection-page .player-row {
+  min-height: 66px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(64, 54, 51, .9), rgba(38, 31, 30, .92));
+  box-shadow: 0 8px 18px rgba(18, 11, 9, .16), inset 0 1px rgba(255, 255, 255, .06);
+}
+
+.player-selection-page .player-row:last-child {
+  border-bottom: 1px solid rgba(255, 255, 255, .18);
+}
+
+.player-selection-page .player-row:hover {
+  border-color: rgba(255, 180, 109, .42);
+  background: linear-gradient(145deg, rgba(73, 60, 56, .94), rgba(43, 34, 32, .94));
+}
+
+.player-selection-page .player-avatar-trigger {
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .05);
+}
+
+.player-selection-page .player-row > .player-avatar {
+  border: 1px solid rgba(255, 255, 255, .3);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .05);
+}
+
+.player-selection-page .player-entry-input,
+.player-selection-page .player-entry-trigger,
+.player-selection-page .setup-text-input {
+  min-height: 44px;
+  border-color: rgba(255, 255, 255, .2);
+  border-radius: 11px;
+  color: #fff;
+  background: rgba(24, 20, 20, .66);
+}
+
+.player-selection-page .player-entry-input:focus,
+.player-selection-page .setup-text-input:focus {
+  border-color: #ff8f30;
+  box-shadow: 0 0 0 3px rgba(247, 91, 4, .28);
+}
+
+.player-selection-page .player-remove {
+  min-width: 44px;
+  width: 44px;
+  min-height: 44px;
+  height: 44px;
+  border-color: rgba(255, 255, 255, .22);
+  border-radius: 11px;
+  color: #ffe8d6;
+  background: rgba(34, 27, 26, .84);
+}
+
+.player-selection-page .player-remove:hover:not(:disabled) {
+  border-color: rgba(255, 111, 111, .72);
+  color: #fff;
+  background: rgba(178, 48, 38, .72);
+}
+
+.player-selection-page .online-invite-link {
+  align-items: stretch;
+}
+
+.player-selection-page .online-share-button {
+  color: #fff;
+}
+
+.player-selection-page .setup-modal-backdrop {
+  background: rgba(54, 17, 2, .62);
+}
+
+.player-selection-page .setup-modal {
+  border-color: var(--setup-line);
+  color: #fff;
+  background: linear-gradient(160deg, rgba(63, 52, 48, .98), rgba(30, 26, 27, .98));
+  box-shadow: 0 28px 76px rgba(57, 15, 0, .44);
+}
+
+.player-selection-page .setup-modal .profile-name-label {
+  color: var(--setup-text-muted);
+}
+
+.player-selection-page .setup-modal .profile-name-input,
+.player-selection-page .invite-code {
+  border-color: rgba(255, 255, 255, .2);
+  color: #fff;
+  background: rgba(23, 19, 19, .72);
+}
+
+.player-selection-page .setup-modal .profile-name-input:focus {
+  border-color: #ff8f30;
+  box-shadow: 0 0 0 3px rgba(247, 91, 4, .28);
+}
+
+@media (max-width: 520px) {
+  .player-selection-page .setup-shell {
+    --setup-panel-top: clamp(6px, 1.4dvh, 14px);
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .player-selection-page .setup-stage {
+    padding-right: 2px;
+    padding-left: 2px;
+  }
+
+  .player-selection-page .setup-stack {
+    gap: 10px;
+  }
+
+  .player-selection-page .setup-title {
+    font-size: clamp(1.8rem, 10vw, 2.55rem);
+  }
+
+  .player-selection-page .setup-panel {
+    padding: 16px 12px;
+    border-radius: 24px;
+  }
+
+  .player-selection-page .setup-game-panel {
+    gap: 12px;
+  }
+
+  .player-selection-page .player-row {
+    min-height: 62px;
+    padding-inline: 7px;
+    grid-template-columns: 42px minmax(0, 1fr) 42px;
+  }
+
+  .player-selection-page .online-actions,
+  .player-selection-page .online-invite-link,
+  .player-selection-page .modal-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-height: 700px) {
+  .player-selection-page .setup-shell {
+    --setup-panel-top: 4px;
+  }
+
+  .player-selection-page .setup-stage {
+    padding-bottom: calc(10px + var(--keyboard-position-space, 0px));
+  }
+
+  .player-selection-page .setup-title {
+    font-size: clamp(1.65rem, 5vw, 2.25rem);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 620px) {
+  .player-selection-page .setup-stack {
+    width: min(760px, 100%);
+  }
+
+  .player-selection-page .setup-title {
+    font-size: 1.65rem;
+  }
+
+  .player-selection-page .setup-panel {
+    padding: 14px 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-selection-page .game-button,
+  .player-selection-page .player-row,
+  .player-selection-page .player-avatar-trigger {
+    transition: none;
+  }
+}

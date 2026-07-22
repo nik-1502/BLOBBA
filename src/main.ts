@@ -679,7 +679,7 @@ function renderModeMenu() {
   setupShell(`<div class="setup-panel setup-game-panel">
     ${renderModeSwitch()}
     ${setupMode === 'offline' ? renderOfflineSetupContent() : renderOnlineSetupContent()}
-  </div>${renderOnlineModal()}`, '', gameTitle())
+  </div>${renderOnlineModal()}`, '', gameTitle(), '', 'player-selection-page')
   app.querySelector<HTMLButtonElement>('[data-add-player]')?.replaceChildren('+ Spieler')
   bindSetupModeSwitch()
   setupMode === 'offline' ? bindOfflineSetup() : bindOnlineSetup()
