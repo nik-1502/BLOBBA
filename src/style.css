@@ -944,16 +944,7 @@ html.is-standalone #app > .home-page {
   position: relative;
   z-index: 2;
   transform: translateY(-8px) scale(1.08);
-  filter:
-    drop-shadow(2px 0 0 var(--home-tile-outline))
-    drop-shadow(-2px 0 0 var(--home-tile-outline))
-    drop-shadow(0 2px 0 var(--home-tile-outline))
-    drop-shadow(0 -2px 0 var(--home-tile-outline))
-    drop-shadow(1.4px 1.4px 0 var(--home-tile-outline))
-    drop-shadow(-1.4px 1.4px 0 var(--home-tile-outline))
-    drop-shadow(1.4px -1.4px 0 var(--home-tile-outline))
-    drop-shadow(-1.4px -1.4px 0 var(--home-tile-outline))
-    drop-shadow(0 7px 11px rgba(0, 48, 122, .24));
+  filter: drop-shadow(0 7px 11px rgba(0, 48, 122, .24));
 }
 
 /* Installierte iOS-App: den sichtbaren Startseiteninhalt unter der Dynamic Island beginnen lassen. */
