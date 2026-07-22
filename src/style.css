@@ -832,8 +832,6 @@ html.is-standalone #app > .setup-page > .setup-shell {
     inset 0 -7px 9px rgba(0, 30, 91, .52),
     inset 5px 0 6px rgba(128, 224, 255, .28),
     inset -5px 0 6px rgba(0, 40, 116, .34),
-    0 0 0 2px rgba(145, 224, 255, .88),
-    0 0 0 4px rgba(3, 43, 119, .90),
     0 0 16px rgba(71, 184, 244, .34),
     0 9px 15px rgba(0, 42, 105, .54),
     0 14px 29px rgba(0, 0, 0, .38);
@@ -848,8 +846,6 @@ html.is-standalone #app > .setup-page > .setup-shell {
     inset 0 -7px 9px rgba(0, 38, 108, .52),
     inset 5px 0 6px rgba(150, 233, 255, .34),
     inset -5px 0 6px rgba(0, 55, 142, .34),
-    0 0 0 2px rgba(171, 235, 255, .94),
-    0 0 0 4px rgba(3, 49, 132, .94),
     0 0 19px rgba(75, 193, 255, .40),
     0 11px 18px rgba(0, 42, 105, .56),
     0 18px 35px rgba(0, 35, 88, .38);
