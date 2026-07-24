@@ -986,6 +986,32 @@ html[data-theme='light'] .app-neon-background {
   display: none;
 }
 
+html[data-theme='light'] .home-page .category-menu {
+  color: #fff;
+  border-color: rgba(255, 255, 255, .22);
+  background: linear-gradient(160deg, rgba(61, 51, 48, .96), rgba(31, 27, 29, .96));
+  box-shadow:
+    0 24px 64px rgba(72, 21, 0, .30),
+    inset 0 1px rgba(255, 255, 255, .08);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+html[data-theme='light'] .home-page .category-chip {
+  color: #fff;
+  border-color: rgba(255, 255, 255, .22);
+  background: linear-gradient(180deg, rgba(75, 63, 59, .94), rgba(42, 34, 33, .94));
+  box-shadow: inset 0 1px rgba(255, 255, 255, .10);
+}
+
+html[data-theme='light'] .home-page .category-chip.is-selected {
+  border-color: #06458f;
+  background: linear-gradient(180deg, #13aae9, #0871c7);
+  box-shadow:
+    0 8px 18px rgba(0, 45, 105, .30),
+    inset 0 1px rgba(218, 248, 255, .42);
+}
+
 html[data-theme='neon'] .home-page,
 html[data-theme='neon'].is-standalone #app > .home-page {
   --home-glass-border: rgba(255, 255, 255, .40);
@@ -1077,21 +1103,26 @@ html[data-theme='neon'] .home-page :is(.categories-filter-button, .favorites-fil
 
 html[data-theme='neon'] .home-page .category-menu {
   color: #fff;
-  border-color: rgba(255, 255, 255, .20);
-  background: rgba(17, 10, 51, .92);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, .3);
+  border-color: rgba(255, 255, 255, .22);
+  background: linear-gradient(160deg, rgba(61, 51, 48, .96), rgba(31, 27, 29, .96));
+  box-shadow:
+    0 24px 64px rgba(72, 21, 0, .30),
+    inset 0 1px rgba(255, 255, 255, .08);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
 }
 
 html[data-theme='neon'] .home-page .category-chip {
   color: #fff;
-  border-color: rgba(255, 255, 255, .14);
-  background: rgba(255, 255, 255, .07);
+  border-color: rgba(255, 255, 255, .22);
+  background: linear-gradient(180deg, rgba(75, 63, 59, .94), rgba(42, 34, 33, .94));
+  box-shadow: inset 0 1px rgba(255, 255, 255, .10);
 }
 
 html[data-theme='neon'] .home-page .category-chip.is-selected {
-  border-color: rgba(255, 65, 167, .9);
-  background: rgba(189, 0, 105, .58);
-  box-shadow: 0 0 12px rgba(255, 0, 145, .24);
+  border-color: rgba(255, 255, 255, .72);
+  background: linear-gradient(135deg, #8255e8, #536de3);
+  box-shadow: 0 0 14px rgba(91, 80, 220, .32);
 }
 
 html[data-theme='neon'] .home-page .busfahrer-button {

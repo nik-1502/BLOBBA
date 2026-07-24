@@ -729,18 +729,29 @@ function updateCategoryMenu() {
 function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER', eyebrow = 'BLOBBA präsentiert', pageClass = '', centerTitle = true) {
   pendingKeyboardPositionCleanup?.()
   pendingKeyboardPositionCleanup = undefined
+  const headerEnd = pageClass.includes('player-selection-busfahrer')
+    ? '<button class="restart-button player-selection-header-spacer" type="button" tabindex="-1" aria-hidden="true">Neu starten</button>'
+    : '<span></span>'
   app.innerHTML = `<main class="busfahrer-page setup-page ${pageClass}"><div class="busfahrer-shell setup-shell">
-    <header class="busfahrer-header"><button class="back-button bus-back blobba-nav-action" type="button" data-setup-back>← Zurück</button>${centerTitle ? '<span></span>' : `<div><p>${eyebrow}</p><h1>${title}</h1></div>`}<span></span></header>
+    <header class="busfahrer-header"><button class="back-button bus-back blobba-nav-action" type="button" data-setup-back>← Zurück</button>${centerTitle ? '<span></span>' : `<div><p>${eyebrow}</p><h1>${title}</h1></div>`}${headerEnd}</header>
     <section class="setup-stage"><div class="setup-stack">${centerTitle ? `<h1 class="setup-title">${title}</h1>` : ''}${content}</div></section>
   </div></main>`
   app.querySelector<HTMLButtonElement>('[data-setup-back]')!.addEventListener('click', () => { playSound('ui-back'); window.location.hash = backTarget })
 }
 
 function renderModeMenu() {
-  setupShell(`<div class="setup-panel setup-game-panel">
+  const gameLayoutClass = activeGame === 'klatschen'
+    ? 'player-selection-blobben'
+    : 'player-selection-busfahrer'
+  const useSeparateSetupTitle = activeGame === 'klatschen'
+  const setupPanel = `<div class="setup-panel setup-game-panel">
     ${renderModeSwitch()}
     ${setupMode === 'offline' ? renderOfflineSetupContent() : renderOnlineSetupContent()}
-  </div>${renderOnlineModal()}`, '', gameTitle(), '', 'player-selection-page')
+  </div>`
+  const positionedSetupPanel = activeGame === 'busfahrer'
+    ? `<div class="player-selection-turn-frame">${setupPanel}</div>`
+    : setupPanel
+  setupShell(`${positionedSetupPanel}${renderOnlineModal()}`, '', gameTitle(), 'BLOBBA präsentiert', `player-selection-page ${gameLayoutClass}`, useSeparateSetupTitle)
   app.querySelector<HTMLButtonElement>('[data-add-player]')?.replaceChildren('+ Spieler')
   bindSetupModeSwitch()
   setupMode === 'offline' ? bindOfflineSetup() : bindOnlineSetup()

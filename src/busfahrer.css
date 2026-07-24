@@ -938,7 +938,12 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
 
 .player-selection-page .setup-stack,
 .player-selection-page .setup-panel {
-  width: min(700px, 100%);
+  width: min(620px, 100%);
+}
+
+.player-selection-page .setup-stack {
+  min-height: 100%;
+  grid-template-rows: auto minmax(0, 79%);
 }
 
 .player-selection-page .setup-title {
@@ -952,6 +957,7 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
 .player-selection-page .setup-panel {
   min-height: 0;
   padding: clamp(18px, 4vw, 34px);
+  align-content: start;
   border: 1px solid var(--setup-line);
   border-radius: clamp(24px, 4vw, 30px);
   color: #fff;
@@ -1194,4 +1200,136 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   .player-selection-page .player-avatar-trigger {
     transition: none;
   }
+}
+
+/* Match each player-selection frame to the first frame of its own game.
+   The title occupies the same header position as it does after starting, so
+   it does not change the frame's vertical coordinates. */
+.player-selection-page:is(.player-selection-busfahrer, .player-selection-blobben) .setup-stage {
+  padding-inline: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: visible;
+}
+
+.player-selection-page:is(.player-selection-busfahrer, .player-selection-blobben) .setup-stack {
+  display: block;
+  width: min(620px, 100%);
+  height: 100%;
+  min-height: 0;
+}
+
+.player-selection-page:is(.player-selection-busfahrer, .player-selection-blobben) .setup-title {
+  position: absolute;
+  top: 0;
+  right: clamp(8px, 3vw, 36px);
+  left: clamp(8px, 3vw, 36px);
+  display: grid;
+  min-height: 48px;
+  margin: 0;
+  place-items: center;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  pointer-events: none;
+}
+
+.player-selection-page.player-selection-busfahrer .setup-stack {
+  --selection-turn-row: clamp(14px, 2.5dvh, 22px);
+  --selection-turn-gap: clamp(8px, 3vw, 16px);
+  --selection-phase-gap: clamp(6px, 1.4dvh, 16px);
+  --selection-turn-title-height: clamp(18px, 3dvh, 24px);
+  --selection-turn-hand-height: clamp(62.9px, 12.75dvh, 107.1px);
+  --selection-turn-extension: calc(
+    var(--selection-turn-title-height) +
+    var(--selection-turn-hand-height) +
+    var(--selection-turn-gap) +
+    var(--selection-turn-gap)
+  );
+  display: grid;
+  width: 100%;
+  padding-bottom: calc(var(--selection-phase-gap) + var(--selection-phase-gap));
+  box-sizing: border-box;
+  grid-template-rows:
+    var(--selection-turn-row)
+    calc(
+      var(--selection-turn-title-height) +
+      var(--selection-turn-gap) +
+      var(--selection-turn-hand-height)
+    )
+    minmax(0, 1fr);
+  gap: var(--selection-turn-gap);
+}
+
+.player-selection-page.player-selection-busfahrer .player-selection-header-spacer {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.player-selection-page.player-selection-busfahrer .setup-shell .busfahrer-header h1 {
+  margin: 2px 0 0;
+}
+
+@media (min-width: 681px) {
+  .player-selection-page.player-selection-busfahrer .setup-shell .busfahrer-header p {
+    display: block;
+  }
+}
+
+@media (max-width: 680px) {
+  .player-selection-page.player-selection-busfahrer .setup-shell .busfahrer-header h1 {
+    font-size: 1.55rem;
+  }
+}
+
+@media (max-height: 650px) and (orientation: landscape) {
+  .player-selection-page.player-selection-busfahrer .setup-shell .busfahrer-header h1 {
+    font-size: 1.35rem;
+  }
+}
+
+.player-selection-page.player-selection-busfahrer .player-selection-turn-frame {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding-bottom: 0;
+  grid-row: 3;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: visible;
+}
+
+.player-selection-page.player-selection-busfahrer .setup-game-panel {
+  position: relative;
+  top: calc(-1 * var(--selection-turn-extension));
+  width: 100%;
+  height: calc(79% + var(--selection-turn-extension));
+  min-height: 0;
+  margin-top: 0;
+  flex: 0 0 auto;
+  align-self: start;
+}
+
+.player-selection-page.player-selection-blobben .setup-shell {
+  padding-bottom: clamp(8px, 2vh, 20px);
+}
+
+.player-selection-page.player-selection-blobben .setup-game-panel {
+  --blobben-selection-rule-margin: clamp(6px, 1.3dvh, 12px);
+  --blobben-selection-rule-height: 27px;
+  --blobben-selection-frame-gap: clamp(40px, 6dvh, 64px);
+  width: 100%;
+  height: calc(
+    100% -
+    var(--blobben-selection-rule-margin) -
+    var(--blobben-selection-rule-height) -
+    var(--blobben-selection-rule-margin) -
+    var(--blobben-selection-frame-gap)
+  );
+  min-height: 0;
+  margin-top: calc(
+    var(--blobben-selection-rule-margin) +
+    var(--blobben-selection-rule-height) +
+    var(--blobben-selection-rule-margin)
+  );
 }
