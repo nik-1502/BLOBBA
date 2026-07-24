@@ -26,17 +26,22 @@ import {
 import type { Session } from '@supabase/supabase-js'
 import './subpage-theme.css'
 import busfahrerGameImage from './assets/spielbild icons/blobb-fahrer-cover-clean.png'
-import blobbenGameImage from './assets/spielbild icons/blobben-cover-clean-v2.png'
+import blobbenGameImage from './assets/spielbild icons/blobben-cover-light-transparent.png'
+import busfahrerGameImageNeon from './assets/spielbild icons/blobb-fahrer-cover-neon-transparent.png'
+import blobbenGameImageNeon from './assets/spielbild icons/blobben-cover-neon-transparent.png'
 import heroLogo from './assets/überschrift/blobba-logo-clean-outlined.png'
+import heroLogoNeon from './assets/überschrift/blobba-logo-neon-original.png'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 const PROFILE_STORAGE_KEY = 'blobba.profiles.v1'
 const PREVIOUS_PROFILE_STORAGE_KEY = atob('Z2V0ZHJ1bmsucHJvZmlsZXMudjE=')
 const FAVORITE_GAMES_STORAGE_KEY = 'blobbaFavoriteGames'
+const THEME_STORAGE_KEY = 'blobba.theme.v1'
 const MAX_PLAYERS = 9
 const DEFAULT_AVATAR_ID = 'bier'
 const HOME_GAME_CATEGORIES = ['Kartenspiele', 'Schnell', 'Klassiker', 'Lustig', 'Denkspiele', 'Verteilspiele', 'Teamspiele', 'Wettkampf'] as const
 type HomeGameCategory = 'Alle' | typeof HOME_GAME_CATEGORIES[number]
+type AppTheme = 'light' | 'neon'
 
 const HOME_GAMES = [
   {
@@ -86,6 +91,29 @@ let onlineUnsubscribe: (() => void) | undefined
 let pendingInviteCode: string | null = null
 let onlineNotice = ''
 let pendingKeyboardPositionCleanup: (() => void) | undefined
+let appTheme = loadAppTheme()
+
+function loadAppTheme(): AppTheme {
+  try {
+    return localStorage.getItem(THEME_STORAGE_KEY) === 'neon' ? 'neon' : 'light'
+  } catch {
+    return 'light'
+  }
+}
+
+function applyAppTheme(theme: AppTheme) {
+  appTheme = theme
+  document.documentElement.dataset.theme = theme
+  const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+  if (themeColor) themeColor.content = theme === 'neon' ? '#120012' : '#f75b04'
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme)
+  } catch {
+    // Das Theme bleibt zumindest für die aktuelle Sitzung aktiv.
+  }
+}
+
+applyAppTheme(appTheme)
 
 function updateIPadStandaloneMode() {
   const navigatorWithStandalone = navigator as Navigator & { standalone?: boolean }
@@ -491,7 +519,7 @@ function renderHome() {
       <svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 21a7.5 7.5 0 0 1 15 0c-2.2 1.25-12.8 1.25-15 0Z"></path></svg>
     </button>
     <header class="hero-header">
-      <img class="hero-logo" src="${heroLogo}" alt="BLOBBA">
+      <img class="hero-logo" src="${appTheme === 'neon' ? heroLogoNeon : heroLogo}" alt="BLOBBA">
     </header>
     <div class="home-games-area">
       <section class="game-filters" aria-label="Spiele filtern">
@@ -517,14 +545,14 @@ function renderHome() {
       <section class="game-list" aria-label="Spiele">
       <div class="game-tile-wrap" data-home-game="blobfahrer">
         <button class="busfahrer-button blobfahrer-home-button" type="button" aria-label="Busfahrer öffnen">
-          <img class="busfahrer-button-image" src="${busfahrerGameImage}" alt="">
+          <img class="busfahrer-button-image" src="${appTheme === 'neon' ? busfahrerGameImageNeon : busfahrerGameImage}" alt="">
           <span class="busfahrer-button-label">BLOBB-FAHRER</span>
         </button>
         ${favoriteHeartMarkup('blobfahrer')}
       </div>
       <div class="game-tile-wrap" data-home-game="blobben">
         <button class="busfahrer-button klatschen-home-button" type="button" aria-label="Blobben öffnen">
-          <img class="busfahrer-button-image" src="${blobbenGameImage}" alt="">
+          <img class="busfahrer-button-image" src="${appTheme === 'neon' ? blobbenGameImageNeon : blobbenGameImage}" alt="">
           <span class="busfahrer-button-label">BLOBBEN</span>
         </button>
         ${favoriteHeartMarkup('blobben')}
@@ -598,12 +626,28 @@ function renderHome() {
 function renderSettingsPlaceholder() {
   const sound = getSoundSettings()
   setupShell(`<div class="setup-panel sound-settings-panel"><h2>Einstellungen</h2>
+    <fieldset class="theme-setting-group"><legend>Design</legend><p class="setup-copy">Wähle das Erscheinungsbild der gesamten App</p>
+      <div class="theme-options" role="radiogroup" aria-label="Design auswählen">
+        <label class="theme-option${appTheme === 'light' ? ' is-selected' : ''}"><input type="radio" name="app-theme" value="light" ${appTheme === 'light' ? 'checked' : ''}><span class="theme-option-preview theme-option-preview--light" aria-hidden="true"></span><span><strong>Hell</strong><small>Aktuelles BLOBBA-Design</small></span></label>
+        <label class="theme-option${appTheme === 'neon' ? ' is-selected' : ''}"><input type="radio" name="app-theme" value="neon" ${appTheme === 'neon' ? 'checked' : ''}><span class="theme-option-preview theme-option-preview--neon" aria-hidden="true"></span><span><strong>Neon</strong><small>Pink, Blau und dunkles Violett</small></span></label>
+      </div>
+    </fieldset>
     <div class="sound-setting-row"><div><strong>Soundeffekte</strong><p class="setup-copy">Töne für Bedienung und Spielaktionen</p></div><label class="sound-toggle"><input type="checkbox" data-sound-enabled ${sound.enabled ? 'checked' : ''}><span aria-hidden="true"></span></label></div>
     <label class="sound-volume-row"><span>Lautstärke</span><input type="range" min="0" max="100" step="1" value="${Math.round(sound.volume * 100)}" data-sound-volume ${sound.enabled ? '' : 'disabled'}><output data-sound-volume-output>${Math.round(sound.volume * 100)} %</output></label>
   </div>`, '', 'EINSTELLUNGEN')
   const enabled = app.querySelector<HTMLInputElement>('[data-sound-enabled]')!
   const volume = app.querySelector<HTMLInputElement>('[data-sound-volume]')!
   const output = app.querySelector<HTMLOutputElement>('[data-sound-volume-output]')!
+  app.querySelectorAll<HTMLInputElement>('input[name="app-theme"]').forEach((input) => {
+    input.addEventListener('change', () => {
+      if (!input.checked) return
+      applyAppTheme(input.value === 'neon' ? 'neon' : 'light')
+      app.querySelectorAll<HTMLElement>('.theme-option').forEach((option) => {
+        option.classList.toggle('is-selected', option.querySelector<HTMLInputElement>('input')?.checked === true)
+      })
+      playSound('ui-confirm')
+    })
+  })
   enabled.addEventListener('change', () => {
     if (!enabled.checked) playSound('ui-click')
     setSoundEffectsEnabled(enabled.checked)
