@@ -782,6 +782,20 @@ html[data-theme='neon'] .busfahrer-page .player-turn-screen {
   background: linear-gradient(155deg, rgba(42, 16, 70, .92), rgba(8, 12, 45, .95));
 }
 
+.busfahrer-page.player-selection-page .setup-game-panel {
+  border-color: var(--blobba-panel-border);
+  background: linear-gradient(160deg, rgba(61, 51, 48, .9), var(--blobba-panel-bg));
+  box-shadow: var(--blobba-shadow-panel), inset 0 1px var(--blobba-panel-highlight);
+}
+
+html[data-theme='neon'] .busfahrer-page.player-selection-busfahrer .setup-game-panel {
+  background: linear-gradient(155deg, rgba(42, 16, 70, .92), rgba(8, 12, 45, .95));
+}
+
+html[data-theme='neon'] .busfahrer-page.player-selection-blobben .setup-game-panel {
+  background: linear-gradient(155deg, rgba(42, 16, 70, .90), rgba(8, 12, 45, .93));
+}
+
 html[data-theme='neon'] .busfahrer-page :is(.player-entry-input, .setup-text-input, .profile-name-input, .player-entry-trigger) {
   background: rgba(8, 9, 39, .78);
 }
