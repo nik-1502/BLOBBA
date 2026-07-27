@@ -546,6 +546,7 @@ function renderHome() {
       <div class="game-tile-wrap" data-home-game="blobfahrer">
         <button class="busfahrer-button blobfahrer-home-button" type="button" aria-label="Busfahrer öffnen">
           <span class="premium-game-frame" aria-hidden="true">
+            <i class="premium-game-card-surface"></i>
             <i class="premium-game-frame-channel"></i>
             <i class="premium-game-frame-details"></i>
           </span>
@@ -557,6 +558,7 @@ function renderHome() {
       <div class="game-tile-wrap" data-home-game="blobben">
         <button class="busfahrer-button klatschen-home-button" type="button" aria-label="Blobben öffnen">
           <span class="premium-game-frame" aria-hidden="true">
+            <i class="premium-game-card-surface"></i>
             <i class="premium-game-frame-channel"></i>
             <i class="premium-game-frame-details"></i>
           </span>

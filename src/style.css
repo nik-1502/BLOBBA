@@ -334,11 +334,24 @@ body {
     inset 0 0 0 2px rgba(0, 2, 22, .78);
 }
 
+.premium-game-card-surface,
 .premium-game-frame-channel,
 .premium-game-frame-details {
   position: absolute;
   display: block;
   pointer-events: none;
+}
+
+.premium-game-card-surface {
+  inset: 9px;
+  border-radius: calc(var(--game-tile-radius) - 8px);
+  background:
+    linear-gradient(90deg, rgba(226, 46, 139, .045), transparent 5px) left center / 5px 100% no-repeat,
+    linear-gradient(270deg, rgba(44, 124, 214, .05), transparent 5px) right center / 5px 100% no-repeat,
+    radial-gradient(circle at 50% 46%, #162c55 0%, #142a52 42%, #12274e 70%, #102349 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(116, 113, 184, .06),
+    inset 0 0 8px rgba(3, 7, 28, .12);
 }
 
 .premium-game-frame-channel {
