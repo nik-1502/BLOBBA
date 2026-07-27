@@ -1297,6 +1297,10 @@ html[data-theme='light'] .home-page .premium-game-frame {
   display: none;
 }
 
+html[data-theme='light'] .home-page .klatschen-home-button .busfahrer-button-image {
+  filter: saturate(1.18) contrast(1.1);
+}
+
 html[data-theme='light'] .home-page .busfahrer-button:hover {
   box-shadow:
     inset 0 2px 0 rgba(228, 251, 255, .58),
