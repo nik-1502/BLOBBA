@@ -545,6 +545,10 @@ function renderHome() {
       <section class="game-list" aria-label="Spiele">
       <div class="game-tile-wrap" data-home-game="blobfahrer">
         <button class="busfahrer-button blobfahrer-home-button" type="button" aria-label="Busfahrer öffnen">
+          <span class="premium-game-frame" aria-hidden="true">
+            <i class="premium-game-frame-channel"></i>
+            <i class="premium-game-frame-details"></i>
+          </span>
           <img class="busfahrer-button-image" src="${appTheme === 'neon' ? busfahrerGameImageNeon : busfahrerGameImage}" alt="">
           <span class="busfahrer-button-label">BLOBB-FAHRER</span>
         </button>
@@ -552,6 +556,10 @@ function renderHome() {
       </div>
       <div class="game-tile-wrap" data-home-game="blobben">
         <button class="busfahrer-button klatschen-home-button" type="button" aria-label="Blobben öffnen">
+          <span class="premium-game-frame" aria-hidden="true">
+            <i class="premium-game-frame-channel"></i>
+            <i class="premium-game-frame-details"></i>
+          </span>
           <img class="busfahrer-button-image" src="${appTheme === 'neon' ? blobbenGameImageNeon : blobbenGameImage}" alt="">
           <span class="busfahrer-button-label">BLOBBEN</span>
         </button>
