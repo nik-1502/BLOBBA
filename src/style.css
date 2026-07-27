@@ -243,17 +243,28 @@ body {
 }
 
 .busfahrer-button {
-  --game-tile-radius: 18px;
+  --game-tile-radius: 22px;
+  --game-frame-surface: linear-gradient(180deg, var(--home-tile-blue-top), var(--home-tile-blue-bottom));
+  --game-frame-edge: linear-gradient(112deg, #ff8a2a 0%, #ff5c36 20%, #ea36aa 45%, #7358ff 69%, #1ca8ff 100%);
+  --game-frame-inner: rgba(219, 247, 255, .70);
+  --game-frame-glow-left: rgba(255, 111, 45, .24);
+  --game-frame-glow-right: rgba(24, 151, 255, .25);
+  position: relative;
+  isolation: isolate;
   width: min(100%, clamp(220px, 58vw, 360px));
   padding: clamp(10px, 2.6vw, 16px);
-  border: 2px solid rgba(255, 255, 255, .48);
+  border: 2px solid transparent;
   border-radius: var(--game-tile-radius);
   overflow: hidden;
   color: #fff;
-  background: linear-gradient(135deg, rgba(255, 0, 140, .34), rgba(36, 71, 255, .34));
+  background:
+    var(--game-frame-surface) padding-box,
+    var(--game-frame-edge) border-box;
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, .16),
-    0 0 8px rgba(255, 255, 255, .14),
+    inset 0 1px 0 rgba(255, 255, 255, .36),
+    inset 0 -8px 18px rgba(0, 31, 92, .16),
+    -5px 0 17px var(--game-frame-glow-left),
+    5px 0 17px var(--game-frame-glow-right),
     0 8px 20px rgba(0, 0, 0, .28);
   font: inherit;
   font-weight: 700;
@@ -262,6 +273,47 @@ body {
   place-items: center;
   gap: 10px;
   transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.busfahrer-button::before,
+.busfahrer-button::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.busfahrer-button::before {
+  inset: 7px;
+  border: 1px solid var(--game-frame-inner);
+  border-radius: calc(var(--game-tile-radius) - 7px);
+  opacity: .74;
+  clip-path: polygon(
+    0 10px, 10px 0,
+    calc(68% - 8px) 0, 68% 8px, calc(68% + 17px) 8px, calc(68% + 25px) 0,
+    calc(100% - 10px) 0, 100% 10px,
+    100% calc(100% - 24px), calc(100% - 8px) calc(100% - 16px),
+    calc(100% - 8px) 100%, 8px 100%,
+    8px calc(100% - 18px), 0 calc(100% - 26px)
+  );
+  box-shadow:
+    inset 0 0 12px rgba(255, 255, 255, .08),
+    0 0 8px rgba(12, 116, 255, .10);
+}
+
+.busfahrer-button::after {
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, .72), transparent 16%) top left / 34% 2px no-repeat,
+    linear-gradient(225deg, rgba(255, 255, 255, .46), transparent 16%) top right / 34% 2px no-repeat,
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, .42), transparent) bottom 8px center / 32% 1px no-repeat;
+  opacity: .68;
+}
+
+.busfahrer-button > * {
+  position: relative;
+  z-index: 1;
 }
 
 .busfahrer-button-image {
@@ -276,7 +328,7 @@ body {
 
 .blobfahrer-home-button,
 .klatschen-home-button {
-  background: linear-gradient(180deg, var(--home-tile-blue-top), var(--home-tile-blue-bottom));
+  --game-frame-surface: linear-gradient(180deg, var(--home-tile-blue-top), var(--home-tile-blue-bottom));
 }
 
 .busfahrer-button-label {
@@ -822,9 +874,11 @@ html.is-standalone #app > .setup-page > .setup-shell {
 .home-page .game-list { gap: clamp(9px, 1.8vw, 16px); }
 
 .home-page .busfahrer-button {
-  border-color: var(--home-tile-outline);
   box-shadow:
-    inset 0 2px 0 rgba(218, 248, 255, .50),
+    inset 0 1px 0 rgba(232, 251, 255, .58),
+    inset 0 -8px 18px rgba(0, 31, 92, .16),
+    -5px 0 17px var(--game-frame-glow-left),
+    5px 0 17px var(--game-frame-glow-right),
     0 7px 15px rgba(0, 45, 105, .30),
     0 12px 22px rgba(46, 20, 3, .22);
   transition: transform 150ms ease, box-shadow 160ms ease, filter 160ms ease;
@@ -833,7 +887,10 @@ html.is-standalone #app > .setup-page > .setup-shell {
 .home-page .busfahrer-button:hover {
   transform: translateY(-4px);
   box-shadow:
-    inset 0 2px 0 rgba(228, 251, 255, .58),
+    inset 0 1px 0 rgba(238, 253, 255, .64),
+    inset 0 -8px 18px rgba(0, 31, 92, .14),
+    -6px 0 20px var(--game-frame-glow-left),
+    6px 0 20px var(--game-frame-glow-right),
     0 9px 17px rgba(0, 45, 105, .33),
     0 15px 25px rgba(46, 20, 3, .24);
 }
@@ -1126,17 +1183,33 @@ html[data-theme='neon'] .home-page .category-chip.is-selected {
 }
 
 html[data-theme='neon'] .home-page .busfahrer-button {
-  border-color: rgba(255, 255, 255, .82);
-  background: linear-gradient(145deg, #071e62, #0a2d7b);
+  --game-frame-surface:
+    radial-gradient(circle at 18% 20%, rgba(73, 13, 100, .28), transparent 42%),
+    linear-gradient(145deg, #090c33, #07184d 54%, #061f5e);
+  --game-frame-edge: linear-gradient(112deg, #ff48a8 0%, #ff2d91 20%, #b439e8 48%, #554cff 70%, #159cff 100%);
+  --game-frame-inner: rgba(150, 115, 255, .70);
+  --game-frame-glow-left: rgba(255, 0, 140, .30);
+  --game-frame-glow-right: rgba(22, 141, 255, .30);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, .18),
-    -5px 0 16px rgba(255, 0, 140, .20),
-    5px 0 16px rgba(22, 141, 255, .20),
+    inset 0 1px 0 rgba(255, 255, 255, .24),
+    inset 0 -12px 22px rgba(0, 2, 25, .30),
+    -6px 0 18px var(--game-frame-glow-left),
+    6px 0 18px var(--game-frame-glow-right),
     0 12px 28px rgba(0, 0, 0, .36);
 }
 
 html[data-theme='neon'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) {
-  background: linear-gradient(145deg, #071e62, #0a2d7b);
+  --game-frame-surface:
+    radial-gradient(circle at 18% 20%, rgba(73, 13, 100, .28), transparent 42%),
+    linear-gradient(145deg, #090c33, #07184d 54%, #061f5e);
+}
+
+html[data-theme='neon'] .home-page .busfahrer-button::before {
+  opacity: .82;
+  box-shadow:
+    inset 0 0 14px rgba(255, 255, 255, .05),
+    -2px 0 8px rgba(255, 0, 145, .16),
+    2px 0 8px rgba(20, 139, 255, .18);
 }
 
 html[data-theme='neon'] .home-page .busfahrer-button-image {
