@@ -1144,6 +1144,16 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
     font-size: clamp(1.8rem, 10vw, 2.55rem);
   }
 
+  .player-selection-page.player-selection-blobben .setup-stack {
+    position: relative;
+  }
+
+  .player-selection-page.player-selection-blobben .setup-title {
+    top: 0;
+    z-index: 2;
+    display: grid;
+  }
+
   .player-selection-page .setup-panel {
     padding: 16px 12px;
     border-radius: 24px;

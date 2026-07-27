@@ -1094,7 +1094,7 @@ html.is-standalone #app > .setup-page > .setup-shell {
   }
 
   .home-page .premium-game-frame::before {
-    padding: 2.5px;
+    padding: 1.6px;
     opacity: .82;
     filter:
       drop-shadow(-1.5px 0 3px var(--game-frame-glow-left))
@@ -1111,7 +1111,7 @@ html.is-standalone #app > .setup-page > .setup-shell {
 
   .home-page .premium-game-frame-channel {
     inset: 9px;
-    padding: .55px;
+    padding: .4px;
     opacity: .43;
     filter:
       drop-shadow(-.5px 0 1.5px var(--game-frame-glow-left))
