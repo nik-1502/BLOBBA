@@ -28,7 +28,7 @@ import './subpage-theme.css'
 import busfahrerGameImage from './assets/spielbild icons/blobb-fahrer-cover-clean.png'
 import blobbenGameImage from './assets/spielbild icons/blobben-cover-light-transparent.png'
 import busfahrerGameImageNeon from './assets/spielbild icons/blobb-fahrer-cover-neon-chroma-v4.png'
-import blobbenGameImageNeon from './assets/spielbild icons/blobben-cover-neon-exclamation-v33.png'
+import blobbenGameImageNeon from './assets/spielbild icons/blobben-cover-neon-exclamation-v34.png'
 import heroLogo from './assets/überschrift/blobba-logo-clean-outlined.png'
 import heroLogoNeon from './assets/überschrift/blobba-logo-neon-original.png'
 
