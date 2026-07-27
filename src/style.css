@@ -1281,6 +1281,22 @@ html[data-theme='light'] .app-neon-background {
   display: none;
 }
 
+html[data-theme='light'] .home-page .busfahrer-button {
+  --game-tile-radius: 18px;
+  --game-image-radius: 18px;
+  border: 2px solid rgba(255, 255, 255, .48);
+  border-radius: var(--game-tile-radius);
+  background: linear-gradient(180deg, var(--home-tile-blue-top), var(--home-tile-blue-bottom));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, .16),
+    0 0 8px rgba(255, 255, 255, .14),
+    0 8px 20px rgba(0, 0, 0, .28);
+}
+
+html[data-theme='light'] .home-page .premium-game-frame {
+  display: none;
+}
+
 html[data-theme='light'] .home-page .category-menu {
   color: #fff;
   border-color: rgba(255, 255, 255, .22);
