@@ -26,7 +26,7 @@ import {
 import type { Session } from '@supabase/supabase-js'
 import './subpage-theme.css'
 import busfahrerGameImage from './assets/spielbild icons/blobb-fahrer-cover-clean.png'
-import blobbenGameImage from './assets/spielbild icons/blobben-cover-light-orange-center-white-v49.png'
+import blobbenGameImage from './assets/spielbild icons/blobben-cover-light-orange-solid-cutout-v50.png'
 import busfahrerGameImageNeon from './assets/spielbild icons/blobb-fahrer-cover-neon-chroma-v4.png'
 import blobbenGameImageNeon from './assets/spielbild icons/blobben-cover-neon-exclamation-v42.png'
 import heroLogo from './assets/überschrift/blobba-logo-clean-outlined.png'
