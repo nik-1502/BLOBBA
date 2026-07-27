@@ -244,6 +244,7 @@ body {
 
 .busfahrer-button {
   --game-tile-radius: 28px;
+  --game-image-radius: 18px;
   --game-frame-surface:
     radial-gradient(circle at 15% 15%, rgba(93, 26, 93, .30), transparent 42%),
     linear-gradient(145deg, #130b2e 0%, #07133b 55%, #062457 100%);
@@ -283,7 +284,7 @@ body {
 .busfahrer-button::after {
   content: "";
   position: absolute;
-  z-index: 2;
+  z-index: 0;
   pointer-events: none;
 }
 
@@ -346,8 +347,8 @@ body {
   display: block;
   width: 100%;
   max-height: clamp(150px, 32dvh, 260px);
-  border-radius: var(--game-tile-radius);
-  clip-path: inset(0 round var(--game-tile-radius));
+  border-radius: var(--game-image-radius);
+  clip-path: inset(0 round var(--game-image-radius));
   overflow: hidden;
   object-fit: contain;
 }
