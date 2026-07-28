@@ -91,6 +91,7 @@ let onlineUnsubscribe: (() => void) | undefined
 let pendingInviteCode: string | null = null
 let onlineNotice = ''
 let pendingKeyboardPositionCleanup: (() => void) | undefined
+let maximumVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
 let appTheme = loadAppTheme()
 
 function loadAppTheme(): AppTheme {
@@ -981,31 +982,42 @@ function positionAddPlayerOnceAboveKeyboard() {
   const cleanup = () => {
     viewport?.removeEventListener('resize', position)
     viewport?.removeEventListener('scroll', position)
+    window.removeEventListener('resize', position)
+    window.removeEventListener('scroll', position)
     settleTimers.forEach((timer) => window.clearTimeout(timer))
+    scrollContainer.style.removeProperty('padding-bottom')
     if (pendingKeyboardPositionCleanup === cleanup) pendingKeyboardPositionCleanup = undefined
   }
   const position = () => {
+    if (viewport) maximumVisualViewportHeight = Math.max(maximumVisualViewportHeight, viewport.height)
     const visibleBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight
     const keyboardHeight = viewport
-      ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+      ? Math.max(0, maximumVisualViewportHeight - viewport.height - viewport.offsetTop)
       : 0
     stage.style.setProperty('--keyboard-position-space', `${Math.ceil(keyboardHeight)}px`)
+    if (keyboardHeight > 40) {
+      scrollContainer.style.paddingBottom = `${Math.ceil(keyboardHeight + 16)}px`
+    } else {
+      scrollContainer.style.removeProperty('padding-bottom')
+    }
     requestAnimationFrame(() => {
-      const containerBottom = scrollContainer.getBoundingClientRect().bottom
-      const targetBottom = Math.min(visibleBottom, containerBottom) - 8
-      const delta = addPlayerButton.getBoundingClientRect().bottom - targetBottom
-      if (delta > 0) scrollContainer.scrollTop += delta
+      requestAnimationFrame(() => {
+        const targetBottom = Math.min(visibleBottom, scrollContainer.getBoundingClientRect().bottom) - 10
+        const delta = addPlayerButton.getBoundingClientRect().bottom - targetBottom
+        if (delta > 0) scrollContainer.scrollTop += delta
+      })
     })
   }
 
   pendingKeyboardPositionCleanup = cleanup
   viewport?.addEventListener('resize', position)
   viewport?.addEventListener('scroll', position)
+  window.addEventListener('resize', position)
+  window.addEventListener('scroll', position)
   position()
-  ;[80, 180, 320, 520].forEach((delay) => {
+  ;[80, 180, 320, 520, 760, 1100, 1500].forEach((delay) => {
     settleTimers.push(window.setTimeout(position, delay))
   })
-  settleTimers.push(window.setTimeout(cleanup, 900))
 }
 
 function bindOnlineSetup() {
