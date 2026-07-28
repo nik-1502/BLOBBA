@@ -814,9 +814,7 @@ function renderPlayerTable(playerList: SetupPlayer[], options: { editable: boole
       ? `<button class="player-avatar-trigger" type="button" data-edit-player-avatar="${player.id}" aria-label="Profilbild von ${escapeHtml(player.name || defaultPlayerName(index + 1))} ändern" title="Profilbild ändern">${playerAvatarMarkup(player)}</button>`
       : playerAvatarMarkup(player)}
     ${options.editable
-      ? editingPlayerId === player.id
-        ? playerNameInputMarkup(player, index)
-        : `<button class="player-entry-trigger" type="button" data-edit-player-entry="${player.id}" aria-label="Spieler ${index + 1} bearbeiten">${escapeHtml(player.name || defaultPlayerName(index + 1))}</button>`
+      ? playerNameInputMarkup(player, index)
       : `<strong class="player-name">${escapeHtml(player.name || defaultPlayerName(index + 1))}</strong>`}
     ${options.canRemove ? removePlayerButtonMarkup(player.id, playerList.length === 1) : ''}
   </div>`).join('')}</div>`
