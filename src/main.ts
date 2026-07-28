@@ -936,9 +936,18 @@ function bindOfflineSetup() {
   app.querySelectorAll<HTMLButtonElement>('[data-remove-player]').forEach((button) => button.addEventListener('click', () => {
     if (players.length === 1) return
     playActionSound('remove-player')
+    const previousPageScroll = app.querySelector<HTMLElement>('.player-selection-page')?.scrollTop ?? 0
+    const previousWindowScroll = window.scrollY
     if (editingPlayerId === button.dataset.removePlayer) editingPlayerId = null
     players = players.filter((player) => player.id !== button.dataset.removePlayer)
     renderModeMenu()
+    const restoreScrollPosition = () => {
+      const page = app.querySelector<HTMLElement>('.player-selection-page')
+      if (page) page.scrollTop = previousPageScroll
+      window.scrollTo({ top: previousWindowScroll, behavior: 'instant' })
+    }
+    restoreScrollPosition()
+    requestAnimationFrame(restoreScrollPosition)
   }))
   app.querySelectorAll<HTMLButtonElement>('[data-edit-player-avatar]').forEach((button) => button.addEventListener('click', () => {
     playSound('ui-click')
@@ -999,28 +1008,43 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
   const settleTimers: number[] = []
   let paddedScrollSurface: HTMLElement | null = null
   let scrollAnimationFrame = 0
+  let scrollAnimationTarget: number | null = null
+  let scrollAnimationSurface: HTMLElement | null = null
+  let scrollAnimationLastFrame = 0
+  let scrollAnimationCompletion: (() => void) | undefined
   const keyboardWasOpen = viewport
     ? maximumVisualViewportHeight - viewport.height - viewport.offsetTop > 40
     : false
 
   const animateScrollBy = (surface: HTMLElement, delta: number, onComplete?: () => void) => {
-    if (scrollAnimationFrame) cancelAnimationFrame(scrollAnimationFrame)
-    const start = surface.scrollTop
-    const target = start + delta
-    const startedAt = performance.now()
-    const duration = 520
+    scrollAnimationSurface = surface
+    scrollAnimationTarget = surface.scrollTop + delta
+    scrollAnimationCompletion = onComplete
+    if (scrollAnimationFrame) return
+    scrollAnimationLastFrame = performance.now()
     const tick = (now: number) => {
-      const progress = Math.min(1, (now - startedAt) / duration)
-      const eased = progress < .5
-        ? 4 * progress * progress * progress
-        : 1 - Math.pow(-2 * progress + 2, 3) / 2
-      surface.scrollTop = start + (target - start) * eased
-      if (progress < 1) {
-        scrollAnimationFrame = requestAnimationFrame(tick)
-      } else {
+      const activeSurface = scrollAnimationSurface
+      const target = scrollAnimationTarget
+      if (!activeSurface || target === null) {
         scrollAnimationFrame = 0
-        onComplete?.()
+        return
       }
+      const elapsed = Math.min(34, now - scrollAnimationLastFrame)
+      scrollAnimationLastFrame = now
+      const remaining = target - activeSurface.scrollTop
+      const movement = remaining * (1 - Math.exp(-elapsed / 58))
+      activeSurface.scrollTop += Math.abs(movement) < .6 ? remaining : movement
+      if (Math.abs(target - activeSurface.scrollTop) > .6) {
+        scrollAnimationFrame = requestAnimationFrame(tick)
+        return
+      }
+      activeSurface.scrollTop = target
+      scrollAnimationFrame = 0
+      scrollAnimationTarget = null
+      scrollAnimationSurface = null
+      const complete = scrollAnimationCompletion
+      scrollAnimationCompletion = undefined
+      complete?.()
     }
     scrollAnimationFrame = requestAnimationFrame(tick)
   }
@@ -1098,7 +1122,7 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
   window.addEventListener('resize', position)
   window.addEventListener('scroll', position)
   position()
-  ;[80, 180, 320, 520, 760, 1100, 1500].forEach((delay) => {
+  ;[80, 180, 300, 450, 650].forEach((delay) => {
     settleTimers.push(window.setTimeout(position, delay))
   })
 }
