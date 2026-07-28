@@ -1011,6 +1011,14 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
     ? maximumVisualViewportHeight - viewport.height - viewport.offsetTop > 40
     : false
 
+  const scrollPlayerSurface = (surface: HTMLElement, delta: number) => {
+    if (Math.abs(delta) < 1) return
+    surface.scrollTo({
+      top: surface.scrollTop + delta,
+      behavior: 'smooth',
+    })
+  }
+
   const cleanup = () => {
     viewport?.removeEventListener('resize', position)
     viewport?.removeEventListener('scroll', position)
@@ -1047,10 +1055,8 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
         const addButtonRect = addPlayerButton.getBoundingClientRect()
         if (isNewlyAddedPlayer) {
           const addButtonDelta = addButtonRect.bottom - (visibleBottom - 10)
-          if (Math.abs(addButtonDelta) >= 1) scrollSurface.scrollTop += addButtonDelta
-          requestAnimationFrame(() => {
-            playerKeyboardGap = visibleBottom - row.getBoundingClientRect().bottom
-          })
+          playerKeyboardGap = visibleBottom - row.getBoundingClientRect().bottom + addButtonDelta
+          scrollPlayerSurface(scrollSurface, addButtonDelta)
           return
         }
         const lastRow = playerPanel.querySelector<HTMLElement>('[data-player-row]:last-child')
@@ -1065,10 +1071,10 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
         const rowStep = siblingRow?.matches('[data-player-row]')
           ? Math.abs(siblingRow.getBoundingClientRect().top - row.getBoundingClientRect().top)
           : row.getBoundingClientRect().height + 10
-        const openKeyboardOffset = keyboardWasOpen ? rowStep : 0
+        const openKeyboardOffset = keyboardWasOpen || playerKeyboardGap !== null ? rowStep : 0
         const targetRowBottom = visibleBottom - (playerKeyboardGap ?? fallbackGap) + openKeyboardOffset
         const delta = row.getBoundingClientRect().bottom - targetRowBottom
-        if (Math.abs(delta) >= 1) scrollSurface.scrollTop += delta
+        scrollPlayerSurface(scrollSurface, delta)
       })
     })
   }
