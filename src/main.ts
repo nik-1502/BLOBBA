@@ -1007,47 +1007,9 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
   const selectionPage = input.closest<HTMLElement>('.player-selection-page')
   const settleTimers: number[] = []
   let paddedScrollSurface: HTMLElement | null = null
-  let scrollAnimationFrame = 0
-  let scrollAnimationTarget: number | null = null
-  let scrollAnimationSurface: HTMLElement | null = null
-  let scrollAnimationLastFrame = 0
-  let scrollAnimationCompletion: (() => void) | undefined
   const keyboardWasOpen = viewport
     ? maximumVisualViewportHeight - viewport.height - viewport.offsetTop > 40
     : false
-
-  const animateScrollBy = (surface: HTMLElement, delta: number, onComplete?: () => void) => {
-    scrollAnimationSurface = surface
-    scrollAnimationTarget = surface.scrollTop + delta
-    scrollAnimationCompletion = onComplete
-    if (scrollAnimationFrame) return
-    scrollAnimationLastFrame = performance.now()
-    const tick = (now: number) => {
-      const activeSurface = scrollAnimationSurface
-      const target = scrollAnimationTarget
-      if (!activeSurface || target === null) {
-        scrollAnimationFrame = 0
-        return
-      }
-      const elapsed = Math.min(34, now - scrollAnimationLastFrame)
-      scrollAnimationLastFrame = now
-      const remaining = target - activeSurface.scrollTop
-      const movement = remaining * (1 - Math.exp(-elapsed / 58))
-      activeSurface.scrollTop += Math.abs(movement) < .6 ? remaining : movement
-      if (Math.abs(target - activeSurface.scrollTop) > .6) {
-        scrollAnimationFrame = requestAnimationFrame(tick)
-        return
-      }
-      activeSurface.scrollTop = target
-      scrollAnimationFrame = 0
-      scrollAnimationTarget = null
-      scrollAnimationSurface = null
-      const complete = scrollAnimationCompletion
-      scrollAnimationCompletion = undefined
-      complete?.()
-    }
-    scrollAnimationFrame = requestAnimationFrame(tick)
-  }
 
   const cleanup = () => {
     viewport?.removeEventListener('resize', position)
@@ -1055,7 +1017,6 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
     window.removeEventListener('resize', position)
     window.removeEventListener('scroll', position)
     settleTimers.forEach((timer) => window.clearTimeout(timer))
-    if (scrollAnimationFrame) cancelAnimationFrame(scrollAnimationFrame)
     paddedScrollSurface?.style.removeProperty('padding-bottom')
     if (pendingKeyboardPositionCleanup === cleanup) pendingKeyboardPositionCleanup = undefined
   }
@@ -1086,14 +1047,10 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
         const addButtonRect = addPlayerButton.getBoundingClientRect()
         if (isNewlyAddedPlayer) {
           const addButtonDelta = addButtonRect.bottom - (visibleBottom - 10)
-          const rememberPlayerGap = () => requestAnimationFrame(() => {
+          if (Math.abs(addButtonDelta) >= 1) scrollSurface.scrollTop += addButtonDelta
+          requestAnimationFrame(() => {
             playerKeyboardGap = visibleBottom - row.getBoundingClientRect().bottom
           })
-          if (Math.abs(addButtonDelta) >= 1) {
-            animateScrollBy(scrollSurface, addButtonDelta, rememberPlayerGap)
-          } else {
-            rememberPlayerGap()
-          }
           return
         }
         const lastRow = playerPanel.querySelector<HTMLElement>('[data-player-row]:last-child')
@@ -1122,7 +1079,7 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
   window.addEventListener('resize', position)
   window.addEventListener('scroll', position)
   position()
-  ;[80, 180, 300, 450, 650].forEach((delay) => {
+  ;[80, 180, 320, 520, 760, 1100, 1500].forEach((delay) => {
     settleTimers.push(window.setTimeout(position, delay))
   })
 }
