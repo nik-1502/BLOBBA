@@ -1351,6 +1351,7 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   min-height: 100svh;
   overflow-x: hidden;
   overflow-y: auto;
+  scroll-padding-bottom: 96px;
 }
 
 .player-selection-page.is-content-expanded .setup-shell {
