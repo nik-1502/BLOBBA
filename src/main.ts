@@ -974,29 +974,38 @@ function positionAddPlayerOnceAboveKeyboard() {
   const viewport = window.visualViewport
   const stage = app.querySelector<HTMLElement>('.setup-stage')
   const addPlayerButton = app.querySelector<HTMLElement>('[data-add-player]')
-  if (!viewport || !stage || !addPlayerButton) return
+  if (!stage || !addPlayerButton) return
+  const scrollContainer = addPlayerButton.closest<HTMLElement>('.offline-panel') ?? stage
+  const settleTimers: number[] = []
 
   const cleanup = () => {
-    viewport.removeEventListener('resize', position)
-    viewport.removeEventListener('scroll', position)
+    viewport?.removeEventListener('resize', position)
+    viewport?.removeEventListener('scroll', position)
+    settleTimers.forEach((timer) => window.clearTimeout(timer))
     if (pendingKeyboardPositionCleanup === cleanup) pendingKeyboardPositionCleanup = undefined
   }
   const position = () => {
-    const keyboardHeight = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
-    if (keyboardHeight < 80) return
-    cleanup()
+    const visibleBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight
+    const keyboardHeight = viewport
+      ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)
+      : 0
     stage.style.setProperty('--keyboard-position-space', `${Math.ceil(keyboardHeight)}px`)
     requestAnimationFrame(() => {
-      const keyboardTop = viewport.offsetTop + viewport.height
-      const delta = addPlayerButton.getBoundingClientRect().bottom - (keyboardTop - 8)
-      if (delta > 0) stage.scrollTop += delta
+      const containerBottom = scrollContainer.getBoundingClientRect().bottom
+      const targetBottom = Math.min(visibleBottom, containerBottom) - 8
+      const delta = addPlayerButton.getBoundingClientRect().bottom - targetBottom
+      if (delta > 0) scrollContainer.scrollTop += delta
     })
   }
 
   pendingKeyboardPositionCleanup = cleanup
-  viewport.addEventListener('resize', position)
-  viewport.addEventListener('scroll', position)
+  viewport?.addEventListener('resize', position)
+  viewport?.addEventListener('scroll', position)
   position()
+  ;[80, 180, 320, 520].forEach((delay) => {
+    settleTimers.push(window.setTimeout(position, delay))
+  })
+  settleTimers.push(window.setTimeout(cleanup, 900))
 }
 
 function bindOnlineSetup() {
