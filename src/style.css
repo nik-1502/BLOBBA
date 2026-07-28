@@ -1432,20 +1432,23 @@ html[data-theme='neon'] .home-page :is(.game-search, .categories-filter-button, 
   isolation: isolate;
   height: clamp(48px, 6.2vw, 52px);
   overflow: hidden;
-  border: 1.5px solid rgba(238, 126, 235, .70);
+  border: 2px solid transparent;
   color: rgba(255, 255, 255, .97);
   background:
     linear-gradient(
       110deg,
-      rgba(190, 20, 145, .78) 0%,
-      rgba(116, 32, 158, .82) 48%,
-      rgba(35, 73, 180, .82) 100%
-    );
+      rgba(212, 18, 157, .92) 0%,
+      rgba(126, 29, 177, .94) 48%,
+      rgba(27, 70, 196, .92) 100%
+    ) padding-box,
+    linear-gradient(110deg, #ff63c7 0%, #bb4ef0 47%, #3e8cff 100%) border-box;
   box-shadow:
-    0 8px 18px rgba(4, 5, 33, .32),
-    0 0 0 1px rgba(78, 46, 190, .56),
-    inset 0 1px 0 rgba(255, 255, 255, .27),
-    inset 0 -5px 10px rgba(8, 10, 66, .22);
+    0 9px 20px rgba(4, 5, 33, .40),
+    0 0 0 1px rgba(65, 35, 168, .78),
+    0 0 10px rgba(123, 51, 218, .18),
+    inset 0 1px 0 rgba(255, 255, 255, .40),
+    inset 0 0 0 1px rgba(255, 255, 255, .13),
+    inset 0 -6px 12px rgba(6, 8, 62, .31);
   text-shadow: 0 1px 3px rgba(8, 6, 45, .55);
   transition:
     transform 160ms ease,
@@ -1461,8 +1464,9 @@ html[data-theme='neon'] .home-page :is(.game-search, .categories-filter-button, 
   z-index: -1;
   border-radius: calc(var(--home-control-radius) - 2px);
   background:
-    radial-gradient(ellipse 62% 75% at 12% 0%, rgba(255, 255, 255, .18), transparent 54%),
-    linear-gradient(180deg, rgba(255, 255, 255, .07), transparent 42%);
+    radial-gradient(ellipse 62% 78% at 10% 0%, rgba(255, 255, 255, .26), transparent 53%),
+    linear-gradient(180deg, rgba(255, 255, 255, .12), transparent 46%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10);
   pointer-events: none;
 }
 
@@ -1472,19 +1476,21 @@ html[data-theme='neon'] .home-page :is(.game-search, .categories-filter-button, 
 }
 
 html[data-theme='neon'] .home-page .games-search-bar {
-  border-color: rgba(231, 139, 237, .64);
+  border-color: transparent;
   background:
     linear-gradient(
       110deg,
-      rgba(186, 20, 142, .55) 0%,
-      rgba(99, 37, 156, .59) 48%,
-      rgba(31, 73, 180, .59) 100%
-    );
+      rgba(190, 18, 145, .62) 0%,
+      rgba(101, 34, 162, .66) 48%,
+      rgba(27, 71, 188, .65) 100%
+    ) padding-box,
+    linear-gradient(110deg, rgba(255, 114, 207, .86), rgba(177, 82, 237, .84) 48%, rgba(70, 145, 255, .88)) border-box;
   box-shadow:
-    0 6px 15px rgba(4, 5, 33, .27),
-    0 0 0 1px rgba(78, 46, 190, .48),
-    inset 0 1px 0 rgba(255, 255, 255, .30),
-    inset 0 -4px 9px rgba(8, 10, 66, .17);
+    0 7px 17px rgba(4, 5, 33, .32),
+    0 0 0 1px rgba(69, 40, 178, .66),
+    inset 0 1px 0 rgba(255, 255, 255, .38),
+    inset 0 0 0 1px rgba(255, 255, 255, .10),
+    inset 0 -5px 10px rgba(8, 10, 66, .22);
   -webkit-backdrop-filter: blur(12px) saturate(125%);
   backdrop-filter: blur(12px) saturate(125%);
 }
@@ -1505,8 +1511,10 @@ html[data-theme='neon'] .home-page .game-search input::placeholder {
 }
 
 html[data-theme='neon'] .home-page :is(.categories-filter-button, .favorites-filter-button).is-active {
-  border-color: rgba(255, 139, 231, .88);
-  background: linear-gradient(110deg, rgba(213, 20, 155, .88), rgba(130, 35, 174, .90) 48%, rgba(42, 79, 195, .88));
+  border-color: transparent;
+  background:
+    linear-gradient(110deg, rgba(231, 18, 164, .96), rgba(142, 31, 190, .97) 48%, rgba(36, 79, 211, .95)) padding-box,
+    linear-gradient(110deg, #ff8dd9, #d56aff 48%, #69a8ff) border-box;
   box-shadow:
     0 7px 17px rgba(4, 5, 33, .30),
     0 0 0 1px rgba(107, 57, 210, .62),
@@ -1547,12 +1555,14 @@ html[data-theme='neon'] .home-page .game-search:focus-within {
     height: 48px;
     padding-inline: 11px;
     gap: 7px;
-    border-width: 1.25px;
+    border-width: 1.5px;
     box-shadow:
-      0 6px 14px rgba(4, 5, 33, .29),
-      0 0 0 .75px rgba(78, 46, 190, .52),
-      inset 0 1px 0 rgba(255, 255, 255, .25),
-      inset 0 -4px 8px rgba(8, 10, 66, .20);
+      0 7px 16px rgba(4, 5, 33, .36),
+      0 0 0 1px rgba(65, 35, 168, .68),
+      0 0 8px rgba(123, 51, 218, .14),
+      inset 0 1px 0 rgba(255, 255, 255, .36),
+      inset 0 0 0 1px rgba(255, 255, 255, .11),
+      inset 0 -5px 9px rgba(8, 10, 66, .27);
   }
 
   html[data-theme='neon'] .home-page :is(.game-search, .categories-filter-button, .favorites-filter-button) svg {
