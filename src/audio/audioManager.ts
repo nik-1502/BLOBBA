@@ -17,7 +17,6 @@ let context: AudioContext | null = null
 let noiseBuffer: AudioBuffer | null = null
 let unlocked = false
 let unlockPromise: Promise<boolean> | null = null
-let mediaChannelAudio: HTMLAudioElement | null = null
 let clickDispatchActive = false
 let soundPlayedForClick = false
 let lastActionSoundAt = 0
@@ -132,33 +131,6 @@ function playPyramidCardReveal() {
   })
 }
 
-function silentWavUrl() {
-  const sampleRate = 8000
-  const sampleCount = sampleRate / 4
-  const bytes = new Uint8Array(44 + sampleCount * 2)
-  const view = new DataView(bytes.buffer)
-  const text = (offset: number, value: string) => [...value].forEach((character, index) => view.setUint8(offset + index, character.charCodeAt(0)))
-  text(0, 'RIFF'); view.setUint32(4, 36 + sampleCount * 2, true); text(8, 'WAVE')
-  text(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true)
-  view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true)
-  view.setUint16(32, 2, true); view.setUint16(34, 16, true); text(36, 'data'); view.setUint32(40, sampleCount * 2, true)
-  return URL.createObjectURL(new Blob([bytes], { type: 'audio/wav' }))
-}
-
-function ensureMediaChannel() {
-  if (!mediaChannelAudio) {
-    mediaChannelAudio = new Audio(silentWavUrl())
-    mediaChannelAudio.preload = 'auto'
-    mediaChannelAudio.loop = true
-    mediaChannelAudio.setAttribute('playsinline', '')
-    mediaChannelAudio.volume = 1
-  }
-  if (!mediaChannelAudio.paused) return
-  void mediaChannelAudio.play().catch((error) => {
-    if (import.meta.env.DEV) console.warn('[Audio] iOS-Medienkanal konnte nicht aktiviert werden.', error)
-  })
-}
-
 function readEnabled() {
   return localStorage.getItem(ENABLED_KEY) !== 'false'
 }
@@ -179,10 +151,6 @@ export function getSoundSettings() {
 
 export function setSoundEffectsEnabled(enabled: boolean) {
   localStorage.setItem(ENABLED_KEY, String(enabled))
-  if (!enabled && mediaChannelAudio) {
-    mediaChannelAudio.pause()
-    mediaChannelAudio.currentTime = 0
-  }
 }
 
 export function setSoundEffectsVolume(volume: number) {
@@ -190,9 +158,6 @@ export function setSoundEffectsVolume(volume: number) {
 }
 
 export function unlockAudio() {
-  // HTML media uses iOS' playback channel, so Web Audio remains audible when
-  // the Ring/Silent switch is enabled. play() must happen in the tap itself.
-  ensureMediaChannel()
   if (unlocked && context?.state === 'running') return Promise.resolve(true)
   if (unlockPromise) return unlockPromise
   unlockPromise = (async () => {
@@ -293,7 +258,6 @@ function renderSound(name: SoundName) {
 export function playSound(name: SoundName) {
   if (!readEnabled()) return
   if (clickDispatchActive) soundPlayedForClick = true
-  ensureMediaChannel()
   if (name === 'card-draw') {
     playCardDraw()
     if (!unlocked || context?.state !== 'running') void unlockAudio()
