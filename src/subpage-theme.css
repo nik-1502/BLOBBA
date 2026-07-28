@@ -498,6 +498,25 @@ html.is-ipad-standalone .busfahrer-page :is(.end-actions, .klatschen-summary-act
   background: rgba(91, 38, 38, .72);
 }
 
+.busfahrer-page.player-selection-page .player-remove:not(:disabled) {
+  border-color: rgba(255, 88, 111, .66);
+  color: #ffb4bf;
+  background: rgba(126, 34, 49, .58);
+  box-shadow:
+    0 0 9px rgba(255, 55, 87, .22),
+    inset 0 1px rgba(255, 210, 216, .10);
+}
+
+.busfahrer-page.player-selection-page .player-remove:hover:not(:disabled),
+.busfahrer-page.player-selection-page .player-remove:active:not(:disabled) {
+  border-color: rgba(255, 112, 130, .78);
+  color: #fff;
+  background: rgba(159, 41, 57, .68);
+  box-shadow:
+    0 0 12px rgba(255, 55, 87, .28),
+    inset 0 1px rgba(255, 220, 224, .13);
+}
+
 /* Project-wide dialogs and overlays within subpages. */
 .busfahrer-page :is(.setup-modal-backdrop, .klatschen-held-dialog-backdrop, .klatschen-players-backdrop) {
   background: rgba(48, 20, 10, .64);
