@@ -771,7 +771,7 @@ function renderModeMenu() {
   setupMode === 'offline' ? bindOfflineSetup() : bindOnlineSetup()
   bindOnlineModal()
   maybeAutoJoinInvite()
-  requestAnimationFrame(expandPlayerSelectionFrameForContent)
+  expandPlayerSelectionFrameForContent()
 }
 
 function expandPlayerSelectionFrameForContent() {
@@ -977,7 +977,9 @@ function bindOfflineSetup() {
     newlyAddedPlayerId = player.id
     newlyAddedPlayerReferenceUntil = performance.now() + 2000
     renderModeMenu()
-    focusPlayerNameInput(player.id)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => focusPlayerNameInput(player.id))
+    })
   })
   app.querySelector<HTMLButtonElement>('[data-start-game]')!.addEventListener('click', () => {
     startSetupGame(players, true)
@@ -1003,18 +1005,19 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
   if (!stage || !row || !addPlayerButton) return
   const playerPanel = addPlayerButton.closest<HTMLElement>('.offline-panel') ?? stage
   const selectionPage = input.closest<HTMLElement>('.player-selection-page')
-  const settleTimers: number[] = []
+  const scrollSurface = selectionPage?.classList.contains('is-content-expanded')
+    ? selectionPage
+    : playerPanel
   let paddedScrollSurface: HTMLElement | null = null
+  let positionTimer = 0
+  let fallbackTimer = 0
+  let hasPositioned = false
   let motionFrame = 0
   let motionSurface: HTMLElement | null = null
   let motionStart = 0
   let motionTarget = 0
   let motionStartedAt = 0
   let motionDuration = 220
-  const keyboardWasOpen = viewport
-    ? maximumVisualViewportHeight - viewport.height - viewport.offsetTop > 40
-    : false
-
   const scrollPlayerSurface = (surface: HTMLElement, delta: number) => {
     if (Math.abs(delta) < 2) return
     const nextTarget = surface.scrollTop + delta
@@ -1048,11 +1051,12 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
   }
 
   const cleanup = () => {
-    viewport?.removeEventListener('resize', position)
-    viewport?.removeEventListener('scroll', position)
-    window.removeEventListener('resize', position)
-    window.removeEventListener('scroll', position)
-    settleTimers.forEach((timer) => window.clearTimeout(timer))
+    viewport?.removeEventListener('resize', schedulePosition)
+    viewport?.removeEventListener('scroll', schedulePosition)
+    window.removeEventListener('resize', schedulePosition)
+    window.removeEventListener('scroll', schedulePosition)
+    window.clearTimeout(positionTimer)
+    window.clearTimeout(fallbackTimer)
     if (motionFrame) cancelAnimationFrame(motionFrame)
     motionFrame = 0
     motionSurface = null
@@ -1066,9 +1070,6 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
       ? Math.max(0, maximumVisualViewportHeight - viewport.height - viewport.offsetTop)
       : 0
     stage.style.setProperty('--keyboard-position-space', `${Math.ceil(keyboardHeight)}px`)
-    const scrollSurface = selectionPage?.classList.contains('is-content-expanded')
-      ? selectionPage
-      : playerPanel
     if (paddedScrollSurface && paddedScrollSurface !== scrollSurface) {
       paddedScrollSurface.style.removeProperty('padding-bottom')
     }
@@ -1079,6 +1080,7 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
       scrollSurface.style.removeProperty('padding-bottom')
       return
     }
+    hasPositioned = true
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         const isNewlyAddedPlayer = input.dataset.playerEntry === newlyAddedPlayerId
@@ -1102,7 +1104,7 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
         const rowStep = siblingRow?.matches('[data-player-row]')
           ? Math.abs(siblingRow.getBoundingClientRect().top - row.getBoundingClientRect().top)
           : row.getBoundingClientRect().height + 10
-        const openKeyboardOffset = keyboardWasOpen || playerKeyboardGap !== null ? rowStep : 0
+        const openKeyboardOffset = playerKeyboardGap !== null ? rowStep : 0
         const targetRowBottom = visibleBottom - (playerKeyboardGap ?? fallbackGap) + openKeyboardOffset
         const delta = row.getBoundingClientRect().bottom - targetRowBottom
         scrollPlayerSurface(scrollSurface, delta)
@@ -1110,15 +1112,21 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
     })
   }
 
+  function schedulePosition() {
+    if (hasPositioned) return
+    window.clearTimeout(positionTimer)
+    positionTimer = window.setTimeout(position, 90)
+  }
+
   pendingKeyboardPositionCleanup = cleanup
-  viewport?.addEventListener('resize', position)
-  viewport?.addEventListener('scroll', position)
-  window.addEventListener('resize', position)
-  window.addEventListener('scroll', position)
-  position()
-  ;[80, 180, 320, 520, 760, 1100, 1500].forEach((delay) => {
-    settleTimers.push(window.setTimeout(position, delay))
-  })
+  viewport?.addEventListener('resize', schedulePosition)
+  viewport?.addEventListener('scroll', schedulePosition)
+  window.addEventListener('resize', schedulePosition)
+  window.addEventListener('scroll', schedulePosition)
+  schedulePosition()
+  fallbackTimer = window.setTimeout(() => {
+    if (!hasPositioned) position()
+  }, 500)
 }
 
 function bindOnlineSetup() {
