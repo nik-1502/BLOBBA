@@ -1343,3 +1343,35 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
     var(--blobben-selection-rule-margin)
   );
 }
+
+/* If the player list no longer fits, grow the complete selection frame and
+   let the page scroll as one unit instead of creating a nested list scroller. */
+.player-selection-page.is-content-expanded {
+  height: auto;
+  min-height: 100svh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.player-selection-page.is-content-expanded .setup-shell {
+  height: auto;
+  min-height: 100svh;
+  overflow: visible;
+}
+
+.player-selection-page.is-content-expanded .setup-stage,
+.player-selection-page.is-content-expanded .setup-stack,
+.player-selection-page.is-content-expanded .player-selection-turn-frame {
+  height: auto;
+  overflow: visible;
+}
+
+.player-selection-page.is-content-expanded .setup-game-panel {
+  height: auto;
+  min-height: var(--selection-collapsed-height);
+}
+
+.player-selection-page.is-content-expanded :is(.offline-panel, .online-panel) {
+  max-height: none;
+  overflow: visible;
+}

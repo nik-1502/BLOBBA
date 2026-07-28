@@ -768,6 +768,16 @@ function renderModeMenu() {
   setupMode === 'offline' ? bindOfflineSetup() : bindOnlineSetup()
   bindOnlineModal()
   maybeAutoJoinInvite()
+  requestAnimationFrame(expandPlayerSelectionFrameForContent)
+}
+
+function expandPlayerSelectionFrameForContent() {
+  const page = app.querySelector<HTMLElement>('.player-selection-page')
+  const panel = page?.querySelector<HTMLElement>('.setup-game-panel')
+  const content = panel?.querySelector<HTMLElement>('.offline-panel, .online-panel')
+  if (!page || !panel || !content || content.scrollHeight <= content.clientHeight + 1) return
+  panel.style.setProperty('--selection-collapsed-height', `${Math.ceil(panel.getBoundingClientRect().height)}px`)
+  page.classList.add('is-content-expanded')
 }
 
 function renderModeSwitch() {
