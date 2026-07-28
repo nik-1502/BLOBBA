@@ -92,9 +92,6 @@ let pendingInviteCode: string | null = null
 let onlineNotice = ''
 let pendingKeyboardPositionCleanup: (() => void) | undefined
 let maximumVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
-let newlyAddedPlayerId: string | null = null
-let newlyAddedPlayerReferenceUntil = 0
-let playerKeyboardGap: number | null = null
 let appTheme = loadAppTheme()
 
 function loadAppTheme(): AppTheme {
@@ -911,7 +908,7 @@ function bindOfflineSetup() {
       input.setSelectionRange(0, input.value.length)
     })
     input.addEventListener('focus', () => {
-      keepPlayerAboveKeyboard(input)
+      positionFocusedPlayerAboveKeyboard(input)
       selectName()
     })
     input.addEventListener('click', (event) => {
@@ -974,12 +971,8 @@ function bindOfflineSetup() {
     const player = createLocalPlayer(players.length + 1)
     players.push(player)
     editingPlayerId = player.id
-    newlyAddedPlayerId = player.id
-    newlyAddedPlayerReferenceUntil = performance.now() + 2000
     renderModeMenu()
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => focusPlayerNameInput(player.id))
-    })
+    focusPlayerNameInput(player.id)
   })
   app.querySelector<HTMLButtonElement>('[data-start-game]')!.addEventListener('click', () => {
     startSetupGame(players, true)
@@ -994,73 +987,56 @@ function focusPlayerNameInput(playerId: string) {
     input.select()
     input.setSelectionRange(0, input.value.length)
   })
+  positionAddPlayerOnceAboveKeyboard()
 }
 
-function keepPlayerAboveKeyboard(input: HTMLInputElement) {
+function playerKeyboardScrollContainer(element: HTMLElement, stage: HTMLElement) {
+  const page = element.closest<HTMLElement>('.player-selection-page')
+  return page?.classList.contains('is-content-expanded')
+    ? page
+    : element.closest<HTMLElement>('.offline-panel') ?? stage
+}
+
+function positionFocusedPlayerAboveKeyboard(input: HTMLInputElement) {
+  const row = input.closest<HTMLElement>('[data-player-row]')
+  const stage = app.querySelector<HTMLElement>('.setup-stage')
+  const addPlayerButton = app.querySelector<HTMLElement>('[data-add-player]')
+  if (!row || !stage || !addPlayerButton) return
+  const scrollContainer = playerKeyboardScrollContainer(input, stage)
+  const lastRow = app.querySelector<HTMLElement>('[data-player-row]:last-child')
+  if (!lastRow) return
+
+  const position = () => requestAnimationFrame(() => {
+    const visibleBottom = window.visualViewport
+      ? window.visualViewport.offsetTop + window.visualViewport.height
+      : window.innerHeight
+    const addButtonRect = addPlayerButton.getBoundingClientRect()
+    const rowGap = Math.max(8, addButtonRect.top - lastRow.getBoundingClientRect().bottom)
+    const targetRowBottom = visibleBottom - 10 - addButtonRect.height - rowGap
+    const delta = row.getBoundingClientRect().bottom - targetRowBottom
+    if (Math.abs(delta) >= 1) scrollContainer.scrollTop += delta
+  })
+
+  position()
+  ;[80, 180, 320].forEach((delay) => window.setTimeout(position, delay))
+}
+
+function positionAddPlayerOnceAboveKeyboard() {
   pendingKeyboardPositionCleanup?.()
   const viewport = window.visualViewport
   const stage = app.querySelector<HTMLElement>('.setup-stage')
-  const row = input.closest<HTMLElement>('[data-player-row]')
   const addPlayerButton = app.querySelector<HTMLElement>('[data-add-player]')
-  if (!stage || !row || !addPlayerButton) return
-  const playerPanel = addPlayerButton.closest<HTMLElement>('.offline-panel') ?? stage
-  const selectionPage = input.closest<HTMLElement>('.player-selection-page')
-  const scrollSurface = selectionPage?.classList.contains('is-content-expanded')
-    ? selectionPage
-    : playerPanel
-  let paddedScrollSurface: HTMLElement | null = null
-  let positionTimer = 0
-  let fallbackTimer = 0
-  let hasPositioned = false
-  let motionFrame = 0
-  let motionSurface: HTMLElement | null = null
-  let motionStart = 0
-  let motionTarget = 0
-  let motionStartedAt = 0
-  let motionDuration = 220
-  const scrollPlayerSurface = (surface: HTMLElement, delta: number) => {
-    if (Math.abs(delta) < 2) return
-    const nextTarget = surface.scrollTop + delta
-    if (motionFrame && motionSurface === surface) {
-      motionTarget = nextTarget
-      return
-    }
-    if (motionFrame) cancelAnimationFrame(motionFrame)
-    motionSurface = surface
-    motionStart = surface.scrollTop
-    motionTarget = nextTarget
-    motionStartedAt = performance.now()
-    motionDuration = Math.min(280, Math.max(170, 150 + Math.abs(delta) * .22))
-    const animate = (now: number) => {
-      if (!motionSurface) {
-        motionFrame = 0
-        return
-      }
-      const progress = Math.min(1, (now - motionStartedAt) / motionDuration)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      motionSurface.scrollTop = motionStart + (motionTarget - motionStart) * eased
-      if (progress < 1) {
-        motionFrame = requestAnimationFrame(animate)
-        return
-      }
-      motionSurface.scrollTop = motionTarget
-      motionFrame = 0
-      motionSurface = null
-    }
-    motionFrame = requestAnimationFrame(animate)
-  }
+  if (!stage || !addPlayerButton) return
+  const scrollContainer = playerKeyboardScrollContainer(addPlayerButton, stage)
+  const settleTimers: number[] = []
 
   const cleanup = () => {
-    viewport?.removeEventListener('resize', schedulePosition)
-    viewport?.removeEventListener('scroll', schedulePosition)
-    window.removeEventListener('resize', schedulePosition)
-    window.removeEventListener('scroll', schedulePosition)
-    window.clearTimeout(positionTimer)
-    window.clearTimeout(fallbackTimer)
-    if (motionFrame) cancelAnimationFrame(motionFrame)
-    motionFrame = 0
-    motionSurface = null
-    paddedScrollSurface?.style.removeProperty('padding-bottom')
+    viewport?.removeEventListener('resize', position)
+    viewport?.removeEventListener('scroll', position)
+    window.removeEventListener('resize', position)
+    window.removeEventListener('scroll', position)
+    settleTimers.forEach((timer) => window.clearTimeout(timer))
+    scrollContainer.style.removeProperty('padding-bottom')
     if (pendingKeyboardPositionCleanup === cleanup) pendingKeyboardPositionCleanup = undefined
   }
   const position = () => {
@@ -1070,63 +1046,29 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
       ? Math.max(0, maximumVisualViewportHeight - viewport.height - viewport.offsetTop)
       : 0
     stage.style.setProperty('--keyboard-position-space', `${Math.ceil(keyboardHeight)}px`)
-    if (paddedScrollSurface && paddedScrollSurface !== scrollSurface) {
-      paddedScrollSurface.style.removeProperty('padding-bottom')
-    }
-    paddedScrollSurface = scrollSurface
     if (keyboardHeight > 40) {
-      scrollSurface.style.paddingBottom = `${Math.ceil(keyboardHeight + 16)}px`
+      scrollContainer.style.paddingBottom = `${Math.ceil(keyboardHeight + 16)}px`
     } else {
-      scrollSurface.style.removeProperty('padding-bottom')
-      return
+      scrollContainer.style.removeProperty('padding-bottom')
     }
-    hasPositioned = true
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        const isNewlyAddedPlayer = input.dataset.playerEntry === newlyAddedPlayerId
-          && performance.now() <= newlyAddedPlayerReferenceUntil
-        const addButtonRect = addPlayerButton.getBoundingClientRect()
-        if (isNewlyAddedPlayer) {
-          const addButtonDelta = addButtonRect.bottom - (visibleBottom - 10)
-          playerKeyboardGap = visibleBottom - row.getBoundingClientRect().bottom + addButtonDelta
-          scrollPlayerSurface(scrollSurface, addButtonDelta)
-          return
-        }
-        const lastRow = playerPanel.querySelector<HTMLElement>('[data-player-row]:last-child')
-        const fallbackGap = lastRow
-          ? 10 + addButtonRect.height + Math.max(8, addButtonRect.top - lastRow.getBoundingClientRect().bottom)
-          : 76
-        const siblingRow = row.nextElementSibling instanceof HTMLElement
-          ? row.nextElementSibling
-          : row.previousElementSibling instanceof HTMLElement
-            ? row.previousElementSibling
-            : null
-        const rowStep = siblingRow?.matches('[data-player-row]')
-          ? Math.abs(siblingRow.getBoundingClientRect().top - row.getBoundingClientRect().top)
-          : row.getBoundingClientRect().height + 10
-        const openKeyboardOffset = playerKeyboardGap !== null ? rowStep : 0
-        const targetRowBottom = visibleBottom - (playerKeyboardGap ?? fallbackGap) + openKeyboardOffset
-        const delta = row.getBoundingClientRect().bottom - targetRowBottom
-        scrollPlayerSurface(scrollSurface, delta)
+        const targetBottom = Math.min(visibleBottom, scrollContainer.getBoundingClientRect().bottom) - 10
+        const delta = addPlayerButton.getBoundingClientRect().bottom - targetBottom
+        if (delta > 0) scrollContainer.scrollTop += delta
       })
     })
   }
 
-  function schedulePosition() {
-    if (hasPositioned) return
-    window.clearTimeout(positionTimer)
-    positionTimer = window.setTimeout(position, 90)
-  }
-
   pendingKeyboardPositionCleanup = cleanup
-  viewport?.addEventListener('resize', schedulePosition)
-  viewport?.addEventListener('scroll', schedulePosition)
-  window.addEventListener('resize', schedulePosition)
-  window.addEventListener('scroll', schedulePosition)
-  schedulePosition()
-  fallbackTimer = window.setTimeout(() => {
-    if (!hasPositioned) position()
-  }, 500)
+  viewport?.addEventListener('resize', position)
+  viewport?.addEventListener('scroll', position)
+  window.addEventListener('resize', position)
+  window.addEventListener('scroll', position)
+  position()
+  ;[80, 180, 320, 520, 760, 1100, 1500].forEach((delay) => {
+    settleTimers.push(window.setTimeout(position, delay))
+  })
 }
 
 function bindOnlineSetup() {
