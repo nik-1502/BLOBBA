@@ -988,6 +988,7 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
     window.removeEventListener('resize', position)
     window.removeEventListener('scroll', position)
     settleTimers.forEach((timer) => window.clearTimeout(timer))
+    scrollContainer.style.removeProperty('padding-top')
     scrollContainer.style.removeProperty('padding-bottom')
     if (pendingKeyboardPositionCleanup === cleanup) pendingKeyboardPositionCleanup = undefined
   }
@@ -999,8 +1000,11 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
       : 0
     stage.style.setProperty('--keyboard-position-space', `${Math.ceil(keyboardHeight)}px`)
     if (keyboardHeight > 40) {
-      scrollContainer.style.paddingBottom = `${Math.ceil(keyboardHeight + 16)}px`
+      const keyboardScrollSpace = `${Math.ceil(keyboardHeight + 16)}px`
+      scrollContainer.style.paddingTop = keyboardScrollSpace
+      scrollContainer.style.paddingBottom = keyboardScrollSpace
     } else {
+      scrollContainer.style.removeProperty('padding-top')
       scrollContainer.style.removeProperty('padding-bottom')
       return
     }
