@@ -898,11 +898,12 @@ function bindOfflineSetup() {
       input.setSelectionRange(0, input.value.length)
     })
     input.addEventListener('focus', () => {
-      positionFocusedPlayerAboveKeyboard(input)
+      keepPlayerAboveKeyboard(input)
       selectName()
     })
     input.addEventListener('click', (event) => {
       event.stopPropagation()
+      keepPlayerAboveKeyboard(input)
       selectName()
     })
     input.addEventListener('pointerdown', (event) => {
@@ -912,6 +913,7 @@ function bindOfflineSetup() {
     input.addEventListener('touchstart', (event) => event.stopPropagation(), { passive: true })
     input.addEventListener('touchend', (event) => {
       event.stopPropagation()
+      keepPlayerAboveKeyboard(input)
       selectName()
     }, { passive: true })
     input.addEventListener('input', () => {
@@ -960,29 +962,6 @@ function bindOfflineSetup() {
   })
 }
 
-function positionFocusedPlayerAboveKeyboard(input: HTMLInputElement) {
-  const row = input.closest<HTMLElement>('[data-player-row]')
-  const scrollContainer = input.closest<HTMLElement>('.offline-panel')
-  const addPlayerButton = app.querySelector<HTMLElement>('[data-add-player]')
-  const lastRow = scrollContainer?.querySelector<HTMLElement>('[data-player-row]:last-child')
-  if (!row || !scrollContainer || !addPlayerButton || !lastRow) return
-
-  const position = () => requestAnimationFrame(() => {
-    const visibleBottom = window.visualViewport
-      ? window.visualViewport.offsetTop + window.visualViewport.height
-      : window.innerHeight
-    const addButtonRect = addPlayerButton.getBoundingClientRect()
-    const lastRowRect = lastRow.getBoundingClientRect()
-    const rowGap = Math.max(8, addButtonRect.top - lastRowRect.bottom)
-    const targetRowBottom = visibleBottom - 10 - addButtonRect.height - rowGap
-    const delta = row.getBoundingClientRect().bottom - targetRowBottom
-    if (Math.abs(delta) >= 1) scrollContainer.scrollTop += delta
-  })
-
-  position()
-  ;[80, 180, 320].forEach((delay) => window.setTimeout(position, delay))
-}
-
 function focusPlayerNameInput(playerId: string) {
   const input = app.querySelector<HTMLInputElement>(`[data-player-entry="${playerId}"]`)
   if (!input) return
@@ -991,15 +970,15 @@ function focusPlayerNameInput(playerId: string) {
     input.select()
     input.setSelectionRange(0, input.value.length)
   })
-  positionAddPlayerOnceAboveKeyboard()
 }
 
-function positionAddPlayerOnceAboveKeyboard() {
+function keepPlayerAboveKeyboard(input: HTMLInputElement) {
   pendingKeyboardPositionCleanup?.()
   const viewport = window.visualViewport
   const stage = app.querySelector<HTMLElement>('.setup-stage')
+  const row = input.closest<HTMLElement>('[data-player-row]')
   const addPlayerButton = app.querySelector<HTMLElement>('[data-add-player]')
-  if (!stage || !addPlayerButton) return
+  if (!stage || !row || !addPlayerButton) return
   const scrollContainer = addPlayerButton.closest<HTMLElement>('.offline-panel') ?? stage
   const settleTimers: number[] = []
 
@@ -1023,12 +1002,17 @@ function positionAddPlayerOnceAboveKeyboard() {
       scrollContainer.style.paddingBottom = `${Math.ceil(keyboardHeight + 16)}px`
     } else {
       scrollContainer.style.removeProperty('padding-bottom')
+      return
     }
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        const targetBottom = Math.min(visibleBottom, scrollContainer.getBoundingClientRect().bottom) - 10
-        const delta = addPlayerButton.getBoundingClientRect().bottom - targetBottom
-        if (delta > 0) scrollContainer.scrollTop += delta
+        const lastRow = scrollContainer.querySelector<HTMLElement>('[data-player-row]:last-child')
+        if (!lastRow) return
+        const addButtonRect = addPlayerButton.getBoundingClientRect()
+        const rowGap = Math.max(8, addButtonRect.top - lastRow.getBoundingClientRect().bottom)
+        const targetRowBottom = visibleBottom - 10 - addButtonRect.height - rowGap
+        const delta = row.getBoundingClientRect().bottom - targetRowBottom
+        if (Math.abs(delta) >= 1) scrollContainer.scrollTop += delta
       })
     })
   }
