@@ -92,7 +92,6 @@ let pendingInviteCode: string | null = null
 let onlineNotice = ''
 let pendingKeyboardPositionCleanup: (() => void) | undefined
 let maximumVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
-let playerInputFocusAnchorTop: number | null = null
 let appTheme = loadAppTheme()
 
 function loadAppTheme(): AppTheme {
@@ -741,7 +740,6 @@ function updateCategoryMenu() {
 function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER', eyebrow = 'BLOBBA präsentiert', pageClass = '', centerTitle = true) {
   pendingKeyboardPositionCleanup?.()
   pendingKeyboardPositionCleanup = undefined
-  playerInputFocusAnchorTop = null
   const headerEnd = pageClass.includes('player-selection-busfahrer')
     ? '<button class="restart-button player-selection-header-spacer" type="button" tabindex="-1" aria-hidden="true">Neu starten</button>'
     : '<span></span>'
@@ -900,7 +898,7 @@ function bindOfflineSetup() {
       input.setSelectionRange(0, input.value.length)
     })
     input.addEventListener('focus', () => {
-      positionFocusedPlayerAtAnchor(input)
+      positionFocusedPlayerAboveKeyboard(input)
       selectName()
     })
     input.addEventListener('click', (event) => {
@@ -918,13 +916,6 @@ function bindOfflineSetup() {
     }, { passive: true })
     input.addEventListener('input', () => {
       players = players.map((player) => player.id === input.dataset.playerEntry ? { ...player, name: input.value } : player)
-    })
-    input.addEventListener('blur', () => {
-      window.setTimeout(() => {
-        if (!(document.activeElement instanceof HTMLInputElement) || !document.activeElement.matches('[data-player-entry]')) {
-          playerInputFocusAnchorTop = null
-        }
-      }, 0)
     })
   })
   app.querySelectorAll<HTMLButtonElement>('[data-remove-player]').forEach((button) => button.addEventListener('click', () => {
@@ -969,21 +960,27 @@ function bindOfflineSetup() {
   })
 }
 
-function positionFocusedPlayerAtAnchor(input: HTMLInputElement) {
+function positionFocusedPlayerAboveKeyboard(input: HTMLInputElement) {
   const row = input.closest<HTMLElement>('[data-player-row]')
   const scrollContainer = input.closest<HTMLElement>('.offline-panel')
-  if (!row || !scrollContainer) return
-  const currentTop = row.getBoundingClientRect().top
-  if (playerInputFocusAnchorTop === null) {
-    playerInputFocusAnchorTop = currentTop
-    return
-  }
-  const delta = currentTop - playerInputFocusAnchorTop
-  if (Math.abs(delta) < 1) return
-  scrollContainer.scrollTop += delta
-  requestAnimationFrame(() => {
-    playerInputFocusAnchorTop = row.getBoundingClientRect().top
+  const addPlayerButton = app.querySelector<HTMLElement>('[data-add-player]')
+  const lastRow = scrollContainer?.querySelector<HTMLElement>('[data-player-row]:last-child')
+  if (!row || !scrollContainer || !addPlayerButton || !lastRow) return
+
+  const position = () => requestAnimationFrame(() => {
+    const visibleBottom = window.visualViewport
+      ? window.visualViewport.offsetTop + window.visualViewport.height
+      : window.innerHeight
+    const addButtonRect = addPlayerButton.getBoundingClientRect()
+    const lastRowRect = lastRow.getBoundingClientRect()
+    const rowGap = Math.max(8, addButtonRect.top - lastRowRect.bottom)
+    const targetRowBottom = visibleBottom - 10 - addButtonRect.height - rowGap
+    const delta = row.getBoundingClientRect().bottom - targetRowBottom
+    if (Math.abs(delta) >= 1) scrollContainer.scrollTop += delta
   })
+
+  position()
+  ;[80, 180, 320].forEach((delay) => window.setTimeout(position, delay))
 }
 
 function focusPlayerNameInput(playerId: string) {
@@ -1032,12 +1029,6 @@ function positionAddPlayerOnceAboveKeyboard() {
         const targetBottom = Math.min(visibleBottom, scrollContainer.getBoundingClientRect().bottom) - 10
         const delta = addPlayerButton.getBoundingClientRect().bottom - targetBottom
         if (delta > 0) scrollContainer.scrollTop += delta
-        requestAnimationFrame(() => {
-          const focusedPlayer = document.activeElement instanceof HTMLInputElement
-            ? document.activeElement.closest<HTMLElement>('[data-player-row]')
-            : null
-          if (focusedPlayer) playerInputFocusAnchorTop = focusedPlayer.getBoundingClientRect().top
-        })
       })
     })
   }
