@@ -972,21 +972,27 @@ function bindOfflineSetup() {
     players.push(player)
     editingPlayerId = player.id
     renderModeMenu()
-    focusPlayerNameInput(player.id)
+    focusPlayerNameInput(player.id, true)
   })
   app.querySelector<HTMLButtonElement>('[data-start-game]')!.addEventListener('click', () => {
     startSetupGame(players, true)
   })
 }
 
-function focusPlayerNameInput(playerId: string) {
+function focusPlayerNameInput(playerId: string, confirmSelection = false) {
   const input = app.querySelector<HTMLInputElement>(`[data-player-entry="${playerId}"]`)
   if (!input) return
   input.focus({ preventScroll: true })
-  requestAnimationFrame(() => {
+  const selectPlayerName = () => {
+    if (!input.isConnected || document.activeElement !== input) return
     input.select()
     input.setSelectionRange(0, input.value.length)
-  })
+  }
+  requestAnimationFrame(selectPlayerName)
+  if (confirmSelection) {
+    window.setTimeout(selectPlayerName, 60)
+    window.setTimeout(selectPlayerName, 160)
+  }
   positionAddPlayerOnceAboveKeyboard()
 }
 
