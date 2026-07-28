@@ -796,6 +796,21 @@ html[data-theme='neon'] .busfahrer-page.player-selection-blobben .setup-game-pan
   background: linear-gradient(155deg, rgba(42, 16, 70, .90), rgba(8, 12, 45, .93));
 }
 
+html[data-theme='neon'] .busfahrer-page.player-selection-page .player-row {
+  border-color: rgba(255, 91, 190, .30);
+  background: linear-gradient(145deg, rgba(91, 24, 78, .90), rgba(38, 15, 48, .92));
+  box-shadow: 0 8px 18px rgba(12, 0, 31, .22), inset 0 1px rgba(255, 182, 229, .08);
+}
+
+html[data-theme='neon'] .busfahrer-page.player-selection-page .player-row:last-child {
+  border-bottom-color: rgba(255, 91, 190, .30);
+}
+
+html[data-theme='neon'] .busfahrer-page.player-selection-page .player-row:hover {
+  border-color: rgba(255, 91, 190, .46);
+  background: linear-gradient(145deg, rgba(103, 28, 88, .92), rgba(45, 17, 57, .94));
+}
+
 html[data-theme='neon'] .busfahrer-page :is(.player-entry-input, .setup-text-input, .profile-name-input, .player-entry-trigger) {
   background: rgba(8, 9, 39, .78);
 }

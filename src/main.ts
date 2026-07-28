@@ -974,7 +974,18 @@ function positionAddPlayerOnceAboveKeyboard() {
   const viewport = window.visualViewport
   const stage = app.querySelector<HTMLElement>('.setup-stage')
   const addPlayerButton = app.querySelector<HTMLElement>('[data-add-player]')
-  if (!viewport || !stage || !addPlayerButton) return
+  if (!stage || !addPlayerButton) return
+  const scrollContainer = addPlayerButton.closest<HTMLElement>('.offline-panel') ?? stage
+
+  const revealButton = (visibleBottom: number) => {
+    const delta = addPlayerButton.getBoundingClientRect().bottom - (visibleBottom - 8)
+    if (delta > 0) scrollContainer.scrollTop += delta
+  }
+
+  requestAnimationFrame(() => {
+    revealButton(viewport ? viewport.offsetTop + viewport.height : window.innerHeight)
+  })
+  if (!viewport) return
 
   const cleanup = () => {
     viewport.removeEventListener('resize', position)
@@ -987,9 +998,7 @@ function positionAddPlayerOnceAboveKeyboard() {
     cleanup()
     stage.style.setProperty('--keyboard-position-space', `${Math.ceil(keyboardHeight)}px`)
     requestAnimationFrame(() => {
-      const keyboardTop = viewport.offsetTop + viewport.height
-      const delta = addPlayerButton.getBoundingClientRect().bottom - (keyboardTop - 8)
-      if (delta > 0) stage.scrollTop += delta
+      revealButton(viewport.offsetTop + viewport.height)
     })
   }
 
