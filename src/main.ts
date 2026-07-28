@@ -998,9 +998,32 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
   const selectionPage = input.closest<HTMLElement>('.player-selection-page')
   const settleTimers: number[] = []
   let paddedScrollSurface: HTMLElement | null = null
+  let scrollAnimationFrame = 0
   const keyboardWasOpen = viewport
     ? maximumVisualViewportHeight - viewport.height - viewport.offsetTop > 40
     : false
+
+  const animateScrollBy = (surface: HTMLElement, delta: number, onComplete?: () => void) => {
+    if (scrollAnimationFrame) cancelAnimationFrame(scrollAnimationFrame)
+    const start = surface.scrollTop
+    const target = start + delta
+    const startedAt = performance.now()
+    const duration = 520
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - startedAt) / duration)
+      const eased = progress < .5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2
+      surface.scrollTop = start + (target - start) * eased
+      if (progress < 1) {
+        scrollAnimationFrame = requestAnimationFrame(tick)
+      } else {
+        scrollAnimationFrame = 0
+        onComplete?.()
+      }
+    }
+    scrollAnimationFrame = requestAnimationFrame(tick)
+  }
 
   const cleanup = () => {
     viewport?.removeEventListener('resize', position)
@@ -1008,6 +1031,7 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
     window.removeEventListener('resize', position)
     window.removeEventListener('scroll', position)
     settleTimers.forEach((timer) => window.clearTimeout(timer))
+    if (scrollAnimationFrame) cancelAnimationFrame(scrollAnimationFrame)
     paddedScrollSurface?.style.removeProperty('padding-bottom')
     if (pendingKeyboardPositionCleanup === cleanup) pendingKeyboardPositionCleanup = undefined
   }
@@ -1038,10 +1062,14 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
         const addButtonRect = addPlayerButton.getBoundingClientRect()
         if (isNewlyAddedPlayer) {
           const addButtonDelta = addButtonRect.bottom - (visibleBottom - 10)
-          if (Math.abs(addButtonDelta) >= 1) scrollSurface.scrollTop += addButtonDelta
-          requestAnimationFrame(() => {
+          const rememberPlayerGap = () => requestAnimationFrame(() => {
             playerKeyboardGap = visibleBottom - row.getBoundingClientRect().bottom
           })
+          if (Math.abs(addButtonDelta) >= 1) {
+            animateScrollBy(scrollSurface, addButtonDelta, rememberPlayerGap)
+          } else {
+            rememberPlayerGap()
+          }
           return
         }
         const lastRow = playerPanel.querySelector<HTMLElement>('[data-player-row]:last-child')
