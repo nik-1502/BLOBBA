@@ -983,15 +983,29 @@ function focusPlayerNameInput(playerId: string, confirmSelection = false) {
   const input = app.querySelector<HTMLInputElement>(`[data-player-entry="${playerId}"]`)
   if (!input) return
   input.focus({ preventScroll: true })
+  const selectionTimers: number[] = []
+  let userStartedEditing = false
   const selectPlayerName = () => {
-    if (!input.isConnected || document.activeElement !== input) return
+    if (userStartedEditing || !input.isConnected || document.activeElement !== input) return
     input.select()
     input.setSelectionRange(0, input.value.length)
   }
   requestAnimationFrame(selectPlayerName)
   if (confirmSelection) {
-    window.setTimeout(selectPlayerName, 60)
-    window.setTimeout(selectPlayerName, 160)
+    const stopSelectionConfirmation = () => {
+      userStartedEditing = true
+      selectionTimers.forEach((timer) => window.clearTimeout(timer))
+      window.visualViewport?.removeEventListener('resize', selectPlayerName)
+    }
+    input.addEventListener('beforeinput', stopSelectionConfirmation, { once: true })
+    input.addEventListener('keydown', stopSelectionConfirmation, { once: true })
+    window.visualViewport?.addEventListener('resize', selectPlayerName)
+    ;[60, 160, 300, 480, 700].forEach((delay) => {
+      selectionTimers.push(window.setTimeout(selectPlayerName, delay))
+    })
+    selectionTimers.push(window.setTimeout(() => {
+      window.visualViewport?.removeEventListener('resize', selectPlayerName)
+    }, 900))
   }
   positionAddPlayerOnceAboveKeyboard()
 }
