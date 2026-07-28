@@ -92,6 +92,9 @@ let pendingInviteCode: string | null = null
 let onlineNotice = ''
 let pendingKeyboardPositionCleanup: (() => void) | undefined
 let maximumVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
+let newlyAddedPlayerId: string | null = null
+let newlyAddedPlayerReferenceUntil = 0
+let playerKeyboardGap: number | null = null
 let appTheme = loadAppTheme()
 
 function loadAppTheme(): AppTheme {
@@ -964,6 +967,8 @@ function bindOfflineSetup() {
     const player = createLocalPlayer(players.length + 1)
     players.push(player)
     editingPlayerId = player.id
+    newlyAddedPlayerId = player.id
+    newlyAddedPlayerReferenceUntil = performance.now() + 2000
     renderModeMenu()
     focusPlayerNameInput(player.id)
   })
@@ -989,8 +994,10 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
   const row = input.closest<HTMLElement>('[data-player-row]')
   const addPlayerButton = app.querySelector<HTMLElement>('[data-add-player]')
   if (!stage || !row || !addPlayerButton) return
-  const scrollContainer = addPlayerButton.closest<HTMLElement>('.offline-panel') ?? stage
+  const playerPanel = addPlayerButton.closest<HTMLElement>('.offline-panel') ?? stage
+  const selectionPage = input.closest<HTMLElement>('.player-selection-page')
   const settleTimers: number[] = []
+  let paddedScrollSurface: HTMLElement | null = null
 
   const cleanup = () => {
     viewport?.removeEventListener('resize', position)
@@ -998,7 +1005,7 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
     window.removeEventListener('resize', position)
     window.removeEventListener('scroll', position)
     settleTimers.forEach((timer) => window.clearTimeout(timer))
-    scrollContainer.style.removeProperty('padding-bottom')
+    paddedScrollSurface?.style.removeProperty('padding-bottom')
     if (pendingKeyboardPositionCleanup === cleanup) pendingKeyboardPositionCleanup = undefined
   }
   const position = () => {
@@ -1008,21 +1015,39 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
       ? Math.max(0, maximumVisualViewportHeight - viewport.height - viewport.offsetTop)
       : 0
     stage.style.setProperty('--keyboard-position-space', `${Math.ceil(keyboardHeight)}px`)
+    const scrollSurface = selectionPage?.classList.contains('is-content-expanded')
+      ? selectionPage
+      : playerPanel
+    if (paddedScrollSurface && paddedScrollSurface !== scrollSurface) {
+      paddedScrollSurface.style.removeProperty('padding-bottom')
+    }
+    paddedScrollSurface = scrollSurface
     if (keyboardHeight > 40) {
-      scrollContainer.style.paddingBottom = `${Math.ceil(keyboardHeight + 16)}px`
+      scrollSurface.style.paddingBottom = `${Math.ceil(keyboardHeight + 16)}px`
     } else {
-      scrollContainer.style.removeProperty('padding-bottom')
+      scrollSurface.style.removeProperty('padding-bottom')
       return
     }
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        const lastRow = scrollContainer.querySelector<HTMLElement>('[data-player-row]:last-child')
-        if (!lastRow) return
+        const isNewlyAddedPlayer = input.dataset.playerEntry === newlyAddedPlayerId
+          && performance.now() <= newlyAddedPlayerReferenceUntil
         const addButtonRect = addPlayerButton.getBoundingClientRect()
-        const rowGap = Math.max(8, addButtonRect.top - lastRow.getBoundingClientRect().bottom)
-        const targetRowBottom = visibleBottom - 10 - addButtonRect.height - rowGap
+        if (isNewlyAddedPlayer) {
+          const addButtonDelta = addButtonRect.bottom - (visibleBottom - 10)
+          if (Math.abs(addButtonDelta) >= 1) scrollSurface.scrollTop += addButtonDelta
+          requestAnimationFrame(() => {
+            playerKeyboardGap = visibleBottom - row.getBoundingClientRect().bottom
+          })
+          return
+        }
+        const lastRow = playerPanel.querySelector<HTMLElement>('[data-player-row]:last-child')
+        const fallbackGap = lastRow
+          ? 10 + addButtonRect.height + Math.max(8, addButtonRect.top - lastRow.getBoundingClientRect().bottom)
+          : 76
+        const targetRowBottom = visibleBottom - (playerKeyboardGap ?? fallbackGap)
         const delta = row.getBoundingClientRect().bottom - targetRowBottom
-        if (Math.abs(delta) >= 1) scrollContainer.scrollTop += delta
+        if (Math.abs(delta) >= 1) scrollSurface.scrollTop += delta
       })
     })
   }
