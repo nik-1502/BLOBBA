@@ -998,6 +998,9 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
   const selectionPage = input.closest<HTMLElement>('.player-selection-page')
   const settleTimers: number[] = []
   let paddedScrollSurface: HTMLElement | null = null
+  const keyboardWasOpen = viewport
+    ? maximumVisualViewportHeight - viewport.height - viewport.offsetTop > 40
+    : false
 
   const cleanup = () => {
     viewport?.removeEventListener('resize', position)
@@ -1045,7 +1048,16 @@ function keepPlayerAboveKeyboard(input: HTMLInputElement) {
         const fallbackGap = lastRow
           ? 10 + addButtonRect.height + Math.max(8, addButtonRect.top - lastRow.getBoundingClientRect().bottom)
           : 76
-        const targetRowBottom = visibleBottom - (playerKeyboardGap ?? fallbackGap)
+        const siblingRow = row.nextElementSibling instanceof HTMLElement
+          ? row.nextElementSibling
+          : row.previousElementSibling instanceof HTMLElement
+            ? row.previousElementSibling
+            : null
+        const rowStep = siblingRow?.matches('[data-player-row]')
+          ? Math.abs(siblingRow.getBoundingClientRect().top - row.getBoundingClientRect().top)
+          : row.getBoundingClientRect().height + 10
+        const openKeyboardOffset = keyboardWasOpen ? rowStep : 0
+        const targetRowBottom = visibleBottom - (playerKeyboardGap ?? fallbackGap) + openKeyboardOffset
         const delta = row.getBoundingClientRect().bottom - targetRowBottom
         if (Math.abs(delta) >= 1) scrollSurface.scrollTop += delta
       })
