@@ -439,6 +439,8 @@ bindPlayerSelectionPinch()
 const PAGE_SCROLL_TOLERANCE = 2
 let pageScrollModeFrame = 0
 let observedPageScrollContainer: HTMLElement | null = null
+let appTouchStartY = 0
+let appTouchLastY = 0
 const pageScrollResizeObserver = new ResizeObserver(() => schedulePageScrollModeUpdate())
 
 function getPageScrollContainer() {
@@ -485,12 +487,64 @@ function schedulePageScrollModeUpdate() {
   pageScrollModeFrame = requestAnimationFrame(updatePageScrollMode)
 }
 
+function canActuallyScroll(element: HTMLElement) {
+  return element.classList.contains('is-player-keyboard-open')
+    || element.scrollHeight > element.clientHeight + PAGE_SCROLL_TOLERANCE
+}
+
+function findAllowedTouchScrollContainer(target: EventTarget | null) {
+  let element = target instanceof Element ? target : null
+  while (element && element !== app) {
+    if (element instanceof HTMLElement) {
+      const overflowY = getComputedStyle(element).overflowY
+      const explicitlyScrollable = element.classList.contains('is-app-scrollable')
+        || overflowY === 'auto'
+        || overflowY === 'scroll'
+      if (explicitlyScrollable && canActuallyScroll(element)) return element
+    }
+    element = element.parentElement
+  }
+  return null
+}
+
+function bindGlobalIOSScrollGuard() {
+  document.addEventListener('touchstart', (event) => {
+    if (event.touches.length === 1) {
+      appTouchStartY = event.touches[0].clientY
+      appTouchLastY = appTouchStartY
+    }
+  }, { passive: true, capture: true })
+  document.addEventListener('touchmove', (event) => {
+    if (event.touches.length !== 1 || playerPinchController.active) return
+    const target = event.target instanceof Element ? event.target : null
+    if (target?.closest('input[type="range"]')) return
+    const scrollContainer = findAllowedTouchScrollContainer(event.target)
+    if (!scrollContainer) {
+      event.preventDefault()
+      return
+    }
+    const currentY = event.touches[0].clientY
+    const deltaY = currentY - appTouchLastY
+    appTouchLastY = currentY
+    const atTop = scrollContainer.scrollTop <= 0
+    const atBottom = scrollContainer.scrollTop + scrollContainer.clientHeight
+      >= scrollContainer.scrollHeight - 1
+    if (atTop && deltaY > 0 || atBottom && deltaY < 0) event.preventDefault()
+  }, { passive: false, capture: true })
+  window.addEventListener('scroll', () => {
+    if (window.scrollX !== 0 || window.scrollY !== 0) window.scrollTo(0, 0)
+    if (document.documentElement.scrollTop !== 0) document.documentElement.scrollTop = 0
+    if (document.body.scrollTop !== 0) document.body.scrollTop = 0
+  }, { passive: true })
+}
+
 const pageScrollMutationObserver = new MutationObserver(() => schedulePageScrollModeUpdate())
 pageScrollMutationObserver.observe(app, { childList: true, subtree: true })
 window.addEventListener('resize', schedulePageScrollModeUpdate)
 window.addEventListener('orientationchange', schedulePageScrollModeUpdate)
 window.visualViewport?.addEventListener('resize', schedulePageScrollModeUpdate)
 window.visualViewport?.addEventListener('scroll', schedulePageScrollModeUpdate)
+bindGlobalIOSScrollGuard()
 schedulePageScrollModeUpdate()
 
 function createId() {
