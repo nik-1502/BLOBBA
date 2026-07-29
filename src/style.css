@@ -823,7 +823,8 @@ html.is-standalone #app > .setup-page {
   min-height: calc(100dvh + env(safe-area-inset-bottom, 0px));
 }
 
-html.is-standalone #app > .setup-page > .setup-shell {
+html.is-standalone #app > .setup-page > .setup-shell,
+html.is-standalone #app > .setup-page > .player-selection-zoom-layer > .setup-shell {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 

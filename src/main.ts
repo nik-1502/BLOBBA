@@ -122,6 +122,20 @@ let playerTapStartX = 0
 let playerTapStartY = 0
 let playerTapStartedAt = 0
 let playerTapMoved = false
+const MIN_PLAYER_PINCH_SCALE = .98
+const MAX_PLAYER_PINCH_SCALE = 1.06
+const PLAYER_PINCH_SMOOTHING = .28
+const PLAYER_PINCH_RETURN_DURATION = 280
+let suppressPlayerTapUntil = 0
+const playerPinchController = {
+  active: false,
+  startDistance: 0,
+  currentScale: 1,
+  renderedScale: 1,
+  frameId: 0,
+  returnAnimationId: 0,
+  layer: null as HTMLElement | null,
+}
 const playerNameBeforeEditing = new Map<string, string>()
 let appTheme = loadAppTheme()
 
@@ -214,23 +228,28 @@ function constrainTouchZoom() {
   }
 
   document.addEventListener('gesturestart', (event) => {
+    if (app.querySelector('.player-selection-page')) return
     const gesture = event as Event & { scale?: number }
     gestureStartScale = window.visualViewport?.scale ?? gesture.scale ?? 1
     isPinching = true
   }, { passive: true })
   document.addEventListener('gesturechange', (event) => {
+    if (app.querySelector('.player-selection-page')) return
     const gesture = event as Event & { scale?: number }
     const relativeScale = gesture.scale ?? 1
     if (gestureStartScale * relativeScale < 1) event.preventDefault()
   }, { passive: false })
   document.addEventListener('gestureend', () => {
+    if (app.querySelector('.player-selection-page')) return
     isPinching = false
     resetZoomToDefault()
   }, { passive: true })
   document.addEventListener('touchstart', (event) => {
+    if (app.querySelector('.player-selection-page')) return
     if (event.touches.length === 2) isPinching = true
   }, { passive: true })
   document.addEventListener('touchend', (event) => {
+    if (app.querySelector('.player-selection-page')) return
     if (!isPinching || event.touches.length !== 0) return
     isPinching = false
     resetZoomToDefault()
@@ -238,6 +257,145 @@ function constrainTouchZoom() {
 }
 
 constrainTouchZoom()
+
+function touchDistance(touchA: Touch, touchB: Touch) {
+  return Math.hypot(touchB.clientX - touchA.clientX, touchB.clientY - touchA.clientY)
+}
+
+function cancelPlayerPinchFrames() {
+  if (playerPinchController.frameId) cancelAnimationFrame(playerPinchController.frameId)
+  if (playerPinchController.returnAnimationId) cancelAnimationFrame(playerPinchController.returnAnimationId)
+  playerPinchController.frameId = 0
+  playerPinchController.returnAnimationId = 0
+}
+
+function resetPlayerPinchTransform() {
+  cancelPlayerPinchFrames()
+  const layer = playerPinchController.layer
+  if (layer?.isConnected) {
+    layer.style.transform = 'translate3d(0, 0, 0) scale(1)'
+    layer.style.transformOrigin = 'center center'
+  }
+  playerPinchController.active = false
+  playerPinchController.startDistance = 0
+  playerPinchController.currentScale = 1
+  playerPinchController.renderedScale = 1
+  playerPinchController.layer = null
+}
+
+function renderPlayerPinchFrame() {
+  const controller = playerPinchController
+  if (!controller.layer?.isConnected) {
+    resetPlayerPinchTransform()
+    return
+  }
+  const difference = controller.currentScale - controller.renderedScale
+  controller.renderedScale += difference * PLAYER_PINCH_SMOOTHING
+  controller.layer.style.transform = `translate3d(0, 0, 0) scale(${controller.renderedScale.toFixed(5)})`
+  if (controller.active && Math.abs(difference) > .0005) {
+    controller.frameId = requestAnimationFrame(renderPlayerPinchFrame)
+  } else {
+    controller.frameId = 0
+  }
+}
+
+function animatePlayerPinchBack() {
+  const controller = playerPinchController
+  if (!controller.layer?.isConnected) {
+    resetPlayerPinchTransform()
+    return
+  }
+  cancelPlayerPinchFrames()
+  controller.active = false
+  controller.currentScale = 1
+  const layer = controller.layer
+  const startScale = controller.renderedScale
+  const startedAt = performance.now()
+  const frame = (now: number) => {
+    if (controller.layer !== layer || !layer.isConnected) {
+      resetPlayerPinchTransform()
+      return
+    }
+    const progress = Math.min((now - startedAt) / PLAYER_PINCH_RETURN_DURATION, 1)
+    const eased = 1 - Math.pow(1 - progress, 3)
+    controller.renderedScale = startScale + (1 - startScale) * eased
+    layer.style.transform = `translate3d(0, 0, 0) scale(${controller.renderedScale.toFixed(5)})`
+    if (progress < 1) {
+      controller.returnAnimationId = requestAnimationFrame(frame)
+      return
+    }
+    resetPlayerPinchTransform()
+  }
+  controller.returnAnimationId = requestAnimationFrame(frame)
+}
+
+function initializePlayerPinchTransform() {
+  resetPlayerPinchTransform()
+  const layer = app.querySelector<HTMLElement>('.player-selection-zoom-layer')
+  if (!layer) return
+  layer.style.transform = 'translate3d(0, 0, 0) scale(1)'
+  layer.style.transformOrigin = 'center center'
+}
+
+function bindPlayerSelectionPinch() {
+  document.addEventListener('gesturestart', (event) => {
+    if (app.querySelector('.player-selection-page')) event.preventDefault()
+  }, { passive: false })
+  document.addEventListener('gesturechange', (event) => {
+    if (app.querySelector('.player-selection-page')) event.preventDefault()
+  }, { passive: false })
+  document.addEventListener('touchstart', (event) => {
+    if (event.touches.length !== 2) return
+    const layer = app.querySelector<HTMLElement>('.player-selection-zoom-layer')
+    if (!layer || !(event.target as Element).closest('.player-selection-page')) return
+    cancelPlayerPinchFrames()
+    clearPlayerTapTracking()
+    const touchA = event.touches[0]
+    const touchB = event.touches[1]
+    const rect = layer.getBoundingClientRect()
+    const continuingVisibleScale = Math.abs(playerPinchController.renderedScale - 1) > .001
+    playerPinchController.layer = layer
+    playerPinchController.active = true
+    playerPinchController.startDistance = touchDistance(touchA, touchB) / playerPinchController.renderedScale
+    playerPinchController.currentScale = playerPinchController.renderedScale
+    if (!continuingVisibleScale) {
+      layer.style.transformOrigin = `${((touchA.clientX + touchB.clientX) / 2) - rect.left}px ${((touchA.clientY + touchB.clientY) / 2) - rect.top}px`
+    }
+    suppressPlayerTapUntil = performance.now() + 500
+    event.preventDefault()
+  }, { passive: false, capture: true })
+  document.addEventListener('touchmove', (event) => {
+    const controller = playerPinchController
+    if (!controller.active || event.touches.length !== 2 || !controller.layer?.isConnected) return
+    const rawScale = touchDistance(event.touches[0], event.touches[1]) / controller.startDistance
+    const resistedScale = rawScale <= 1
+      ? 1 - (1 - rawScale) * .35
+      : 1 + (rawScale - 1) * .35
+    controller.currentScale = Math.max(MIN_PLAYER_PINCH_SCALE, Math.min(resistedScale, MAX_PLAYER_PINCH_SCALE))
+    if (!controller.frameId) controller.frameId = requestAnimationFrame(renderPlayerPinchFrame)
+    event.preventDefault()
+  }, { passive: false, capture: true })
+  const finishPinch = (event: TouchEvent) => {
+    if (!playerPinchController.active || event.touches.length >= 2) return
+    suppressPlayerTapUntil = performance.now() + 500
+    animatePlayerPinchBack()
+  }
+  document.addEventListener('touchend', finishPinch, { passive: true, capture: true })
+  document.addEventListener('touchcancel', finishPinch, { passive: true, capture: true })
+  document.addEventListener('click', (event) => {
+    if (performance.now() >= suppressPlayerTapUntil
+      || !(event.target as Element).closest('.player-selection-page')) return
+    event.preventDefault()
+    event.stopPropagation()
+  }, { capture: true })
+  window.addEventListener('orientationchange', initializePlayerPinchTransform)
+  window.addEventListener('pageshow', initializePlayerPinchTransform)
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && !playerPinchController.active) initializePlayerPinchTransform()
+  })
+}
+
+bindPlayerSelectionPinch()
 
 function createId() {
   return crypto.randomUUID()
@@ -777,10 +935,13 @@ function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER',
   const fixedPlayerBackground = pageClass.includes('player-selection-page')
     ? '<div class="player-selection-background" aria-hidden="true"></div>'
     : ''
-  app.innerHTML = `<main class="busfahrer-page setup-page ${pageClass}">${fixedPlayerBackground}<div class="busfahrer-shell setup-shell">
+  const zoomLayerStart = pageClass.includes('player-selection-page') ? '<div class="player-selection-zoom-layer">' : ''
+  const zoomLayerEnd = pageClass.includes('player-selection-page') ? '</div>' : ''
+  app.innerHTML = `<main class="busfahrer-page setup-page ${pageClass}">${fixedPlayerBackground}${zoomLayerStart}<div class="busfahrer-shell setup-shell">
     <header class="busfahrer-header"><button class="back-button bus-back blobba-nav-action" type="button" data-setup-back>← Zurück</button>${centerTitle ? '<span></span>' : `<div><p>${eyebrow}</p><h1>${title}</h1></div>`}${headerEnd}</header>
     <section class="setup-stage"><div class="setup-stack">${centerTitle ? `<h1 class="setup-title">${title}</h1>` : ''}${content}</div></section>
-  </div></main>`
+  </div>${zoomLayerEnd}</main>`
+  if (pageClass.includes('player-selection-page')) initializePlayerPinchTransform()
   app.querySelector<HTMLButtonElement>('[data-setup-back]')!.addEventListener('click', () => { playSound('ui-back'); window.location.hash = backTarget })
 }
 
@@ -1044,6 +1205,7 @@ function handlePlayerInputPointerDown(event: PointerEvent, input: HTMLInputEleme
 }
 
 function handlePlayerPointerDown(event: PointerEvent) {
+  if (playerPinchController.active || performance.now() < suppressPlayerTapUntil) return
   const row = event.currentTarget as HTMLElement
   if ((event.target as Element).closest('button')) return
   const playerId = row.dataset.playerRow
@@ -1069,6 +1231,10 @@ function handlePlayerPointerMove(event: PointerEvent) {
 }
 
 function handlePlayerPointerUp(event: PointerEvent) {
+  if (playerPinchController.active || performance.now() < suppressPlayerTapUntil) {
+    clearPlayerTapTracking()
+    return
+  }
   if (event.pointerId !== playerTapPointerId) return
   const playerId = playerTapPlayerId
   const isConfirmedTap = !playerTapMoved
