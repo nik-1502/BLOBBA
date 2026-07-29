@@ -93,7 +93,9 @@ let onlineNotice = ''
 let pendingKeyboardPositionCleanup: (() => void) | undefined
 let maximumVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
 const ACTIVE_PLAYER_KEYBOARD_GAP = 68
-const PLAYER_SCROLL_DURATION = 220
+const DEFAULT_IOS_KEYBOARD_DURATION = 250
+const VIEWPORT_ANIMATION_EPSILON = .5
+const REQUIRED_STABLE_VIEWPORT_FRAMES = 3
 const PLAYER_TAP_MOVE_THRESHOLD = 8
 const PLAYER_TAP_TIME_THRESHOLD = 450
 type PlayerActivationSource = 'add' | 'tap'
@@ -104,11 +106,14 @@ let pointerPlayerInputId: string | null = null
 let focusTransitionId = 0
 let focusTransitionState: FocusTransitionState = 'idle'
 let pendingFocusPlayerId: string | null = null
-let viewportChangedDuringFocus = false
 let playerPositionFrame = 0
 let playerMotionFrame = 0
+let keyboardTrackingFrame = 0
 let playerMotionOffset = 0
 let playerMotionElement: HTMLElement | null = null
+let lastKeyboardAnimationDuration = DEFAULT_IOS_KEYBOARD_DURATION
+let lastVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
+let lastVisualViewportOffsetTop = window.visualViewport?.offsetTop ?? 0
 let playerTapPointerId: number | null = null
 let playerTapPlayerId: string | null = null
 let playerTapStartX = 0
@@ -1140,15 +1145,16 @@ function bindActivePlayerViewport() {
     window.removeEventListener('resize', handleVisualViewportChange)
     if (playerPositionFrame) cancelAnimationFrame(playerPositionFrame)
     if (playerMotionFrame) cancelAnimationFrame(playerMotionFrame)
+    if (keyboardTrackingFrame) cancelAnimationFrame(keyboardTrackingFrame)
     playerPositionFrame = 0
     playerMotionFrame = 0
+    keyboardTrackingFrame = 0
     playerMotionElement?.style.removeProperty('transform')
     playerMotionElement = null
     playerMotionOffset = 0
     focusTransitionId += 1
     focusTransitionState = 'idle'
     pendingFocusPlayerId = null
-    viewportChangedDuringFocus = false
     activePlayerInputId = null
     pendingSelectAllPlayerId = null
     pointerPlayerInputId = null
@@ -1165,12 +1171,21 @@ function bindActivePlayerViewport() {
 
 function handleVisualViewportChange() {
   const viewport = window.visualViewport
+  const viewportHeight = viewport?.height ?? window.innerHeight
+  const viewportOffsetTop = viewport?.offsetTop ?? 0
+  const previousKeyboardTop = lastVisualViewportOffsetTop + lastVisualViewportHeight
+  const viewportIsExpanding = viewportHeight > lastVisualViewportHeight + VIEWPORT_ANIMATION_EPSILON
+  lastVisualViewportHeight = viewportHeight
+  lastVisualViewportOffsetTop = viewportOffsetTop
   if (viewport) maximumVisualViewportHeight = Math.max(maximumVisualViewportHeight, viewport.height)
   const keyboardHeight = getKeyboardHeight()
   const page = app.querySelector<HTMLElement>('.player-selection-page')
   if (focusTransitionState === 'restoring-normal-layout') return
-  if (keyboardHeight <= 40 && focusTransitionState === 'waiting-for-native-focus') {
-    viewportChangedDuringFocus = true
+  if (focusTransitionState === 'waiting-for-native-focus') {
+    return
+  }
+  if (viewportIsExpanding && keyboardHeight > 40) {
+    startKeyboardSynchronizedClose(previousKeyboardTop)
     return
   }
   if (keyboardHeight <= 40) {
@@ -1180,7 +1195,6 @@ function handleVisualViewportChange() {
   }
   page?.classList.add('is-player-keyboard-open')
   if (focusTransitionState !== 'idle') {
-    viewportChangedDuringFocus = true
     return
   }
   scheduleActivePlayerPositionUpdate()
@@ -1193,42 +1207,70 @@ function getKeyboardHeight() {
     : 0
 }
 
-function nextAnimationFrame() {
-  return new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
-}
-
-async function waitForStablePlayerViewport(transitionId: number, row: HTMLElement) {
-  const expectsVirtualKeyboard = Boolean(window.visualViewport && navigator.maxTouchPoints > 0)
-  let previousHeight: number | null = null
-  let previousOffsetTop: number | null = null
-  let previousRowBottom: number | null = null
+function trackKeyboardOpening(
+  transitionId: number,
+  row: HTMLElement,
+  content: HTMLElement,
+) {
+  let previousHeight = lastVisualViewportHeight
+  let previousOffsetTop = lastVisualViewportOffsetTop
+  let movementStartedAt = 0
   let stableFrames = 0
   let observedFrames = 0
 
-  while (transitionId === focusTransitionId) {
-    await nextAnimationFrame()
-    if (transitionId !== focusTransitionId || !row.isConnected) return false
-    const viewport = window.visualViewport
-    const height = viewport?.height ?? window.innerHeight
-    const offsetTop = viewport?.offsetTop ?? 0
-    const rowBottom = row.getBoundingClientRect().bottom
-    const viewportChanged = viewportChangedDuringFocus
-    viewportChangedDuringFocus = false
-    const keyboardReady = !expectsVirtualKeyboard || getKeyboardHeight() > 40 || observedFrames >= 24
-    const stable = previousHeight !== null
-      && !viewportChanged
-      && Math.abs(height - previousHeight) < 1
-      && Math.abs(offsetTop - (previousOffsetTop ?? offsetTop)) < 1
-      && Math.abs(rowBottom - (previousRowBottom ?? rowBottom)) < 1
+  return new Promise<boolean>((resolve) => {
+    const updateFrame = (now: number) => {
+      if (transitionId !== focusTransitionId || !row.isConnected || !content.isConnected) {
+        keyboardTrackingFrame = 0
+        resolve(false)
+        return
+      }
+      const viewport = window.visualViewport
+      const height = viewport?.height ?? window.innerHeight
+      const offsetTop = viewport?.offsetTop ?? 0
+      const viewportMoved = Math.abs(height - previousHeight) > VIEWPORT_ANIMATION_EPSILON
+        || Math.abs(offsetTop - previousOffsetTop) > VIEWPORT_ANIMATION_EPSILON
 
-    stableFrames = keyboardReady && stable ? stableFrames + 1 : 0
-    previousHeight = height
-    previousOffsetTop = offsetTop
-    previousRowBottom = rowBottom
-    observedFrames += 1
-    if (stableFrames >= 2) return true
+      if (viewportMoved && !movementStartedAt) movementStartedAt = now
+      if (movementStartedAt || getKeyboardHeight() > 40) {
+        applyPlayerPositionForKeyboardTop(row, content, offsetTop + height)
+      }
+      stableFrames = movementStartedAt && !viewportMoved ? stableFrames + 1 : 0
+      previousHeight = height
+      previousOffsetTop = offsetTop
+      observedFrames += 1
+
+      if (stableFrames >= REQUIRED_STABLE_VIEWPORT_FRAMES) {
+        keyboardTrackingFrame = 0
+        lastKeyboardAnimationDuration = Math.max(180, Math.min(now - movementStartedAt, 450))
+        applyPlayerPositionForKeyboardTop(row, content, offsetTop + height)
+        resolve(true)
+        return
+      }
+      if (!movementStartedAt && observedFrames >= 30) {
+        keyboardTrackingFrame = 0
+        resolve(false)
+        return
+      }
+      keyboardTrackingFrame = requestAnimationFrame(updateFrame)
+    }
+    keyboardTrackingFrame = requestAnimationFrame(updateFrame)
+  })
+}
+
+function applyPlayerPositionForKeyboardTop(
+  row: HTMLElement,
+  content: HTMLElement,
+  keyboardTop: number,
+) {
+  if (playerMotionElement !== content) {
+    playerMotionElement?.style.removeProperty('transform')
+    playerMotionElement = content
+    playerMotionOffset = 0
   }
-  return false
+  const untransformedBottom = row.getBoundingClientRect().bottom - playerMotionOffset
+  playerMotionOffset = keyboardTop - ACTIVE_PLAYER_KEYBOARD_GAP - untransformedBottom
+  content.style.transform = `translate3d(0, ${playerMotionOffset.toFixed(2)}px, 0)`
 }
 
 async function beginPlayerFocusTransition(input: HTMLInputElement, selectAll: boolean) {
@@ -1240,24 +1282,21 @@ async function beginPlayerFocusTransition(input: HTMLInputElement, selectAll: bo
   cancelPlayerPositionWork()
   pendingFocusPlayerId = playerId
   focusTransitionState = 'waiting-for-native-focus'
-  viewportChangedDuringFocus = false
-
-  if (!await waitForStablePlayerViewport(transitionId, row)) return
-  if (transitionId !== focusTransitionId || document.activeElement !== input) return
 
   if (selectAll) {
     selectEntirePlayerName(input)
-    if (!await waitForStablePlayerViewport(transitionId, row)) return
   }
-  if (transitionId !== focusTransitionId || document.activeElement !== input) return
-
-  focusTransitionState = 'animating'
-  const completed = await positionActivePlayer(transitionId)
+  const content = input.closest<HTMLElement>('.setup-shell')
+  if (!content) return
+  const keyboardAlreadyOpen = getKeyboardHeight() > 40
+  if (keyboardAlreadyOpen) focusTransitionState = 'animating'
+  const completed = keyboardAlreadyOpen
+    ? await positionActivePlayer(transitionId)
+    : await trackKeyboardOpening(transitionId, row, content)
   if (!completed || transitionId !== focusTransitionId) {
     if (transitionId === focusTransitionId) {
       pendingFocusPlayerId = null
       focusTransitionState = 'idle'
-      viewportChangedDuringFocus = false
     }
     return
   }
@@ -1265,12 +1304,10 @@ async function beginPlayerFocusTransition(input: HTMLInputElement, selectAll: bo
   activePlayerInputId = playerId
   pendingFocusPlayerId = null
   focusTransitionState = 'idle'
-  viewportChangedDuringFocus = false
 }
 
 function scheduleActivePlayerPositionUpdate() {
   if (focusTransitionState !== 'idle') {
-    viewportChangedDuringFocus = true
     return
   }
   if (playerMotionFrame) return
@@ -1284,8 +1321,76 @@ function scheduleActivePlayerPositionUpdate() {
 function cancelPlayerPositionWork() {
   if (playerMotionFrame) cancelAnimationFrame(playerMotionFrame)
   if (playerPositionFrame) cancelAnimationFrame(playerPositionFrame)
+  if (keyboardTrackingFrame) cancelAnimationFrame(keyboardTrackingFrame)
   playerMotionFrame = 0
   playerPositionFrame = 0
+  keyboardTrackingFrame = 0
+}
+
+function startKeyboardSynchronizedClose(startKeyboardTop: number) {
+  if (focusTransitionState === 'restoring-normal-layout') return
+  const content = playerMotionElement?.isConnected
+    ? playerMotionElement
+    : app.querySelector<HTMLElement>('.player-selection-page .setup-shell')
+  const page = app.querySelector<HTMLElement>('.player-selection-page')
+  if (!content || !page) {
+    restoreNormalPlayerLayout()
+    return
+  }
+
+  const transitionId = ++focusTransitionId
+  cancelPlayerPositionWork()
+  focusTransitionState = 'restoring-normal-layout'
+  if (activePlayerInputId) finishPlayerNameEditing(activePlayerInputId)
+  pendingFocusPlayerId = null
+  activePlayerInputId = null
+  pendingSelectAllPlayerId = null
+  pointerPlayerInputId = null
+
+  const startedAt = performance.now()
+  const startOffset = playerMotionOffset
+  const startScrollTop = page.scrollTop
+  const normalMaxScrollTop = Math.max(0, page.scrollHeight - page.clientHeight)
+  const effectiveNormalScrollTop = startScrollTop - startOffset
+  const targetScrollTop = Math.max(0, Math.min(effectiveNormalScrollTop, normalMaxScrollTop))
+  const finalKeyboardTop = maximumVisualViewportHeight
+  const keyboardTravel = Math.max(1, finalKeyboardTop - startKeyboardTop)
+  let previousHeight = window.visualViewport?.height ?? window.innerHeight
+  let previousOffsetTop = window.visualViewport?.offsetTop ?? 0
+  let stableFrames = 0
+
+  const updateFrame = (now: number) => {
+    if (transitionId !== focusTransitionId || !content.isConnected || !page.isConnected) {
+      keyboardTrackingFrame = 0
+      return
+    }
+    const viewport = window.visualViewport
+    const height = viewport?.height ?? window.innerHeight
+    const offsetTop = viewport?.offsetTop ?? 0
+    const keyboardTop = offsetTop + height
+    const progress = Math.max(0, Math.min((keyboardTop - startKeyboardTop) / keyboardTravel, 1))
+    playerMotionOffset = startOffset * (1 - progress)
+    content.style.transform = `translate3d(0, ${playerMotionOffset.toFixed(2)}px, 0)`
+    page.scrollTop = startScrollTop + (targetScrollTop - startScrollTop) * progress
+
+    const viewportStable = Math.abs(height - previousHeight) <= VIEWPORT_ANIMATION_EPSILON
+      && Math.abs(offsetTop - previousOffsetTop) <= VIEWPORT_ANIMATION_EPSILON
+    stableFrames = viewportStable ? stableFrames + 1 : 0
+    previousHeight = height
+    previousOffsetTop = offsetTop
+
+    if (progress >= 1 || stableFrames >= REQUIRED_STABLE_VIEWPORT_FRAMES) {
+      keyboardTrackingFrame = 0
+      lastKeyboardAnimationDuration = Math.max(180, Math.min(now - startedAt, 450))
+      playerMotionOffset = 0
+      content.style.transform = 'translate3d(0, 0, 0)'
+      page.scrollTop = targetScrollTop
+      finishNormalPlayerLayout(transitionId, content)
+      return
+    }
+    keyboardTrackingFrame = requestAnimationFrame(updateFrame)
+  }
+  keyboardTrackingFrame = requestAnimationFrame(updateFrame)
 }
 
 function restoreNormalPlayerLayout() {
@@ -1295,7 +1400,6 @@ function restoreNormalPlayerLayout() {
   focusTransitionState = 'restoring-normal-layout'
   if (activePlayerInputId) finishPlayerNameEditing(activePlayerInputId)
   pendingFocusPlayerId = null
-  viewportChangedDuringFocus = false
   activePlayerInputId = null
   pendingSelectAllPlayerId = null
   pointerPlayerInputId = null
@@ -1339,7 +1443,6 @@ function finishNormalPlayerLayoutImmediately() {
   pendingFocusPlayerId = null
   pendingSelectAllPlayerId = null
   pointerPlayerInputId = null
-  viewportChangedDuringFocus = false
   focusTransitionState = 'idle'
   app.querySelector('.player-selection-page')?.classList.remove('is-player-keyboard-open')
 }
@@ -1368,6 +1471,11 @@ async function positionActivePlayer(transitionId: number) {
   const currentBottom = row.getBoundingClientRect().bottom
   const untransformedBottom = currentBottom - playerMotionOffset
   const absoluteTargetOffset = targetBottom - untransformedBottom
+  if (Math.abs(absoluteTargetOffset - playerMotionOffset) <= 2) {
+    playerMotionOffset = absoluteTargetOffset
+    content.style.transform = `translate3d(0, ${absoluteTargetOffset.toFixed(2)}px, 0)`
+    return true
+  }
   return animatePlayerContentTo(content, absoluteTargetOffset, transitionId)
 }
 
@@ -1392,7 +1500,7 @@ function animatePlayerContentTo(
     return Promise.resolve(true)
   }
   const startedAt = performance.now()
-  const duration = PLAYER_SCROLL_DURATION
+  const duration = lastKeyboardAnimationDuration
   return new Promise<boolean>((resolve) => {
     const animate = (now: number) => {
       if (transitionId !== focusTransitionId || playerMotionElement !== content) {
