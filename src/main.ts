@@ -228,28 +228,28 @@ function constrainTouchZoom() {
   }
 
   document.addEventListener('gesturestart', (event) => {
-    if (app.querySelector('.player-selection-page')) return
+    if (resolveAppPinchLayer()) return
     const gesture = event as Event & { scale?: number }
     gestureStartScale = window.visualViewport?.scale ?? gesture.scale ?? 1
     isPinching = true
   }, { passive: true })
   document.addEventListener('gesturechange', (event) => {
-    if (app.querySelector('.player-selection-page')) return
+    if (resolveAppPinchLayer()) return
     const gesture = event as Event & { scale?: number }
     const relativeScale = gesture.scale ?? 1
     if (gestureStartScale * relativeScale < 1) event.preventDefault()
   }, { passive: false })
   document.addEventListener('gestureend', () => {
-    if (app.querySelector('.player-selection-page')) return
+    if (resolveAppPinchLayer()) return
     isPinching = false
     resetZoomToDefault()
   }, { passive: true })
   document.addEventListener('touchstart', (event) => {
-    if (app.querySelector('.player-selection-page')) return
+    if (resolveAppPinchLayer()) return
     if (event.touches.length === 2) isPinching = true
   }, { passive: true })
   document.addEventListener('touchend', (event) => {
-    if (app.querySelector('.player-selection-page')) return
+    if (resolveAppPinchLayer()) return
     if (!isPinching || event.touches.length !== 0) return
     isPinching = false
     resetZoomToDefault()
@@ -260,6 +260,12 @@ constrainTouchZoom()
 
 function touchDistance(touchA: Touch, touchB: Touch) {
   return Math.hypot(touchB.clientX - touchA.clientX, touchB.clientY - touchA.clientY)
+}
+
+function resolveAppPinchLayer() {
+  return app.querySelector<HTMLElement>('.player-selection-zoom-layer')
+    ?? app.querySelector<HTMLElement>('.home-page')
+    ?? app.querySelector<HTMLElement>('.busfahrer-page > .busfahrer-shell')
 }
 
 function cancelPlayerPinchFrames() {
@@ -331,7 +337,7 @@ function animatePlayerPinchBack() {
 
 function initializePlayerPinchTransform() {
   resetPlayerPinchTransform()
-  const layer = app.querySelector<HTMLElement>('.player-selection-zoom-layer')
+  const layer = resolveAppPinchLayer()
   if (!layer) return
   layer.style.transform = 'translate3d(0, 0, 0) scale(1)'
   layer.style.transformOrigin = 'center center'
@@ -339,15 +345,22 @@ function initializePlayerPinchTransform() {
 
 function bindPlayerSelectionPinch() {
   document.addEventListener('gesturestart', (event) => {
-    if (app.querySelector('.player-selection-page')) event.preventDefault()
+    if (resolveAppPinchLayer()) event.preventDefault()
   }, { passive: false })
   document.addEventListener('gesturechange', (event) => {
-    if (app.querySelector('.player-selection-page')) event.preventDefault()
+    if (resolveAppPinchLayer()) event.preventDefault()
+  }, { passive: false })
+  document.addEventListener('gestureend', (event) => {
+    if (!playerPinchController.active) return
+    event.preventDefault()
+    suppressPlayerTapUntil = performance.now() + 500
+    animatePlayerPinchBack()
   }, { passive: false })
   document.addEventListener('touchstart', (event) => {
     if (event.touches.length !== 2) return
-    const layer = app.querySelector<HTMLElement>('.player-selection-zoom-layer')
-    if (!layer || !(event.target as Element).closest('.player-selection-page')) return
+    const layer = resolveAppPinchLayer()
+    if (!layer || !(event.target as Element).closest('#app')) return
+    if (playerPinchController.layer !== layer) resetPlayerPinchTransform()
     cancelPlayerPinchFrames()
     clearPlayerTapTracking()
     const touchA = event.touches[0]
@@ -384,7 +397,7 @@ function bindPlayerSelectionPinch() {
   document.addEventListener('touchcancel', finishPinch, { passive: true, capture: true })
   document.addEventListener('click', (event) => {
     if (performance.now() >= suppressPlayerTapUntil
-      || !(event.target as Element).closest('.player-selection-page')) return
+      || !(event.target as Element).closest('#app')) return
     event.preventDefault()
     event.stopPropagation()
   }, { capture: true })

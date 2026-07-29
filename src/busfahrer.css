@@ -869,7 +869,8 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
   overflow-anchor: none;
 }
 
-.player-selection-page .player-selection-zoom-layer {
+.player-selection-page .player-selection-zoom-layer,
+.busfahrer-page > .busfahrer-shell {
   position: relative;
   z-index: 1;
   width: 100%;
