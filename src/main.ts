@@ -913,7 +913,6 @@ function bindOfflineSetup() {
     })
     input.addEventListener('click', (event) => {
       event.stopPropagation()
-      selectName()
     })
     input.addEventListener('pointerdown', (event) => {
       event.stopPropagation()
@@ -922,7 +921,6 @@ function bindOfflineSetup() {
     input.addEventListener('touchstart', (event) => event.stopPropagation(), { passive: true })
     input.addEventListener('touchend', (event) => {
       event.stopPropagation()
-      selectName()
     }, { passive: true })
     input.addEventListener('input', () => {
       players = players.map((player) => player.id === input.dataset.playerEntry ? { ...player, name: input.value } : player)
@@ -987,6 +985,7 @@ function focusPlayerNameInput(playerId: string, confirmSelection = false) {
   let userStartedEditing = false
   const selectPlayerName = () => {
     if (userStartedEditing || !input.isConnected || document.activeElement !== input) return
+    if (confirmSelection) input.classList.add('is-new-player-name-selected')
     input.select()
     input.setSelectionRange(0, input.value.length)
   }
@@ -994,11 +993,14 @@ function focusPlayerNameInput(playerId: string, confirmSelection = false) {
   if (confirmSelection) {
     const stopSelectionConfirmation = () => {
       userStartedEditing = true
+      input.classList.remove('is-new-player-name-selected')
       selectionTimers.forEach((timer) => window.clearTimeout(timer))
       window.visualViewport?.removeEventListener('resize', selectPlayerName)
     }
     input.addEventListener('beforeinput', stopSelectionConfirmation, { once: true })
     input.addEventListener('keydown', stopSelectionConfirmation, { once: true })
+    input.addEventListener('pointerdown', stopSelectionConfirmation, { once: true })
+    input.addEventListener('blur', stopSelectionConfirmation, { once: true })
     window.visualViewport?.addEventListener('resize', selectPlayerName)
     ;[60, 160, 300, 480, 700].forEach((delay) => {
       selectionTimers.push(window.setTimeout(selectPlayerName, delay))
