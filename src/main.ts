@@ -125,8 +125,9 @@ let playerTapMoved = false
 const MIN_PLAYER_PINCH_SCALE = .98
 const MAX_PLAYER_PINCH_SCALE = 1.06
 const PLAYER_PINCH_SMOOTHING = .28
-const PLAYER_PINCH_RETURN_DURATION = 280
+const PLAYER_PINCH_RETURN_DURATION = 260
 let suppressPlayerTapUntil = 0
+const activePinchTouchPointers = new Set<number>()
 const playerPinchController = {
   active: false,
   startDistance: 0,
@@ -134,6 +135,9 @@ const playerPinchController = {
   renderedScale: 1,
   frameId: 0,
   returnAnimationId: 0,
+  transitionId: 0,
+  renderedTranslateX: 0,
+  renderedTranslateY: 0,
   layer: null as HTMLElement | null,
 }
 const playerNameBeforeEditing = new Map<string, string>()
@@ -273,6 +277,7 @@ function cancelPlayerPinchFrames() {
   if (playerPinchController.returnAnimationId) cancelAnimationFrame(playerPinchController.returnAnimationId)
   playerPinchController.frameId = 0
   playerPinchController.returnAnimationId = 0
+  playerPinchController.transitionId += 1
 }
 
 function resetPlayerPinchTransform() {
@@ -286,7 +291,10 @@ function resetPlayerPinchTransform() {
   playerPinchController.startDistance = 0
   playerPinchController.currentScale = 1
   playerPinchController.renderedScale = 1
+  playerPinchController.renderedTranslateX = 0
+  playerPinchController.renderedTranslateY = 0
   playerPinchController.layer = null
+  activePinchTouchPointers.clear()
 }
 
 function renderPlayerPinchFrame() {
@@ -297,7 +305,7 @@ function renderPlayerPinchFrame() {
   }
   const difference = controller.currentScale - controller.renderedScale
   controller.renderedScale += difference * PLAYER_PINCH_SMOOTHING
-  controller.layer.style.transform = `translate3d(0, 0, 0) scale(${controller.renderedScale.toFixed(5)})`
+  controller.layer.style.transform = `translate3d(${controller.renderedTranslateX.toFixed(2)}px, ${controller.renderedTranslateY.toFixed(2)}px, 0) scale(${controller.renderedScale.toFixed(5)})`
   if (controller.active && Math.abs(difference) > .0005) {
     controller.frameId = requestAnimationFrame(renderPlayerPinchFrame)
   } else {
@@ -316,8 +324,12 @@ function animatePlayerPinchBack() {
   controller.currentScale = 1
   const layer = controller.layer
   const startScale = controller.renderedScale
+  const startTranslateX = controller.renderedTranslateX
+  const startTranslateY = controller.renderedTranslateY
   const startedAt = performance.now()
+  const transitionId = controller.transitionId
   const frame = (now: number) => {
+    if (transitionId !== controller.transitionId) return
     if (controller.layer !== layer || !layer.isConnected) {
       resetPlayerPinchTransform()
       return
@@ -325,7 +337,9 @@ function animatePlayerPinchBack() {
     const progress = Math.min((now - startedAt) / PLAYER_PINCH_RETURN_DURATION, 1)
     const eased = 1 - Math.pow(1 - progress, 3)
     controller.renderedScale = startScale + (1 - startScale) * eased
-    layer.style.transform = `translate3d(0, 0, 0) scale(${controller.renderedScale.toFixed(5)})`
+    controller.renderedTranslateX = startTranslateX * (1 - eased)
+    controller.renderedTranslateY = startTranslateY * (1 - eased)
+    layer.style.transform = `translate3d(${controller.renderedTranslateX.toFixed(2)}px, ${controller.renderedTranslateY.toFixed(2)}px, 0) scale(${controller.renderedScale.toFixed(5)})`
     if (progress < 1) {
       controller.returnAnimationId = requestAnimationFrame(frame)
       return
@@ -395,6 +409,18 @@ function bindPlayerSelectionPinch() {
   }
   document.addEventListener('touchend', finishPinch, { passive: true, capture: true })
   document.addEventListener('touchcancel', finishPinch, { passive: true, capture: true })
+  document.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'touch') activePinchTouchPointers.add(event.pointerId)
+  }, { passive: true, capture: true })
+  const finishPointerPinch = (event: PointerEvent) => {
+    if (event.pointerType !== 'touch') return
+    activePinchTouchPointers.delete(event.pointerId)
+    if (!playerPinchController.active || activePinchTouchPointers.size >= 2) return
+    suppressPlayerTapUntil = performance.now() + 500
+    animatePlayerPinchBack()
+  }
+  document.addEventListener('pointerup', finishPointerPinch, { passive: true, capture: true })
+  document.addEventListener('pointercancel', finishPointerPinch, { passive: true, capture: true })
   document.addEventListener('click', (event) => {
     if (performance.now() >= suppressPlayerTapUntil
       || !(event.target as Element).closest('#app')) return
@@ -646,6 +672,7 @@ function gameRoute(suffix = '') {
 }
 
 function renderPage() {
+  resetPlayerPinchTransform()
   pendingKeyboardPositionCleanup?.()
   pendingKeyboardPositionCleanup = undefined
   unmountCurrentPage?.()
