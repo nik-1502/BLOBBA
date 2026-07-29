@@ -774,6 +774,34 @@ html[data-theme='neon'] .busfahrer-page.player-selection-page {
   --setup-text-muted: rgba(231, 224, 255, .76);
 }
 
+html[data-theme='neon'] .player-selection-background {
+  background-color: #120012;
+  background-image: var(--app-background);
+  background-position: center;
+  background-size: cover;
+}
+
+html[data-theme='neon'] .player-selection-background::before {
+  opacity: .22;
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, .15) 0 1px, transparent 1.4px) 0 0 / 16px 16px,
+    radial-gradient(circle at center, rgba(255, 255, 255, .10) 0 1px, transparent 1.6px) 8px 8px / 22px 22px;
+  mask-image:
+    radial-gradient(ellipse 62% 42% at 30% 42%, #000 0%, transparent 72%),
+    radial-gradient(ellipse 58% 42% at 76% 42%, #000 0%, transparent 72%);
+  -webkit-mask-image:
+    radial-gradient(ellipse 62% 42% at 30% 42%, #000 0%, transparent 72%),
+    radial-gradient(ellipse 58% 42% at 76% 42%, #000 0%, transparent 72%);
+}
+
+html[data-theme='neon'] .player-selection-background::after {
+  opacity: .92;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, .035) 1px, transparent 1px) 0 0 / 3px 3px,
+    linear-gradient(0deg, rgba(0, 0, 0, .045) 1px, transparent 1px) 0 0 / 4px 4px,
+    radial-gradient(ellipse 98% 88% at 50% 43%, transparent 0%, rgba(2, 0, 8, .20) 62%, rgba(0, 0, 0, .78) 100%);
+}
+
 html[data-theme='neon'] .busfahrer-page.player-selection-page .bus-back {
   border-color: rgba(255, 255, 255, .24);
   background: rgba(255, 255, 255, .08);

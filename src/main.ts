@@ -92,9 +92,10 @@ let pendingInviteCode: string | null = null
 let onlineNotice = ''
 let pendingKeyboardPositionCleanup: (() => void) | undefined
 let maximumVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
-let previousVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
 const ACTIVE_PLAYER_KEYBOARD_GAP = 68
 const PLAYER_SCROLL_DURATION = 220
+const PLAYER_TAP_MOVE_THRESHOLD = 8
+const PLAYER_TAP_TIME_THRESHOLD = 450
 type PlayerActivationSource = 'add' | 'tap'
 type FocusTransitionState = 'idle' | 'waiting-for-native-focus' | 'animating' | 'restoring-normal-layout'
 let activePlayerInputId: string | null = null
@@ -108,9 +109,12 @@ let playerPositionFrame = 0
 let playerMotionFrame = 0
 let playerMotionOffset = 0
 let playerMotionElement: HTMLElement | null = null
-let keyboardSessionActive = false
-let keyboardSessionBaseScrollTop = 0
-let keyboardSessionSettledScrollTop = 0
+let playerTapPointerId: number | null = null
+let playerTapPlayerId: string | null = null
+let playerTapStartX = 0
+let playerTapStartY = 0
+let playerTapStartedAt = 0
+let playerTapMoved = false
 let appTheme = loadAppTheme()
 
 function loadAppTheme(): AppTheme {
@@ -762,7 +766,10 @@ function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER',
   const headerEnd = pageClass.includes('player-selection-busfahrer')
     ? '<button class="restart-button player-selection-header-spacer" type="button" tabindex="-1" aria-hidden="true">Neu starten</button>'
     : '<span></span>'
-  app.innerHTML = `<main class="busfahrer-page setup-page ${pageClass}"><div class="busfahrer-shell setup-shell">
+  const fixedPlayerBackground = pageClass.includes('player-selection-page')
+    ? '<div class="player-selection-background" aria-hidden="true"></div>'
+    : ''
+  app.innerHTML = `<main class="busfahrer-page setup-page ${pageClass}">${fixedPlayerBackground}<div class="busfahrer-shell setup-shell">
     <header class="busfahrer-header"><button class="back-button bus-back blobba-nav-action" type="button" data-setup-back>← Zurück</button>${centerTitle ? '<span></span>' : `<div><p>${eyebrow}</p><h1>${title}</h1></div>`}${headerEnd}</header>
     <section class="setup-stage"><div class="setup-stack">${centerTitle ? `<h1 class="setup-title">${title}</h1>` : ''}${content}</div></section>
   </div></main>`
@@ -772,9 +779,6 @@ function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER',
 function renderModeMenu() {
   const preservedMotionOffset = playerMotionOffset
   const preservedPageScrollTop = app.querySelector<HTMLElement>('.player-selection-page')?.scrollTop ?? 0
-  const preservedKeyboardSessionActive = keyboardSessionActive
-  const preservedKeyboardSessionBaseScrollTop = keyboardSessionBaseScrollTop
-  const preservedKeyboardSessionSettledScrollTop = keyboardSessionSettledScrollTop
   const gameLayoutClass = activeGame === 'klatschen'
     ? 'player-selection-blobben'
     : 'player-selection-busfahrer'
@@ -796,11 +800,6 @@ function renderModeMenu() {
   }
   const renderedPage = app.querySelector<HTMLElement>('.player-selection-page')
   if (renderedPage) renderedPage.scrollTop = preservedPageScrollTop
-  if (preservedKeyboardSessionActive && getKeyboardHeight() > 40) {
-    keyboardSessionActive = true
-    keyboardSessionBaseScrollTop = preservedKeyboardSessionBaseScrollTop
-    keyboardSessionSettledScrollTop = preservedKeyboardSessionSettledScrollTop
-  }
   app.querySelector<HTMLButtonElement>('[data-add-player]')?.replaceChildren('+ Spieler')
   bindSetupModeSwitch()
   setupMode === 'offline' ? bindOfflineSetup() : bindOnlineSetup()
@@ -943,14 +942,16 @@ function bindOfflineSetup() {
   app.querySelectorAll<HTMLInputElement>('[data-player-entry]').forEach((input) => {
     input.addEventListener('focus', () => handlePlayerInputFocus(input))
     input.addEventListener('click', (event) => event.stopPropagation())
-    input.addEventListener('pointerdown', (event) => handlePlayerInputPointerDown(event, input))
-    input.addEventListener('pointerup', (event) => event.stopPropagation())
-    input.addEventListener('touchstart', (event) => event.stopPropagation(), { passive: true })
-    input.addEventListener('touchend', (event) => event.stopPropagation(), { passive: true })
     input.addEventListener('input', () => {
       clearPlayerNameSelection(input)
       players = players.map((player) => player.id === input.dataset.playerEntry ? { ...player, name: input.value } : player)
     })
+  })
+  app.querySelectorAll<HTMLElement>('[data-player-row]').forEach((row) => {
+    row.addEventListener('pointerdown', handlePlayerPointerDown)
+    row.addEventListener('pointermove', handlePlayerPointerMove)
+    row.addEventListener('pointerup', handlePlayerPointerUp)
+    row.addEventListener('pointercancel', clearPlayerTapTracking)
   })
   updatePlayerInputTabState(activePlayerInputId)
   app.querySelectorAll<HTMLButtonElement>('[data-remove-player]').forEach((button) => button.addEventListener('click', () => {
@@ -1028,23 +1029,50 @@ function activatePlayerInput(
 
 function handlePlayerInputPointerDown(event: PointerEvent, input: HTMLInputElement) {
   event.stopPropagation()
-  const playerId = input.dataset.playerEntry ?? null
-  pointerPlayerInputId = playerId
-  if (playerId && (activePlayerInputId !== playerId || document.activeElement !== input)) {
-    event.preventDefault()
-    pendingSelectAllPlayerId = playerId
-    updatePlayerInputTabState(playerId)
-    input.focus({ preventScroll: true })
-    if (document.activeElement === input && activePlayerInputId !== playerId) handlePlayerInputFocus(input)
+  pointerPlayerInputId = input.dataset.playerEntry ?? null
+  pendingSelectAllPlayerId = null
+  clearPlayerNameSelection(input)
+}
+
+function handlePlayerPointerDown(event: PointerEvent) {
+  const row = event.currentTarget as HTMLElement
+  if ((event.target as Element).closest('button')) return
+  const playerId = row.dataset.playerRow
+  const activeInput = row.querySelector<HTMLInputElement>('[data-player-entry].is-active-player-input')
+  if (!playerId || activeInput && event.target === activeInput) {
+    if (activeInput) handlePlayerInputPointerDown(event, activeInput)
     return
   }
-  if (playerId && activePlayerInputId === playerId && document.activeElement === input) {
-    pendingSelectAllPlayerId = null
-    clearPlayerNameSelection(input)
-  } else if (playerId && document.activeElement === input) {
-    pendingSelectAllPlayerId = playerId
-    queueMicrotask(() => handlePlayerInputFocus(input))
+  playerTapPointerId = event.pointerId
+  playerTapPlayerId = playerId
+  playerTapStartX = event.clientX
+  playerTapStartY = event.clientY
+  playerTapStartedAt = performance.now()
+  playerTapMoved = false
+}
+
+function handlePlayerPointerMove(event: PointerEvent) {
+  if (event.pointerId !== playerTapPointerId) return
+  if (Math.abs(event.clientX - playerTapStartX) > PLAYER_TAP_MOVE_THRESHOLD
+    || Math.abs(event.clientY - playerTapStartY) > PLAYER_TAP_MOVE_THRESHOLD) {
+    playerTapMoved = true
   }
+}
+
+function handlePlayerPointerUp(event: PointerEvent) {
+  if (event.pointerId !== playerTapPointerId) return
+  const playerId = playerTapPlayerId
+  const isConfirmedTap = !playerTapMoved
+    && performance.now() - playerTapStartedAt <= PLAYER_TAP_TIME_THRESHOLD
+  clearPlayerTapTracking()
+  if (!isConfirmedTap || !playerId) return
+  activatePlayerInput(playerId, { selectAll: true, source: 'tap' })
+}
+
+function clearPlayerTapTracking() {
+  playerTapPointerId = null
+  playerTapPlayerId = null
+  playerTapMoved = false
 }
 
 function handlePlayerInputFocus(input: HTMLInputElement) {
@@ -1067,7 +1095,9 @@ function handlePlayerInputFocus(input: HTMLInputElement) {
 
 function updatePlayerInputTabState(activePlayerId: string | null) {
   app.querySelectorAll<HTMLInputElement>('[data-player-entry]').forEach((input) => {
-    input.tabIndex = input.dataset.playerEntry === activePlayerId ? 0 : -1
+    const isActive = input.dataset.playerEntry === activePlayerId
+    input.tabIndex = isActive ? 0 : -1
+    input.classList.toggle('is-active-player-input', isActive)
   })
 }
 
@@ -1095,9 +1125,6 @@ function bindActivePlayerViewport() {
     playerMotionElement?.style.removeProperty('transform')
     playerMotionElement = null
     playerMotionOffset = 0
-    keyboardSessionActive = false
-    keyboardSessionBaseScrollTop = 0
-    keyboardSessionSettledScrollTop = 0
     focusTransitionId += 1
     focusTransitionState = 'idle'
     pendingFocusPlayerId = null
@@ -1105,6 +1132,7 @@ function bindActivePlayerViewport() {
     activePlayerInputId = null
     pendingSelectAllPlayerId = null
     pointerPlayerInputId = null
+    clearPlayerTapTracking()
     const page = app.querySelector<HTMLElement>('.player-selection-page')
     page?.classList.remove('is-player-keyboard-open')
     if (pendingKeyboardPositionCleanup === cleanup) pendingKeyboardPositionCleanup = undefined
@@ -1117,21 +1145,15 @@ function bindActivePlayerViewport() {
 
 function handleVisualViewportChange() {
   const viewport = window.visualViewport
-  const viewportHeight = viewport?.height ?? window.innerHeight
-  const viewportIsExpanding = viewportHeight > previousVisualViewportHeight + 1
-  previousVisualViewportHeight = viewportHeight
   if (viewport) maximumVisualViewportHeight = Math.max(maximumVisualViewportHeight, viewport.height)
   const keyboardHeight = getKeyboardHeight()
   const page = app.querySelector<HTMLElement>('.player-selection-page')
-  const playerInputFocused = document.activeElement instanceof HTMLInputElement
-    && document.activeElement.matches('[data-player-entry]')
   if (focusTransitionState === 'restoring-normal-layout') return
   if (keyboardHeight <= 40 && focusTransitionState === 'waiting-for-native-focus') {
     viewportChangedDuringFocus = true
     return
   }
-  if (keyboardHeight <= 40
-    || (focusTransitionState === 'idle' && (!playerInputFocused || viewportIsExpanding))) {
+  if (keyboardHeight <= 40) {
     app.querySelectorAll<HTMLInputElement>('[data-player-entry]').forEach(clearPlayerNameSelection)
     restoreNormalPlayerLayout()
     return
@@ -1196,12 +1218,6 @@ async function beginPlayerFocusTransition(input: HTMLInputElement, selectAll: bo
 
   const transitionId = ++focusTransitionId
   cancelPlayerPositionWork()
-  const page = input.closest<HTMLElement>('.player-selection-page')
-  if (!keyboardSessionActive) {
-    keyboardSessionBaseScrollTop = page?.scrollTop ?? 0
-    keyboardSessionSettledScrollTop = keyboardSessionBaseScrollTop
-    keyboardSessionActive = true
-  }
   pendingFocusPlayerId = playerId
   focusTransitionState = 'waiting-for-native-focus'
   viewportChangedDuringFocus = false
@@ -1230,7 +1246,6 @@ async function beginPlayerFocusTransition(input: HTMLInputElement, selectAll: bo
   pendingFocusPlayerId = null
   focusTransitionState = 'idle'
   viewportChangedDuringFocus = false
-  keyboardSessionSettledScrollTop = input.closest<HTMLElement>('.player-selection-page')?.scrollTop ?? 0
 }
 
 function scheduleActivePlayerPositionUpdate() {
@@ -1270,15 +1285,8 @@ function restoreNormalPlayerLayout() {
   const page = app.querySelector<HTMLElement>('.player-selection-page')
   const normalMaxScrollTop = page ? Math.max(0, page.scrollHeight - page.clientHeight) : 0
   const currentScrollTop = page?.scrollTop ?? 0
-  const userChangedNormalScroll = keyboardSessionActive
-    && Math.abs(currentScrollTop - keyboardSessionSettledScrollTop) > 2
-  const preferredNormalScrollTop = userChangedNormalScroll
-    ? currentScrollTop
-    : keyboardSessionActive ? keyboardSessionBaseScrollTop : currentScrollTop
-  const targetScrollTop = Math.max(0, Math.min(
-    preferredNormalScrollTop,
-    normalMaxScrollTop,
-  ))
+  const effectiveNormalScrollTop = currentScrollTop - playerMotionOffset
+  const targetScrollTop = Math.max(0, Math.min(effectiveNormalScrollTop, normalMaxScrollTop))
   if (!content || (Math.abs(playerMotionOffset) < .5 && Math.abs(currentScrollTop - targetScrollTop) < 2)) {
     if (page) page.scrollTop = targetScrollTop
     finishNormalPlayerLayout(transitionId, content)
@@ -1294,9 +1302,7 @@ function finishNormalPlayerLayout(transitionId: number, content: HTMLElement | n
   content?.style.removeProperty('transform')
   playerMotionElement = null
   playerMotionOffset = 0
-  keyboardSessionActive = false
-  keyboardSessionBaseScrollTop = 0
-  keyboardSessionSettledScrollTop = 0
+  updatePlayerInputTabState(null)
   app.querySelector('.player-selection-page')?.classList.remove('is-player-keyboard-open')
   focusTransitionState = 'idle'
 }
@@ -1307,9 +1313,7 @@ function finishNormalPlayerLayoutImmediately() {
   playerMotionElement?.style.removeProperty('transform')
   playerMotionElement = null
   playerMotionOffset = 0
-  keyboardSessionActive = false
-  keyboardSessionBaseScrollTop = 0
-  keyboardSessionSettledScrollTop = 0
+  updatePlayerInputTabState(null)
   activePlayerInputId = null
   pendingFocusPlayerId = null
   pendingSelectAllPlayerId = null
