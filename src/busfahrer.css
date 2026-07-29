@@ -809,7 +809,16 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
 }
 .avatar-choice-visual .default-profile-icon, .profile-preview .default-profile-icon, .profile-card-avatar .default-profile-icon { width: 66%; height: 66%; }
 .profile-save-button { width: 100%; }
-.sound-settings-panel { display: grid; gap: 22px; }
+.sound-settings-panel { display: flex; flex-direction: column; gap: 24px; }
+.settings-control-row { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 24px; }
+.settings-control-row strong, .settings-control-row > span { color: #fff; font-size: 1.05rem; }
+.settings-divider { width: 100%; height: 1px; background: rgba(255, 255, 255, .12); }
+.settings-audio-section { display: flex; min-width: 0; flex-direction: column; gap: 16px; }
+.settings-audio-section h2 { margin: 0; text-align: left; }
+.sound-volume-setting { display: flex; min-width: 0; flex-direction: column; gap: 10px; }
+.sound-volume-setting > input { width: 100%; min-width: 0; accent-color: #8b70ff; }
+.sound-volume-setting output { color: #d7d0e4; font-size: 1.05rem; text-align: right; font-weight: 750; }
+.sound-volume-setting:has(input:disabled) { opacity: .58; }
 .sound-setting-row { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .sound-setting-row strong, .sound-volume-row > span { color: #fff; font-size: 1.05rem; }
 .sound-setting-row .setup-copy { margin: 5px 0 0; text-align: left; }

@@ -149,9 +149,10 @@ let appTheme = loadAppTheme()
 
 function loadAppTheme(): AppTheme {
   try {
-    return localStorage.getItem(THEME_STORAGE_KEY) === 'neon' ? 'neon' : 'light'
+    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY)
+    return storedTheme === 'light' || storedTheme === 'neon' ? storedTheme : 'neon'
   } catch {
-    return 'light'
+    return 'neon'
   }
 }
 
@@ -988,28 +989,25 @@ function renderHome() {
 
 function renderSettingsPlaceholder() {
   const sound = getSoundSettings()
-  setupShell(`<div class="setup-panel sound-settings-panel"><h2>Einstellungen</h2>
-    <fieldset class="theme-setting-group"><legend>Design</legend><p class="setup-copy">Wähle das Erscheinungsbild der gesamten App</p>
-      <div class="theme-options" role="radiogroup" aria-label="Design auswählen">
-        <label class="theme-option${appTheme === 'light' ? ' is-selected' : ''}"><input type="radio" name="app-theme" value="light" ${appTheme === 'light' ? 'checked' : ''}><span class="theme-option-preview theme-option-preview--light" aria-hidden="true"></span><span><strong>Hell</strong><small>Aktuelles BLOBBA-Design</small></span></label>
-        <label class="theme-option${appTheme === 'neon' ? ' is-selected' : ''}"><input type="radio" name="app-theme" value="neon" ${appTheme === 'neon' ? 'checked' : ''}><span class="theme-option-preview theme-option-preview--neon" aria-hidden="true"></span><span><strong>Neon</strong><small>Pink, Blau und dunkles Violett</small></span></label>
-      </div>
-    </fieldset>
-    <div class="sound-setting-row"><div><strong>Soundeffekte</strong><p class="setup-copy">Töne für Bedienung und Spielaktionen</p></div><label class="sound-toggle"><input type="checkbox" data-sound-enabled ${sound.enabled ? 'checked' : ''}><span aria-hidden="true"></span></label></div>
-    <label class="sound-volume-row"><span>Lautstärke</span><input type="range" min="0" max="100" step="1" value="${Math.round(sound.volume * 100)}" data-sound-volume ${sound.enabled ? '' : 'disabled'}><output data-sound-volume-output>${Math.round(sound.volume * 100)} %</output></label>
+  setupShell(`<div class="setup-panel sound-settings-panel">
+    <div class="settings-control-row"><strong>Dunkelmodus</strong><label class="sound-toggle"><input type="checkbox" data-dark-mode ${appTheme === 'neon' ? 'checked' : ''}><span aria-hidden="true"></span></label></div>
+    <div class="settings-divider" aria-hidden="true"></div>
+    <section class="settings-audio-section" aria-labelledby="settings-audio-title">
+      <h2 id="settings-audio-title">Audio</h2>
+      <div class="settings-control-row"><strong>Soundeffekte</strong><label class="sound-toggle"><input type="checkbox" data-sound-enabled ${sound.enabled ? 'checked' : ''}><span aria-hidden="true"></span></label></div>
+      <label class="sound-volume-setting">
+        <span class="settings-control-row"><span>Lautstärke</span><output data-sound-volume-output>${Math.round(sound.volume * 100)} %</output></span>
+        <input type="range" min="0" max="100" step="1" value="${Math.round(sound.volume * 100)}" data-sound-volume ${sound.enabled ? '' : 'disabled'}>
+      </label>
+    </section>
   </div>`, '', 'EINSTELLUNGEN')
+  const darkMode = app.querySelector<HTMLInputElement>('[data-dark-mode]')!
   const enabled = app.querySelector<HTMLInputElement>('[data-sound-enabled]')!
   const volume = app.querySelector<HTMLInputElement>('[data-sound-volume]')!
   const output = app.querySelector<HTMLOutputElement>('[data-sound-volume-output]')!
-  app.querySelectorAll<HTMLInputElement>('input[name="app-theme"]').forEach((input) => {
-    input.addEventListener('change', () => {
-      if (!input.checked) return
-      applyAppTheme(input.value === 'neon' ? 'neon' : 'light')
-      app.querySelectorAll<HTMLElement>('.theme-option').forEach((option) => {
-        option.classList.toggle('is-selected', option.querySelector<HTMLInputElement>('input')?.checked === true)
-      })
-      playSound('ui-confirm')
-    })
+  darkMode.addEventListener('change', () => {
+    applyAppTheme(darkMode.checked ? 'neon' : 'light')
+    playSound('ui-confirm')
   })
   enabled.addEventListener('change', () => {
     if (!enabled.checked) playSound('ui-click')

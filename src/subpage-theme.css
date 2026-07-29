@@ -482,11 +482,13 @@ html.is-ipad-standalone .busfahrer-page :is(.end-actions, .klatschen-summary-act
   outline-offset: 3px;
 }
 
-.busfahrer-page .sound-volume-row input {
+.busfahrer-page .sound-volume-row input,
+.busfahrer-page .sound-volume-setting > input {
   accent-color: var(--blobba-water-main);
 }
 
-.busfahrer-page .sound-volume-row output {
+.busfahrer-page .sound-volume-row output,
+.busfahrer-page .sound-volume-setting output {
   color: var(--blobba-text-muted);
 }
 
