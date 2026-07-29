@@ -865,6 +865,7 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
   background-size: cover;
   background-repeat: no-repeat;
   background-attachment: fixed;
+  overflow-anchor: none;
 }
 
 .player-selection-page::before {

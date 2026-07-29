@@ -94,14 +94,18 @@ let pendingKeyboardPositionCleanup: (() => void) | undefined
 let maximumVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
 const ACTIVE_PLAYER_KEYBOARD_GAP = 68
 type PlayerActivationSource = 'add' | 'tap' | 'keyboard-navigation'
+type FocusTransitionState = 'idle' | 'waiting-for-native-focus' | 'animating'
 let activePlayerInputId: string | null = null
 let pendingSelectAllPlayerId: string | null = null
 let pointerPlayerInputId: string | null = null
+let focusTransitionId = 0
+let focusTransitionState: FocusTransitionState = 'idle'
+let pendingFocusPlayerId: string | null = null
+let viewportChangedDuringFocus = false
 let playerPositionFrame = 0
 let playerMotionFrame = 0
 let playerMotionOffset = 0
 let playerMotionElement: HTMLElement | null = null
-let playerMotionNeedsFinalMeasurement = false
 let appTheme = loadAppTheme()
 
 function loadAppTheme(): AppTheme {
@@ -761,6 +765,7 @@ function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER',
 }
 
 function renderModeMenu() {
+  const preservedMotionOffset = playerMotionOffset
   const gameLayoutClass = activeGame === 'klatschen'
     ? 'player-selection-blobben'
     : 'player-selection-busfahrer'
@@ -773,6 +778,13 @@ function renderModeMenu() {
     ? `<div class="player-selection-turn-frame">${setupPanel}</div>`
     : setupPanel
   setupShell(`${positionedSetupPanel}${renderOnlineModal()}`, '', gameTitle(), 'BLOBBA präsentiert', `player-selection-page ${gameLayoutClass}`, useSeparateSetupTitle)
+  const renderedShell = app.querySelector<HTMLElement>('.player-selection-page .setup-shell')
+  if (renderedShell && Math.abs(preservedMotionOffset) >= .01 && getKeyboardHeight() > 40) {
+    playerMotionElement = renderedShell
+    playerMotionOffset = preservedMotionOffset
+    renderedShell.style.transform = `translate3d(0, ${preservedMotionOffset.toFixed(2)}px, 0)`
+    renderedShell.closest('.player-selection-page')?.classList.add('is-player-keyboard-open')
+  }
   app.querySelector<HTMLButtonElement>('[data-add-player]')?.replaceChildren('+ Spieler')
   bindSetupModeSwitch()
   setupMode === 'offline' ? bindOfflineSetup() : bindOnlineSetup()
@@ -979,7 +991,7 @@ function activatePlayerInput(
     return
   }
   input.focus({ preventScroll: true })
-  if (document.activeElement === input) handlePlayerInputFocus(input)
+  if (document.activeElement === input && activePlayerInputId !== playerId) handlePlayerInputFocus(input)
 }
 
 function handlePlayerInputPointerDown(event: PointerEvent, input: HTMLInputElement) {
@@ -1007,19 +1019,15 @@ function handlePlayerInputFocus(input: HTMLInputElement) {
   app.querySelectorAll<HTMLInputElement>('[data-player-entry]').forEach((entry) => {
     if (entry !== input) clearPlayerNameSelection(entry)
   })
-  if (selectAll) selectEntirePlayerName(input)
+  if (selectAll) input.classList.add('is-new-player-name-selected')
   bindActivePlayerViewport()
-  cancelPlayerMotionForRemeasure()
-  scheduleActivePlayerPositionUpdate()
+  void beginPlayerFocusTransition(input, selectAll)
 }
 
 function selectEntirePlayerName(input: HTMLInputElement) {
   input.classList.add('is-new-player-name-selected')
-  queueMicrotask(() => {
-    if (document.activeElement !== input || !input.isConnected) return
-    input.select()
-    input.setSelectionRange(0, input.value.length)
-  })
+  input.select()
+  input.setSelectionRange(0, input.value.length)
 }
 
 function clearPlayerNameSelection(input: HTMLInputElement) {
@@ -1040,7 +1048,10 @@ function bindActivePlayerViewport() {
     playerMotionElement?.style.removeProperty('transform')
     playerMotionElement = null
     playerMotionOffset = 0
-    playerMotionNeedsFinalMeasurement = false
+    focusTransitionId += 1
+    focusTransitionState = 'idle'
+    pendingFocusPlayerId = null
+    viewportChangedDuringFocus = false
     activePlayerInputId = null
     pendingSelectAllPlayerId = null
     pointerPlayerInputId = null
@@ -1057,47 +1068,142 @@ function bindActivePlayerViewport() {
 function handleVisualViewportChange() {
   const viewport = window.visualViewport
   if (viewport) maximumVisualViewportHeight = Math.max(maximumVisualViewportHeight, viewport.height)
-  const keyboardHeight = viewport
-    ? Math.max(0, maximumVisualViewportHeight - viewport.height - viewport.offsetTop)
-    : 0
+  const keyboardHeight = getKeyboardHeight()
   const page = app.querySelector<HTMLElement>('.player-selection-page')
+  if (keyboardHeight <= 40 && focusTransitionState === 'waiting-for-native-focus') {
+    viewportChangedDuringFocus = true
+    return
+  }
   if (keyboardHeight <= 40) {
     page?.classList.remove('is-player-keyboard-open')
     app.querySelectorAll<HTMLInputElement>('[data-player-entry]').forEach(clearPlayerNameSelection)
+    focusTransitionId += 1
+    focusTransitionState = 'idle'
+    pendingFocusPlayerId = null
+    viewportChangedDuringFocus = false
     activePlayerInputId = null
     pendingSelectAllPlayerId = null
-    resetPlayerContentOffset()
+    cancelPlayerPositionWork()
     return
   }
   page?.classList.add('is-player-keyboard-open')
+  if (focusTransitionState !== 'idle') {
+    viewportChangedDuringFocus = true
+    return
+  }
   scheduleActivePlayerPositionUpdate()
 }
 
-function scheduleActivePlayerPositionUpdate() {
-  if (playerMotionFrame) {
-    playerMotionNeedsFinalMeasurement = true
+function getKeyboardHeight() {
+  const viewport = window.visualViewport
+  return viewport
+    ? Math.max(0, maximumVisualViewportHeight - viewport.height - viewport.offsetTop)
+    : 0
+}
+
+function nextAnimationFrame() {
+  return new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+}
+
+async function waitForStablePlayerViewport(transitionId: number, row: HTMLElement) {
+  const expectsVirtualKeyboard = Boolean(window.visualViewport && navigator.maxTouchPoints > 0)
+  let previousHeight: number | null = null
+  let previousOffsetTop: number | null = null
+  let previousRowBottom: number | null = null
+  let stableFrames = 0
+  let observedFrames = 0
+
+  while (transitionId === focusTransitionId) {
+    await nextAnimationFrame()
+    if (transitionId !== focusTransitionId || !row.isConnected) return false
+    const viewport = window.visualViewport
+    const height = viewport?.height ?? window.innerHeight
+    const offsetTop = viewport?.offsetTop ?? 0
+    const rowBottom = row.getBoundingClientRect().bottom
+    const viewportChanged = viewportChangedDuringFocus
+    viewportChangedDuringFocus = false
+    const keyboardReady = !expectsVirtualKeyboard || getKeyboardHeight() > 40 || observedFrames >= 24
+    const stable = previousHeight !== null
+      && !viewportChanged
+      && Math.abs(height - previousHeight) < 1
+      && Math.abs(offsetTop - (previousOffsetTop ?? offsetTop)) < 1
+      && Math.abs(rowBottom - (previousRowBottom ?? rowBottom)) < 1
+
+    stableFrames = keyboardReady && stable ? stableFrames + 1 : 0
+    previousHeight = height
+    previousOffsetTop = offsetTop
+    previousRowBottom = rowBottom
+    observedFrames += 1
+    if (stableFrames >= 2) return true
+  }
+  return false
+}
+
+async function beginPlayerFocusTransition(input: HTMLInputElement, selectAll: boolean) {
+  const playerId = input.dataset.playerEntry
+  const row = input.closest<HTMLElement>('[data-player-row]')
+  if (!playerId || !row) return
+
+  const transitionId = ++focusTransitionId
+  cancelPlayerPositionWork()
+  pendingFocusPlayerId = playerId
+  focusTransitionState = 'waiting-for-native-focus'
+  viewportChangedDuringFocus = false
+
+  if (!await waitForStablePlayerViewport(transitionId, row)) return
+  if (transitionId !== focusTransitionId || document.activeElement !== input) return
+
+  if (selectAll) {
+    selectEntirePlayerName(input)
+    if (!await waitForStablePlayerViewport(transitionId, row)) return
+  }
+  if (transitionId !== focusTransitionId || document.activeElement !== input) return
+
+  focusTransitionState = 'animating'
+  const completed = await positionActivePlayer(transitionId)
+  if (!completed || transitionId !== focusTransitionId) {
+    if (transitionId === focusTransitionId) {
+      pendingFocusPlayerId = null
+      focusTransitionState = 'idle'
+      viewportChangedDuringFocus = false
+    }
     return
   }
+
+  activePlayerInputId = playerId
+  pendingFocusPlayerId = null
+  focusTransitionState = 'idle'
+  viewportChangedDuringFocus = false
+}
+
+function scheduleActivePlayerPositionUpdate() {
+  if (focusTransitionState !== 'idle') {
+    viewportChangedDuringFocus = true
+    return
+  }
+  if (playerMotionFrame) return
   if (playerPositionFrame) cancelAnimationFrame(playerPositionFrame)
   playerPositionFrame = requestAnimationFrame(() => {
     playerPositionFrame = 0
-    positionActivePlayer()
+    void positionActivePlayer(focusTransitionId)
   })
 }
 
-function cancelPlayerMotionForRemeasure() {
+function cancelPlayerPositionWork() {
   if (playerMotionFrame) cancelAnimationFrame(playerMotionFrame)
+  if (playerPositionFrame) cancelAnimationFrame(playerPositionFrame)
   playerMotionFrame = 0
-  playerMotionNeedsFinalMeasurement = false
+  playerPositionFrame = 0
 }
 
-function positionActivePlayer() {
-  if (!activePlayerInputId) return
-  const input = app.querySelector<HTMLInputElement>(`[data-player-entry="${activePlayerInputId}"]`)
+async function positionActivePlayer(transitionId: number) {
+  const playerId = pendingFocusPlayerId ?? activePlayerInputId
+  if (!playerId) return false
+  const input = app.querySelector<HTMLInputElement>(`[data-player-entry="${playerId}"]`)
   const row = input?.closest<HTMLElement>('[data-player-row]')
   const content = input?.closest<HTMLElement>('.setup-shell')
   const viewport = window.visualViewport
-  if (!input || !row || !content || document.activeElement !== input) return
+  if (!input || !row || !content || document.activeElement !== input) return false
   if (playerMotionElement !== content) {
     if (playerMotionFrame) cancelAnimationFrame(playerMotionFrame)
     playerMotionElement?.style.removeProperty('transform')
@@ -1108,61 +1214,49 @@ function positionActivePlayer() {
   const keyboardHeight = viewport
     ? Math.max(0, maximumVisualViewportHeight - viewport.height - viewport.offsetTop)
     : 0
-  if (keyboardHeight <= 40) return
+  if (keyboardHeight <= 40) return false
   const keyboardTop = (viewport?.offsetTop ?? 0) + (viewport?.height ?? window.innerHeight)
   const targetBottom = keyboardTop - ACTIVE_PLAYER_KEYBOARD_GAP
   const currentBottom = row.getBoundingClientRect().bottom
   const untransformedBottom = currentBottom - playerMotionOffset
   const absoluteTargetOffset = targetBottom - untransformedBottom
-  animatePlayerContentTo(content, absoluteTargetOffset)
+  return animatePlayerContentTo(content, absoluteTargetOffset, transitionId)
 }
 
-function animatePlayerContentTo(content: HTMLElement, targetOffset: number) {
+function animatePlayerContentTo(content: HTMLElement, targetOffset: number, transitionId: number) {
   if (playerMotionFrame) cancelAnimationFrame(playerMotionFrame)
   playerMotionElement = content
   playerMotionFrame = 0
-  playerMotionNeedsFinalMeasurement = false
   const startOffset = playerMotionOffset
   const distance = targetOffset - startOffset
   if (Math.abs(distance) < .5) {
     playerMotionOffset = targetOffset
     content.style.transform = `translate3d(0, ${targetOffset.toFixed(2)}px, 0)`
-    return
+    return Promise.resolve(true)
   }
   const startedAt = performance.now()
   const duration = 240
-  const animate = (now: number) => {
-    if (playerMotionElement !== content) {
+  return new Promise<boolean>((resolve) => {
+    const animate = (now: number) => {
+      if (transitionId !== focusTransitionId || playerMotionElement !== content) {
+        playerMotionFrame = 0
+        resolve(false)
+        return
+      }
+      const progress = Math.min(1, (now - startedAt) / duration)
+      const easedProgress = 1 - Math.pow(1 - progress, 3)
+      playerMotionOffset = startOffset + distance * easedProgress
+      playerMotionElement.style.transform = `translate3d(0, ${playerMotionOffset.toFixed(2)}px, 0)`
+      if (progress < 1) {
+        playerMotionFrame = requestAnimationFrame(animate)
+        return
+      }
       playerMotionFrame = 0
-      return
+      playerMotionOffset = targetOffset
+      resolve(true)
     }
-    const progress = Math.min(1, (now - startedAt) / duration)
-    const easedProgress = 1 - Math.pow(1 - progress, 3)
-    playerMotionOffset = startOffset + distance * easedProgress
-    playerMotionElement.style.transform = `translate3d(0, ${playerMotionOffset.toFixed(2)}px, 0)`
-    if (progress < 1) {
-      playerMotionFrame = requestAnimationFrame(animate)
-      return
-    }
-    playerMotionFrame = 0
-    playerMotionOffset = targetOffset
-    if (playerMotionNeedsFinalMeasurement) {
-      playerMotionNeedsFinalMeasurement = false
-      scheduleActivePlayerPositionUpdate()
-    }
-  }
-  playerMotionFrame = requestAnimationFrame(animate)
-}
-
-function resetPlayerContentOffset() {
-  if (playerMotionFrame) cancelAnimationFrame(playerMotionFrame)
-  if (playerPositionFrame) cancelAnimationFrame(playerPositionFrame)
-  playerMotionFrame = 0
-  playerPositionFrame = 0
-  playerMotionOffset = 0
-  playerMotionNeedsFinalMeasurement = false
-  playerMotionElement?.style.removeProperty('transform')
-  playerMotionElement = null
+    playerMotionFrame = requestAnimationFrame(animate)
+  })
 }
 
 function bindOnlineSetup() {
