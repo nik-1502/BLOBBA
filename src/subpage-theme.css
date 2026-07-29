@@ -436,6 +436,12 @@ html.is-ipad-standalone .busfahrer-page :is(.end-actions, .klatschen-summary-act
   box-shadow: 0 0 0 3px rgba(18, 154, 221, .25);
 }
 
+.busfahrer-page .player-entry-input::selection {
+  color: #fff;
+  background: #087fd1;
+  -webkit-text-fill-color: #fff;
+}
+
 .busfahrer-page input:-webkit-autofill,
 .busfahrer-page input:-webkit-autofill:hover,
 .busfahrer-page input:-webkit-autofill:focus {
@@ -834,6 +840,12 @@ html[data-theme='neon'] .busfahrer-page.player-selection-page .player-row:hover 
 
 html[data-theme='neon'] .busfahrer-page :is(.player-entry-input, .setup-text-input, .profile-name-input, .player-entry-trigger) {
   background: rgba(8, 9, 39, .78);
+}
+
+html[data-theme='neon'] .busfahrer-page .player-entry-input::selection {
+  color: #fff;
+  background: #d40a86;
+  -webkit-text-fill-color: #fff;
 }
 
 html[data-theme='neon'] .busfahrer-page :is(.avatar-choice, .saved-profile-card, .theme-option) {
