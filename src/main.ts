@@ -188,7 +188,8 @@ function alignHomeHeaderButtons() {
   const buttons = app.querySelectorAll<HTMLButtonElement>('.home-page .home-profile-button')
   if (!logo || buttons.length === 0 || logo.getBoundingClientRect().height === 0) return
   const logoRect = logo.getBoundingClientRect()
-  const centerY = logoRect.top + (logoRect.height / 2)
+  const visibleLogoCenterRatio = appTheme === 'neon' ? 0.438 : 0.517
+  const centerY = logoRect.top + (logoRect.height * visibleLogoCenterRatio)
   buttons.forEach((button) => {
     button.style.top = `${centerY - (button.offsetHeight / 2)}px`
   })
