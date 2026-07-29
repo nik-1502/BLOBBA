@@ -92,9 +92,11 @@ let pendingInviteCode: string | null = null
 let onlineNotice = ''
 let pendingKeyboardPositionCleanup: (() => void) | undefined
 let maximumVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
+let previousVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
 const ACTIVE_PLAYER_KEYBOARD_GAP = 68
+const PLAYER_SCROLL_DURATION = 220
 type PlayerActivationSource = 'add' | 'tap' | 'keyboard-navigation'
-type FocusTransitionState = 'idle' | 'waiting-for-native-focus' | 'animating'
+type FocusTransitionState = 'idle' | 'waiting-for-native-focus' | 'animating' | 'restoring-normal-layout'
 let activePlayerInputId: string | null = null
 let pendingSelectAllPlayerId: string | null = null
 let pointerPlayerInputId: string | null = null
@@ -939,9 +941,24 @@ function bindOfflineSetup() {
   app.querySelectorAll<HTMLButtonElement>('[data-remove-player]').forEach((button) => button.addEventListener('click', () => {
     if (players.length === 1) return
     playActionSound('remove-player')
-    if (editingPlayerId === button.dataset.removePlayer) editingPlayerId = null
-    players = players.filter((player) => player.id !== button.dataset.removePlayer)
-    renderModeMenu()
+    const playerId = button.dataset.removePlayer
+    if (!playerId) return
+    const row = button.closest<HTMLElement>('[data-player-row]')
+    const input = row?.querySelector<HTMLInputElement>('[data-player-entry]')
+    const removingActivePlayer = activePlayerInputId === playerId || document.activeElement === input
+    if (editingPlayerId === playerId) editingPlayerId = null
+    players = players.filter((player) => player.id !== playerId)
+    if (removingActivePlayer) {
+      input?.blur()
+      finishNormalPlayerLayoutImmediately()
+    }
+    row?.remove()
+    app.querySelectorAll<HTMLButtonElement>('[data-remove-player]').forEach((removeButton) => {
+      removeButton.disabled = players.length === 1
+    })
+    const addButton = app.querySelector<HTMLButtonElement>('[data-add-player]')
+    if (addButton) addButton.disabled = players.length >= MAX_PLAYERS
+    clampPlayerSelectionFrameToContent()
   }))
   app.querySelectorAll<HTMLButtonElement>('[data-edit-player-avatar]').forEach((button) => button.addEventListener('click', () => {
     playSound('ui-click')
@@ -1067,23 +1084,23 @@ function bindActivePlayerViewport() {
 
 function handleVisualViewportChange() {
   const viewport = window.visualViewport
+  const viewportHeight = viewport?.height ?? window.innerHeight
+  const viewportIsExpanding = viewportHeight > previousVisualViewportHeight + 1
+  previousVisualViewportHeight = viewportHeight
   if (viewport) maximumVisualViewportHeight = Math.max(maximumVisualViewportHeight, viewport.height)
   const keyboardHeight = getKeyboardHeight()
   const page = app.querySelector<HTMLElement>('.player-selection-page')
+  const playerInputFocused = document.activeElement instanceof HTMLInputElement
+    && document.activeElement.matches('[data-player-entry]')
+  if (focusTransitionState === 'restoring-normal-layout') return
   if (keyboardHeight <= 40 && focusTransitionState === 'waiting-for-native-focus') {
     viewportChangedDuringFocus = true
     return
   }
-  if (keyboardHeight <= 40) {
-    page?.classList.remove('is-player-keyboard-open')
+  if (keyboardHeight <= 40
+    || (focusTransitionState === 'idle' && (!playerInputFocused || viewportIsExpanding))) {
     app.querySelectorAll<HTMLInputElement>('[data-player-entry]').forEach(clearPlayerNameSelection)
-    focusTransitionId += 1
-    focusTransitionState = 'idle'
-    pendingFocusPlayerId = null
-    viewportChangedDuringFocus = false
-    activePlayerInputId = null
-    pendingSelectAllPlayerId = null
-    cancelPlayerPositionWork()
+    restoreNormalPlayerLayout()
     return
   }
   page?.classList.add('is-player-keyboard-open')
@@ -1196,6 +1213,63 @@ function cancelPlayerPositionWork() {
   playerPositionFrame = 0
 }
 
+function restoreNormalPlayerLayout() {
+  if (focusTransitionState === 'restoring-normal-layout') return
+  const transitionId = ++focusTransitionId
+  cancelPlayerPositionWork()
+  focusTransitionState = 'restoring-normal-layout'
+  pendingFocusPlayerId = null
+  viewportChangedDuringFocus = false
+  activePlayerInputId = null
+  pendingSelectAllPlayerId = null
+  pointerPlayerInputId = null
+
+  const content = playerMotionElement?.isConnected
+    ? playerMotionElement
+    : app.querySelector<HTMLElement>('.player-selection-page .setup-shell')
+  if (!content || Math.abs(playerMotionOffset) < .5) {
+    finishNormalPlayerLayout(transitionId, content)
+    return
+  }
+  void animatePlayerContentTo(content, 0, transitionId).then((completed) => {
+    if (completed) finishNormalPlayerLayout(transitionId, content)
+  })
+}
+
+function finishNormalPlayerLayout(transitionId: number, content: HTMLElement | null) {
+  if (transitionId !== focusTransitionId) return
+  content?.style.removeProperty('transform')
+  playerMotionElement = null
+  playerMotionOffset = 0
+  app.querySelector('.player-selection-page')?.classList.remove('is-player-keyboard-open')
+  focusTransitionState = 'idle'
+  clampPlayerSelectionFrameToContent()
+}
+
+function finishNormalPlayerLayoutImmediately() {
+  focusTransitionId += 1
+  cancelPlayerPositionWork()
+  playerMotionElement?.style.removeProperty('transform')
+  playerMotionElement = null
+  playerMotionOffset = 0
+  activePlayerInputId = null
+  pendingFocusPlayerId = null
+  pendingSelectAllPlayerId = null
+  pointerPlayerInputId = null
+  viewportChangedDuringFocus = false
+  focusTransitionState = 'idle'
+  app.querySelector('.player-selection-page')?.classList.remove('is-player-keyboard-open')
+}
+
+function clampPlayerSelectionFrameToContent() {
+  const page = app.querySelector<HTMLElement>('.player-selection-page')
+  const panel = page?.querySelector<HTMLElement>('.setup-game-panel')
+  if (!page || !panel || !page.classList.contains('is-content-expanded')) return
+  if (page.scrollHeight > page.clientHeight + 1) return
+  page.classList.remove('is-content-expanded')
+  panel.style.removeProperty('--selection-collapsed-height')
+}
+
 async function positionActivePlayer(transitionId: number) {
   const playerId = pendingFocusPlayerId ?? activePlayerInputId
   if (!playerId) return false
@@ -1235,7 +1309,7 @@ function animatePlayerContentTo(content: HTMLElement, targetOffset: number, tran
     return Promise.resolve(true)
   }
   const startedAt = performance.now()
-  const duration = 240
+  const duration = PLAYER_SCROLL_DURATION
   return new Promise<boolean>((resolve) => {
     const animate = (now: number) => {
       if (transitionId !== focusTransitionId || playerMotionElement !== content) {
