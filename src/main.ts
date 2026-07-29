@@ -454,6 +454,12 @@ function updatePageScrollMode() {
   pageScrollModeFrame = 0
   if (playerPinchController.active) return
   const container = getPageScrollContainer()
+  if (container?.classList.contains('player-selection-page')) {
+    container.classList.remove('is-app-scrollable', 'is-app-scroll-locked')
+    if (observedPageScrollContainer) pageScrollResizeObserver.disconnect()
+    observedPageScrollContainer = null
+    return
+  }
   if (container !== observedPageScrollContainer) {
     pageScrollResizeObserver.disconnect()
     observedPageScrollContainer = container
@@ -517,6 +523,7 @@ function bindGlobalIOSScrollGuard() {
   document.addEventListener('touchmove', (event) => {
     if (event.touches.length !== 1 || playerPinchController.active) return
     const target = event.target instanceof Element ? event.target : null
+    if (target?.closest('.player-selection-page')) return
     if (target?.closest('input[type="range"]')) return
     const scrollContainer = findAllowedTouchScrollContainer(event.target)
     if (!scrollContainer) {
@@ -784,6 +791,7 @@ function gameRoute(suffix = '') {
 
 function renderPage() {
   resetPlayerPinchTransform()
+  document.body.classList.remove('page-player-selection')
   pendingKeyboardPositionCleanup?.()
   pendingKeyboardPositionCleanup = undefined
   unmountCurrentPage?.()
@@ -1086,6 +1094,7 @@ function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER',
   const fixedPlayerBackground = pageClass.includes('player-selection-page')
     ? '<div class="player-selection-background" aria-hidden="true"></div>'
     : ''
+  document.body.classList.toggle('page-player-selection', pageClass.includes('player-selection-page'))
   const zoomLayerStart = pageClass.includes('player-selection-page') ? '<div class="player-selection-zoom-layer">' : ''
   const zoomLayerEnd = pageClass.includes('player-selection-page') ? '</div>' : ''
   app.innerHTML = `<main class="busfahrer-page setup-page ${pageClass}">${fixedPlayerBackground}${zoomLayerStart}<div class="busfahrer-shell setup-shell">

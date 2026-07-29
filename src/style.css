@@ -62,6 +62,14 @@ body {
   touch-action: none;
 }
 
+body.page-player-selection {
+  touch-action: pan-y;
+}
+
+.player-selection-page {
+  touch-action: pan-y;
+}
+
 .is-app-scroll-locked {
   overflow-x: hidden !important;
   overflow-y: hidden !important;
