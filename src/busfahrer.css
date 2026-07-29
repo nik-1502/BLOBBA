@@ -905,6 +905,10 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
+  transform: none;
+  filter: none;
+  contain: none;
+  will-change: auto;
 }
 
 .player-selection-background::before,
@@ -1418,6 +1422,19 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   min-height: 100svh;
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+.player-selection-page.is-content-expanded.is-selection-scroll-locked {
+  overflow-y: hidden;
+  overscroll-behavior-y: none;
+  touch-action: none;
+}
+
+.player-selection-page.is-content-expanded.is-selection-scrollable {
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 .player-selection-page.is-content-expanded .setup-shell {

@@ -98,8 +98,10 @@ const ANIMATION_SPEED_MULTIPLIER = 1.15
 const KEYBOARD_FRAME_FOLLOW_FACTOR = 1 / ANIMATION_SPEED_MULTIPLIER
 const VIEWPORT_ANIMATION_EPSILON = .5
 const REQUIRED_STABLE_VIEWPORT_FRAMES = 3
-const PLAYER_TAP_MOVE_THRESHOLD = 8
-const PLAYER_TAP_TIME_THRESHOLD = 450
+const PLAYER_TAP_MOVE_THRESHOLD = 12
+const NON_SCROLLABLE_PLAYER_TAP_THRESHOLD = 16
+const PLAYER_TAP_SCROLL_THRESHOLD = 3
+const PLAYER_TAP_TIME_THRESHOLD = 500
 type PlayerActivationSource = 'add' | 'tap'
 type FocusTransitionState = 'idle' | 'waiting-for-native-focus' | 'animating' | 'restoring-normal-layout'
 let activePlayerInputId: string | null = null
@@ -123,6 +125,7 @@ let playerTapStartX = 0
 let playerTapStartY = 0
 let playerTapStartedAt = 0
 let playerTapMoved = false
+let playerTapStartScrollTop = 0
 const MIN_PLAYER_PINCH_SCALE = .98
 const MAX_PLAYER_PINCH_SCALE = 1.06
 const PLAYER_PINCH_SMOOTHING = .28
@@ -1128,6 +1131,7 @@ function renderModeMenu() {
   if (renderedPage) {
     applyPlayerSelectionSpacers(renderedPage)
     renderedPage.scrollTop = preservedPageScrollTop
+    bindPlayerSelectionScrollState(renderedPage)
   }
   app.querySelector<HTMLButtonElement>('[data-add-player]')?.replaceChildren('+ Spieler')
   bindSetupModeSwitch()
@@ -1144,6 +1148,7 @@ function expandPlayerSelectionFrameForContent() {
   if (!page || !panel || !content) return
   panel.style.setProperty('--selection-collapsed-height', `${Math.ceil(panel.getBoundingClientRect().height)}px`)
   page.classList.add('is-content-expanded')
+  schedulePlayerSelectionScrollState()
 }
 
 function renderModeSwitch() {
@@ -1381,12 +1386,17 @@ function handlePlayerPointerDown(event: PointerEvent) {
   playerTapStartY = event.clientY
   playerTapStartedAt = performance.now()
   playerTapMoved = false
+  playerTapStartScrollTop = row.closest<HTMLElement>('.player-selection-page')?.scrollTop ?? 0
 }
 
 function handlePlayerPointerMove(event: PointerEvent) {
   if (event.pointerId !== playerTapPointerId) return
-  if (Math.abs(event.clientX - playerTapStartX) > PLAYER_TAP_MOVE_THRESHOLD
-    || Math.abs(event.clientY - playerTapStartY) > PLAYER_TAP_MOVE_THRESHOLD) {
+  const page = app.querySelector<HTMLElement>('.player-selection-page')
+  const threshold = page?.classList.contains('is-selection-scrollable')
+    ? PLAYER_TAP_MOVE_THRESHOLD
+    : NON_SCROLLABLE_PLAYER_TAP_THRESHOLD
+  if (Math.hypot(event.clientX - playerTapStartX, event.clientY - playerTapStartY) > threshold
+    || Math.abs((page?.scrollTop ?? 0) - playerTapStartScrollTop) > PLAYER_TAP_SCROLL_THRESHOLD) {
     playerTapMoved = true
   }
 }
@@ -1398,7 +1408,10 @@ function handlePlayerPointerUp(event: PointerEvent) {
   }
   if (event.pointerId !== playerTapPointerId) return
   const playerId = playerTapPlayerId
+  const page = app.querySelector<HTMLElement>('.player-selection-page')
+  const pageScrolled = Math.abs((page?.scrollTop ?? 0) - playerTapStartScrollTop) > PLAYER_TAP_SCROLL_THRESHOLD
   const isConfirmedTap = !playerTapMoved
+    && !pageScrolled
     && performance.now() - playerTapStartedAt <= PLAYER_TAP_TIME_THRESHOLD
   clearPlayerTapTracking()
   if (!isConfirmedTap || !playerId) return
@@ -1409,6 +1422,7 @@ function clearPlayerTapTracking() {
   playerTapPointerId = null
   playerTapPlayerId = null
   playerTapMoved = false
+  playerTapStartScrollTop = 0
 }
 
 function handlePlayerInputFocus(input: HTMLInputElement) {
@@ -1464,10 +1478,45 @@ function finishPlayerNameEditing(playerId: string) {
   playerNameBeforeEditing.delete(playerId)
 }
 
+let playerSelectionScrollFrame = 0
+let observedPlayerSelectionPage: HTMLElement | null = null
+const playerSelectionResizeObserver = new ResizeObserver(() => schedulePlayerSelectionScrollState())
+
+function bindPlayerSelectionScrollState(page: HTMLElement) {
+  if (observedPlayerSelectionPage !== page) {
+    playerSelectionResizeObserver.disconnect()
+    observedPlayerSelectionPage = page
+    playerSelectionResizeObserver.observe(page)
+    const content = page.querySelector<HTMLElement>('.player-selection-zoom-layer')
+    if (content) playerSelectionResizeObserver.observe(content)
+  }
+  schedulePlayerSelectionScrollState()
+}
+
+function schedulePlayerSelectionScrollState() {
+  if (playerSelectionScrollFrame) return
+  playerSelectionScrollFrame = requestAnimationFrame(updatePlayerSelectionScrollState)
+}
+
+function updatePlayerSelectionScrollState() {
+  playerSelectionScrollFrame = 0
+  const page = app.querySelector<HTMLElement>('.player-selection-page')
+  if (!page) return
+  const needsScroll = page.scrollHeight - page.clientHeight > PAGE_SCROLL_TOLERANCE
+  page.classList.toggle('is-selection-scrollable', needsScroll)
+  page.classList.toggle('is-selection-scroll-locked', !needsScroll)
+  if (!needsScroll && temporaryKeyboardSpacer <= 0 && persistentBottomSpacer <= 0) page.scrollTop = 0
+}
+
+window.addEventListener('orientationchange', schedulePlayerSelectionScrollState)
+window.addEventListener('resize', schedulePlayerSelectionScrollState)
+window.visualViewport?.addEventListener('resize', schedulePlayerSelectionScrollState)
+
 function applyPlayerSelectionSpacers(page = app.querySelector<HTMLElement>('.player-selection-page')) {
   if (!page) return
   page.style.setProperty('--temporary-keyboard-spacer', `${Math.max(0, temporaryKeyboardSpacer).toFixed(2)}px`)
   page.style.setProperty('--persistent-bottom-spacer', `${Math.max(0, persistentBottomSpacer).toFixed(2)}px`)
+  schedulePlayerSelectionScrollState()
 }
 
 function requiredBottomSpacerForTarget(page: HTMLElement, row: HTMLElement, keyboardTop: number) {
@@ -1575,6 +1624,7 @@ function trackKeyboardOpening(
   let movementStartedAt = 0
   let stableFrames = 0
   let observedFrames = 0
+  let selectionReinforced = false
 
   return new Promise<boolean>((resolve) => {
     const updateFrame = (now: number) => {
@@ -1590,6 +1640,13 @@ function trackKeyboardOpening(
         || Math.abs(offsetTop - previousOffsetTop) > VIEWPORT_ANIMATION_EPSILON
 
       if (viewportMoved && !movementStartedAt) movementStartedAt = now
+      if (viewportMoved && !selectionReinforced) {
+        const input = row.querySelector<HTMLInputElement>('[data-player-entry]')
+        if (input?.classList.contains('is-new-player-name-selected') && document.activeElement === input) {
+          selectEntirePlayerName(input)
+          selectionReinforced = true
+        }
+      }
       if (movementStartedAt || getKeyboardHeight() > 40) {
         applyPlayerPositionForKeyboardTop(row, content, offsetTop + height)
       }
@@ -1638,6 +1695,10 @@ function applyPlayerPositionForKeyboardTop(
   page.scrollTop = snapToTarget
     ? targetScrollTop
     : page.scrollTop + (targetScrollTop - page.scrollTop) * KEYBOARD_FRAME_FOLLOW_FACTOR
+  if (snapToTarget) {
+    const finalError = row.getBoundingClientRect().bottom - targetBottom
+    if (Math.abs(finalError) > 1.5) page.scrollTop += finalError
+  }
 }
 
 function adjustedKeyboardAnimationDuration(measuredDuration: number) {
@@ -1656,6 +1717,13 @@ async function beginPlayerFocusTransition(input: HTMLInputElement, selectAll: bo
 
   if (selectAll) {
     selectEntirePlayerName(input)
+    requestAnimationFrame(() => {
+      if (transitionId === focusTransitionId
+        && document.activeElement === input
+        && input.classList.contains('is-new-player-name-selected')) {
+        selectEntirePlayerName(input)
+      }
+    })
   }
   const content = input.closest<HTMLElement>('.setup-shell')
   if (!content) return
