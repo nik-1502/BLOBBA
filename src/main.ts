@@ -115,6 +115,7 @@ let playerTapStartX = 0
 let playerTapStartY = 0
 let playerTapStartedAt = 0
 let playerTapMoved = false
+const playerNameBeforeEditing = new Map<string, string>()
 let appTheme = loadAppTheme()
 
 function loadAppTheme(): AppTheme {
@@ -963,6 +964,7 @@ function bindOfflineSetup() {
     const input = row?.querySelector<HTMLInputElement>('[data-player-entry]')
     const removingActivePlayer = activePlayerInputId === playerId || document.activeElement === input
     if (editingPlayerId === playerId) editingPlayerId = null
+    playerNameBeforeEditing.delete(playerId)
     players = players.filter((player) => player.id !== playerId)
     if (removingActivePlayer) {
       input?.blur()
@@ -1078,6 +1080,12 @@ function clearPlayerTapTracking() {
 function handlePlayerInputFocus(input: HTMLInputElement) {
   const playerId = input.dataset.playerEntry
   if (!playerId) return
+  if (activePlayerInputId && activePlayerInputId !== playerId) {
+    finishPlayerNameEditing(activePlayerInputId)
+  }
+  if (!playerNameBeforeEditing.has(playerId)) {
+    playerNameBeforeEditing.set(playerId, input.value)
+  }
   const changedPlayer = activePlayerInputId !== playerId
   const samePlayerTap = pointerPlayerInputId === playerId && !changedPlayer
   const selectAll = !samePlayerTap && (changedPlayer || pendingSelectAllPlayerId === playerId)
@@ -1111,10 +1119,22 @@ function clearPlayerNameSelection(input: HTMLInputElement) {
   input.classList.remove('is-new-player-name-selected')
 }
 
+function finishPlayerNameEditing(playerId: string) {
+  const previousName = playerNameBeforeEditing.get(playerId)
+  if (previousName === undefined) return
+  const input = app.querySelector<HTMLInputElement>(`[data-player-entry="${playerId}"]`)
+  if (input && input.value.trim().length === 0) {
+    input.value = previousName
+    players = players.map((player) => player.id === playerId ? { ...player, name: previousName } : player)
+  }
+  playerNameBeforeEditing.delete(playerId)
+}
+
 function bindActivePlayerViewport() {
   if (pendingKeyboardPositionCleanup) return
   const viewport = window.visualViewport
   const cleanup = () => {
+    if (activePlayerInputId) finishPlayerNameEditing(activePlayerInputId)
     viewport?.removeEventListener('resize', handleVisualViewportChange)
     viewport?.removeEventListener('scroll', handleVisualViewportChange)
     window.removeEventListener('resize', handleVisualViewportChange)
@@ -1273,6 +1293,7 @@ function restoreNormalPlayerLayout() {
   const transitionId = ++focusTransitionId
   cancelPlayerPositionWork()
   focusTransitionState = 'restoring-normal-layout'
+  if (activePlayerInputId) finishPlayerNameEditing(activePlayerInputId)
   pendingFocusPlayerId = null
   viewportChangedDuringFocus = false
   activePlayerInputId = null

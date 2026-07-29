@@ -739,7 +739,7 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
 .player-name { overflow: hidden; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
 .player-edit-label { color: #aaa1ba; font-size: .78rem; }
 .player-entry-input, .setup-text-input { width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid rgba(255, 255, 255, .14); border-radius: 9px; outline: none; color: #fff; background: rgba(33, 26, 48, .72); font: inherit; font-weight: 800; }
-.player-entry-input:focus, .setup-text-input:focus { box-shadow: 0 0 0 3px rgba(138, 92, 255, .24); }
+.setup-text-input:focus { box-shadow: 0 0 0 3px rgba(138, 92, 255, .24); }
 .player-entry-trigger { width: 100%; min-width: 0; padding: 9px 10px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .14); border-radius: 9px; color: #fff; background: rgba(33, 26, 48, .72); font: inherit; font-weight: 800; text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: text; }
 .player-entry-trigger:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .player-remove { display: grid; width: 42px; height: 42px; min-width: 42px; min-height: 42px; padding: 10px; border: 1px solid rgba(255, 99, 124, .38); border-radius: 9px; place-items: center; color: #ff9bac; background: rgba(228, 54, 82, .12); font: inherit; cursor: pointer; }
@@ -1099,10 +1099,19 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   background: rgba(24, 20, 20, .66);
 }
 
-.player-selection-page .player-entry-input:focus,
 .player-selection-page .setup-text-input:focus {
   border-color: #ff8f30;
   box-shadow: 0 0 0 3px rgba(247, 91, 4, .28);
+}
+
+.player-selection-page .player-entry-input {
+  caret-color: auto;
+}
+
+.player-selection-page .player-entry-input:focus {
+  border-color: rgba(255, 255, 255, .2);
+  outline: none;
+  box-shadow: none;
 }
 
 .player-selection-page .player-entry-input:not(.is-active-player-input) {
