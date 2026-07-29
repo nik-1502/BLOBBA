@@ -882,6 +882,13 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
   will-change: transform;
 }
 
+.player-selection-page .player-selection-bottom-spacer {
+  width: 100%;
+  height: calc(var(--temporary-keyboard-spacer, 0px) + var(--persistent-bottom-spacer, 0px));
+  flex: 0 0 auto;
+  pointer-events: none;
+}
+
 .player-selection-background {
   position: fixed;
   inset: 0;

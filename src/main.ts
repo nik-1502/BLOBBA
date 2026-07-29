@@ -111,8 +111,9 @@ let pendingFocusPlayerId: string | null = null
 let playerPositionFrame = 0
 let playerMotionFrame = 0
 let keyboardTrackingFrame = 0
-let playerMotionOffset = 0
-let playerMotionElement: HTMLElement | null = null
+let temporaryKeyboardSpacer = 0
+let persistentBottomSpacer = 0
+let lastPlayerKeyboardTop = 0
 let lastKeyboardAnimationDuration = DEFAULT_IOS_KEYBOARD_DURATION * ANIMATION_SPEED_MULTIPLIER
 let lastVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
 let lastVisualViewportOffsetTop = window.visualViewport?.offsetTop ?? 0
@@ -1096,7 +1097,9 @@ function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER',
     : ''
   document.body.classList.toggle('page-player-selection', pageClass.includes('player-selection-page'))
   const zoomLayerStart = pageClass.includes('player-selection-page') ? '<div class="player-selection-zoom-layer">' : ''
-  const zoomLayerEnd = pageClass.includes('player-selection-page') ? '</div>' : ''
+  const zoomLayerEnd = pageClass.includes('player-selection-page')
+    ? '<div class="player-selection-bottom-spacer" aria-hidden="true"></div></div>'
+    : ''
   app.innerHTML = `<main class="busfahrer-page setup-page ${pageClass}">${fixedPlayerBackground}${zoomLayerStart}<div class="busfahrer-shell setup-shell">
     <header class="busfahrer-header"><button class="back-button bus-back blobba-nav-action" type="button" data-setup-back>← Zurück</button>${centerTitle ? '<span></span>' : `<div><p>${eyebrow}</p><h1>${title}</h1></div>`}${headerEnd}</header>
     <section class="setup-stage"><div class="setup-stack">${centerTitle ? `<h1 class="setup-title">${title}</h1>` : ''}${content}</div></section>
@@ -1106,7 +1109,6 @@ function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER',
 }
 
 function renderModeMenu() {
-  const preservedMotionOffset = playerMotionOffset
   const preservedPageScrollTop = app.querySelector<HTMLElement>('.player-selection-page')?.scrollTop ?? 0
   const gameLayoutClass = activeGame === 'klatschen'
     ? 'player-selection-blobben'
@@ -1121,14 +1123,12 @@ function renderModeMenu() {
     : setupPanel
   setupShell(`${positionedSetupPanel}${renderOnlineModal()}`, '', gameTitle(), 'BLOBBA präsentiert', `player-selection-page ${gameLayoutClass}`, useSeparateSetupTitle)
   const renderedShell = app.querySelector<HTMLElement>('.player-selection-page .setup-shell')
-  if (renderedShell && Math.abs(preservedMotionOffset) >= .01 && getKeyboardHeight() > 40) {
-    playerMotionElement = renderedShell
-    playerMotionOffset = preservedMotionOffset
-    renderedShell.style.transform = `translate3d(0, ${preservedMotionOffset.toFixed(2)}px, 0)`
-    renderedShell.closest('.player-selection-page')?.classList.add('is-player-keyboard-open')
-  }
+  if (renderedShell && getKeyboardHeight() > 40) renderedShell.closest('.player-selection-page')?.classList.add('is-player-keyboard-open')
   const renderedPage = app.querySelector<HTMLElement>('.player-selection-page')
-  if (renderedPage) renderedPage.scrollTop = preservedPageScrollTop
+  if (renderedPage) {
+    applyPlayerSelectionSpacers(renderedPage)
+    renderedPage.scrollTop = preservedPageScrollTop
+  }
   app.querySelector<HTMLButtonElement>('[data-add-player]')?.replaceChildren('+ Spieler')
   bindSetupModeSwitch()
   setupMode === 'offline' ? bindOfflineSetup() : bindOnlineSetup()
@@ -1299,6 +1299,7 @@ function bindOfflineSetup() {
       finishNormalPlayerLayoutImmediately()
     }
     row?.remove()
+    updatePersistentBottomSpacer()
     app.querySelectorAll<HTMLButtonElement>('[data-remove-player]').forEach((removeButton) => {
       removeButton.disabled = players.length === 1
     })
@@ -1463,6 +1464,38 @@ function finishPlayerNameEditing(playerId: string) {
   playerNameBeforeEditing.delete(playerId)
 }
 
+function applyPlayerSelectionSpacers(page = app.querySelector<HTMLElement>('.player-selection-page')) {
+  if (!page) return
+  page.style.setProperty('--temporary-keyboard-spacer', `${Math.max(0, temporaryKeyboardSpacer).toFixed(2)}px`)
+  page.style.setProperty('--persistent-bottom-spacer', `${Math.max(0, persistentBottomSpacer).toFixed(2)}px`)
+}
+
+function requiredBottomSpacerForTarget(page: HTMLElement, row: HTMLElement, keyboardTop: number) {
+  const currentSpacer = temporaryKeyboardSpacer + persistentBottomSpacer
+  const baseScrollHeight = Math.max(0, page.scrollHeight - currentSpacer)
+  const targetBottom = keyboardTop - ACTIVE_PLAYER_KEYBOARD_GAP
+  const desiredScrollTop = page.scrollTop + row.getBoundingClientRect().bottom - targetBottom
+  return Math.max(0, desiredScrollTop + page.clientHeight - baseScrollHeight)
+}
+
+function updatePersistentBottomSpacer(page = app.querySelector<HTMLElement>('.player-selection-page')) {
+  if (!page || lastPlayerKeyboardTop <= 0) return
+  const rows = app.querySelectorAll<HTMLElement>('[data-player-row]')
+  const lastRow = rows.item(rows.length - 1)
+  if (!lastRow) {
+    persistentBottomSpacer = 0
+    applyPlayerSelectionSpacers(page)
+    return
+  }
+  const preservedScrollTop = page.scrollTop
+  temporaryKeyboardSpacer = 0
+  persistentBottomSpacer = 0
+  applyPlayerSelectionSpacers(page)
+  persistentBottomSpacer = requiredBottomSpacerForTarget(page, lastRow, lastPlayerKeyboardTop)
+  applyPlayerSelectionSpacers(page)
+  page.scrollTop = Math.min(preservedScrollTop, Math.max(0, page.scrollHeight - page.clientHeight))
+}
+
 function bindActivePlayerViewport() {
   if (pendingKeyboardPositionCleanup) return
   const viewport = window.visualViewport
@@ -1477,9 +1510,6 @@ function bindActivePlayerViewport() {
     playerPositionFrame = 0
     playerMotionFrame = 0
     keyboardTrackingFrame = 0
-    playerMotionElement?.style.removeProperty('transform')
-    playerMotionElement = null
-    playerMotionOffset = 0
     focusTransitionId += 1
     focusTransitionState = 'idle'
     pendingFocusPlayerId = null
@@ -1588,21 +1618,26 @@ function trackKeyboardOpening(
 
 function applyPlayerPositionForKeyboardTop(
   row: HTMLElement,
-  content: HTMLElement,
+  _content: HTMLElement,
   keyboardTop: number,
   snapToTarget = false,
 ) {
-  if (playerMotionElement !== content) {
-    playerMotionElement?.style.removeProperty('transform')
-    playerMotionElement = content
-    playerMotionOffset = 0
+  const page = row.closest<HTMLElement>('.player-selection-page')
+  if (!page) return
+  lastPlayerKeyboardTop = keyboardTop
+  const neededTemporarySpacer = Math.max(
+    0,
+    requiredBottomSpacerForTarget(page, row, keyboardTop) - persistentBottomSpacer,
+  )
+  if (neededTemporarySpacer > temporaryKeyboardSpacer) {
+    temporaryKeyboardSpacer = neededTemporarySpacer
+    applyPlayerSelectionSpacers(page)
   }
-  const untransformedBottom = row.getBoundingClientRect().bottom - playerMotionOffset
-  const targetOffset = keyboardTop - ACTIVE_PLAYER_KEYBOARD_GAP - untransformedBottom
-  playerMotionOffset = snapToTarget
-    ? targetOffset
-    : playerMotionOffset + (targetOffset - playerMotionOffset) * KEYBOARD_FRAME_FOLLOW_FACTOR
-  content.style.transform = `translate3d(0, ${playerMotionOffset.toFixed(2)}px, 0)`
+  const targetBottom = keyboardTop - ACTIVE_PLAYER_KEYBOARD_GAP
+  const targetScrollTop = Math.max(0, page.scrollTop + row.getBoundingClientRect().bottom - targetBottom)
+  page.scrollTop = snapToTarget
+    ? targetScrollTop
+    : page.scrollTop + (targetScrollTop - page.scrollTop) * KEYBOARD_FRAME_FOLLOW_FACTOR
 }
 
 function adjustedKeyboardAnimationDuration(measuredDuration: number) {
@@ -1663,13 +1698,26 @@ function cancelPlayerPositionWork() {
   keyboardTrackingFrame = 0
 }
 
+function finishAfterKeyboardClosed(transitionId: number) {
+  const waitForClosedFrame = () => {
+    if (transitionId !== focusTransitionId) {
+      keyboardTrackingFrame = 0
+      return
+    }
+    if (getKeyboardHeight() <= 40) {
+      keyboardTrackingFrame = 0
+      finishNormalPlayerLayout(transitionId)
+      return
+    }
+    keyboardTrackingFrame = requestAnimationFrame(waitForClosedFrame)
+  }
+  keyboardTrackingFrame = requestAnimationFrame(waitForClosedFrame)
+}
+
 function startKeyboardSynchronizedClose(startKeyboardTop: number) {
   if (focusTransitionState === 'restoring-normal-layout') return
-  const content = playerMotionElement?.isConnected
-    ? playerMotionElement
-    : app.querySelector<HTMLElement>('.player-selection-page .setup-shell')
   const page = app.querySelector<HTMLElement>('.player-selection-page')
-  if (!content || !page) {
+  if (!page) {
     restoreNormalPlayerLayout()
     return
   }
@@ -1677,65 +1725,33 @@ function startKeyboardSynchronizedClose(startKeyboardTop: number) {
   const transitionId = ++focusTransitionId
   cancelPlayerPositionWork()
   focusTransitionState = 'restoring-normal-layout'
+  const closingPlayerId = activePlayerInputId
+  const activeIndex = players.findIndex((player) => player.id === closingPlayerId)
   if (activePlayerInputId) finishPlayerNameEditing(activePlayerInputId)
   pendingFocusPlayerId = null
   activePlayerInputId = null
   pendingSelectAllPlayerId = null
   pointerPlayerInputId = null
-
-  const startedAt = performance.now()
-  const startOffset = playerMotionOffset
-  const startScrollTop = page.scrollTop
-  const normalMaxScrollTop = Math.max(0, page.scrollHeight - page.clientHeight)
-  const effectiveNormalScrollTop = startScrollTop - startOffset
-  const targetScrollTop = Math.max(0, Math.min(effectiveNormalScrollTop, normalMaxScrollTop))
-  const finalKeyboardTop = maximumVisualViewportHeight
-  const keyboardTravel = Math.max(1, finalKeyboardTop - startKeyboardTop)
-  let previousHeight = window.visualViewport?.height ?? window.innerHeight
-  let previousOffsetTop = window.visualViewport?.offsetTop ?? 0
-  let stableFrames = 0
-  let smoothedProgress = 0
-
-  const updateFrame = (now: number) => {
-    if (transitionId !== focusTransitionId || !content.isConnected || !page.isConnected) {
-      keyboardTrackingFrame = 0
-      return
-    }
-    const viewport = window.visualViewport
-    const height = viewport?.height ?? window.innerHeight
-    const offsetTop = viewport?.offsetTop ?? 0
-    const keyboardTop = offsetTop + height
-    const rawProgress = Math.max(0, Math.min((keyboardTop - startKeyboardTop) / keyboardTravel, 1))
-    smoothedProgress += (rawProgress - smoothedProgress) * KEYBOARD_FRAME_FOLLOW_FACTOR
-    playerMotionOffset = startOffset * (1 - smoothedProgress)
-    content.style.transform = `translate3d(0, ${playerMotionOffset.toFixed(2)}px, 0)`
-    page.scrollTop = startScrollTop + (targetScrollTop - startScrollTop) * smoothedProgress
-
-    const viewportStable = Math.abs(height - previousHeight) <= VIEWPORT_ANIMATION_EPSILON
-      && Math.abs(offsetTop - previousOffsetTop) <= VIEWPORT_ANIMATION_EPSILON
-    stableFrames = viewportStable ? stableFrames + 1 : 0
-    previousHeight = height
-    previousOffsetTop = offsetTop
-
-    const smoothingSettled = Math.abs(rawProgress - smoothedProgress) <= .005
-    if ((rawProgress >= 1 && smoothingSettled)
-      || (stableFrames >= REQUIRED_STABLE_VIEWPORT_FRAMES && smoothingSettled)
-      || stableFrames >= 12) {
-      keyboardTrackingFrame = 0
-      lastKeyboardAnimationDuration = adjustedKeyboardAnimationDuration(now - startedAt)
-      playerMotionOffset = 0
-      content.style.transform = 'translate3d(0, 0, 0)'
-      page.scrollTop = targetScrollTop
-      finishNormalPlayerLayout(transitionId, content)
-      return
-    }
-    keyboardTrackingFrame = requestAnimationFrame(updateFrame)
+  lastPlayerKeyboardTop = Math.max(lastPlayerKeyboardTop, startKeyboardTop)
+  if (activeIndex === 0) {
+    void animatePlayerPageScroll(page, 0, transitionId).then((completed) => {
+      if (!completed) return
+      temporaryKeyboardSpacer = 0
+      persistentBottomSpacer = 0
+      applyPlayerSelectionSpacers(page)
+      finishAfterKeyboardClosed(transitionId)
+    })
+    return
   }
-  keyboardTrackingFrame = requestAnimationFrame(updateFrame)
+  preservePlayerSelectionAfterKeyboard(page, closingPlayerId)
+  finishAfterKeyboardClosed(transitionId)
 }
 
 function restoreNormalPlayerLayout() {
   if (focusTransitionState === 'restoring-normal-layout') return
+  const page = app.querySelector<HTMLElement>('.player-selection-page')
+  const closingPlayerId = activePlayerInputId
+  const activeIndex = players.findIndex((player) => player.id === closingPlayerId)
   const transitionId = ++focusTransitionId
   cancelPlayerPositionWork()
   focusTransitionState = 'restoring-normal-layout'
@@ -1744,30 +1760,44 @@ function restoreNormalPlayerLayout() {
   activePlayerInputId = null
   pendingSelectAllPlayerId = null
   pointerPlayerInputId = null
-
-  const content = playerMotionElement?.isConnected
-    ? playerMotionElement
-    : app.querySelector<HTMLElement>('.player-selection-page .setup-shell')
-  const page = app.querySelector<HTMLElement>('.player-selection-page')
-  const normalMaxScrollTop = page ? Math.max(0, page.scrollHeight - page.clientHeight) : 0
-  const currentScrollTop = page?.scrollTop ?? 0
-  const effectiveNormalScrollTop = currentScrollTop - playerMotionOffset
-  const targetScrollTop = Math.max(0, Math.min(effectiveNormalScrollTop, normalMaxScrollTop))
-  if (!content || (Math.abs(playerMotionOffset) < .5 && Math.abs(currentScrollTop - targetScrollTop) < 2)) {
-    if (page) page.scrollTop = targetScrollTop
-    finishNormalPlayerLayout(transitionId, content)
+  if (!page) {
+    finishNormalPlayerLayout(transitionId)
     return
   }
-  void animatePlayerContentTo(content, 0, transitionId, page, targetScrollTop).then((completed) => {
-    if (completed) finishNormalPlayerLayout(transitionId, content)
-  })
+  if (activeIndex === 0) {
+    void animatePlayerPageScroll(page, 0, transitionId).then((completed) => {
+      if (!completed) return
+      temporaryKeyboardSpacer = 0
+      persistentBottomSpacer = 0
+      applyPlayerSelectionSpacers(page)
+      finishNormalPlayerLayout(transitionId)
+    })
+    return
+  }
+  preservePlayerSelectionAfterKeyboard(page, closingPlayerId)
+  finishNormalPlayerLayout(transitionId)
 }
 
-function finishNormalPlayerLayout(transitionId: number, content: HTMLElement | null) {
+function preservePlayerSelectionAfterKeyboard(page: HTMLElement, playerId: string | null) {
+  const row = playerId
+    ? app.querySelector<HTMLElement>(`[data-player-row="${playerId}"]`)
+    : null
+  const preservedScrollTop = page.scrollTop
+  const preservedPlayerTop = row?.getBoundingClientRect().top
+  updatePersistentBottomSpacer(page)
+  if (temporaryKeyboardSpacer > 0) {
+    persistentBottomSpacer = Math.max(persistentBottomSpacer, temporaryKeyboardSpacer)
+    temporaryKeyboardSpacer = 0
+    applyPlayerSelectionSpacers(page)
+  }
+  page.scrollTop = preservedScrollTop
+  if (row && preservedPlayerTop !== undefined) {
+    page.scrollTop += row.getBoundingClientRect().top - preservedPlayerTop
+  }
+}
+
+function finishNormalPlayerLayout(transitionId: number) {
   if (transitionId !== focusTransitionId) return
-  content?.style.removeProperty('transform')
-  playerMotionElement = null
-  playerMotionOffset = 0
   updatePlayerInputTabState(null)
   app.querySelector('.player-selection-page')?.classList.remove('is-player-keyboard-open')
   focusTransitionState = 'idle'
@@ -1776,9 +1806,6 @@ function finishNormalPlayerLayout(transitionId: number, content: HTMLElement | n
 function finishNormalPlayerLayoutImmediately() {
   focusTransitionId += 1
   cancelPlayerPositionWork()
-  playerMotionElement?.style.removeProperty('transform')
-  playerMotionElement = null
-  playerMotionOffset = 0
   updatePlayerInputTabState(null)
   activePlayerInputId = null
   pendingFocusPlayerId = null
@@ -1794,72 +1821,59 @@ async function positionActivePlayer(transitionId: number) {
   const input = app.querySelector<HTMLInputElement>(`[data-player-entry="${playerId}"]`)
   const row = input?.closest<HTMLElement>('[data-player-row]')
   const content = input?.closest<HTMLElement>('.setup-shell')
+  const page = input?.closest<HTMLElement>('.player-selection-page')
   const viewport = window.visualViewport
-  if (!input || !row || !content || document.activeElement !== input) return false
-  if (playerMotionElement !== content) {
-    if (playerMotionFrame) cancelAnimationFrame(playerMotionFrame)
-    playerMotionElement?.style.removeProperty('transform')
-    playerMotionFrame = 0
-    playerMotionElement = content
-    playerMotionOffset = 0
-  }
+  if (!input || !row || !content || !page || document.activeElement !== input) return false
   const keyboardHeight = viewport
     ? Math.max(0, maximumVisualViewportHeight - viewport.height - viewport.offsetTop)
     : 0
   if (keyboardHeight <= 40) return false
   const keyboardTop = (viewport?.offsetTop ?? 0) + (viewport?.height ?? window.innerHeight)
+  lastPlayerKeyboardTop = keyboardTop
+  const neededTemporarySpacer = Math.max(
+    0,
+    requiredBottomSpacerForTarget(page, row, keyboardTop) - persistentBottomSpacer,
+  )
+  if (neededTemporarySpacer > temporaryKeyboardSpacer) {
+    temporaryKeyboardSpacer = neededTemporarySpacer
+    applyPlayerSelectionSpacers(page)
+  }
   const targetBottom = keyboardTop - ACTIVE_PLAYER_KEYBOARD_GAP
-  const currentBottom = row.getBoundingClientRect().bottom
-  const untransformedBottom = currentBottom - playerMotionOffset
-  const absoluteTargetOffset = targetBottom - untransformedBottom
-  if (Math.abs(absoluteTargetOffset - playerMotionOffset) <= 2) {
-    playerMotionOffset = absoluteTargetOffset
-    content.style.transform = `translate3d(0, ${absoluteTargetOffset.toFixed(2)}px, 0)`
+  const targetScrollTop = Math.max(0, page.scrollTop + row.getBoundingClientRect().bottom - targetBottom)
+  if (Math.abs(targetScrollTop - page.scrollTop) <= 2) {
+    page.scrollTop = targetScrollTop
     return true
   }
-  return animatePlayerContentTo(content, absoluteTargetOffset, transitionId)
+  return animatePlayerPageScroll(page, targetScrollTop, transitionId)
 }
 
-function animatePlayerContentTo(
-  content: HTMLElement,
-  targetOffset: number,
-  transitionId: number,
-  scrollContainer?: HTMLElement | null,
-  targetScrollTop = scrollContainer?.scrollTop ?? 0,
-) {
+function animatePlayerPageScroll(page: HTMLElement, targetScrollTop: number, transitionId: number) {
   if (playerMotionFrame) cancelAnimationFrame(playerMotionFrame)
-  playerMotionElement = content
   playerMotionFrame = 0
-  const startOffset = playerMotionOffset
-  const distance = targetOffset - startOffset
-  const startScrollTop = scrollContainer?.scrollTop ?? targetScrollTop
+  const startScrollTop = page.scrollTop
   const scrollDistance = targetScrollTop - startScrollTop
-  if (Math.abs(distance) < .5 && Math.abs(scrollDistance) < .5) {
-    playerMotionOffset = targetOffset
-    content.style.transform = `translate3d(0, ${targetOffset.toFixed(2)}px, 0)`
-    if (scrollContainer) scrollContainer.scrollTop = targetScrollTop
+  if (Math.abs(scrollDistance) < .5) {
+    page.scrollTop = targetScrollTop
     return Promise.resolve(true)
   }
   const startedAt = performance.now()
   const duration = lastKeyboardAnimationDuration
   return new Promise<boolean>((resolve) => {
     const animate = (now: number) => {
-      if (transitionId !== focusTransitionId || playerMotionElement !== content) {
+      if (transitionId !== focusTransitionId || !page.isConnected) {
         playerMotionFrame = 0
         resolve(false)
         return
       }
       const progress = Math.min(1, (now - startedAt) / duration)
       const easedProgress = 1 - Math.pow(1 - progress, 3)
-      playerMotionOffset = startOffset + distance * easedProgress
-      playerMotionElement.style.transform = `translate3d(0, ${playerMotionOffset.toFixed(2)}px, 0)`
-      if (scrollContainer) scrollContainer.scrollTop = startScrollTop + scrollDistance * easedProgress
+      page.scrollTop = startScrollTop + scrollDistance * easedProgress
       if (progress < 1) {
         playerMotionFrame = requestAnimationFrame(animate)
         return
       }
       playerMotionFrame = 0
-      playerMotionOffset = targetOffset
+      page.scrollTop = targetScrollTop
       resolve(true)
     }
     playerMotionFrame = requestAnimationFrame(animate)
