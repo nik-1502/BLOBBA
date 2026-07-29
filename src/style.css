@@ -1764,6 +1764,10 @@ html[data-theme='neon'] .home-page::after {
     radial-gradient(ellipse 98% 88% at 50% 43%, transparent 0%, rgba(2, 0, 8, .20) 62%, rgba(0, 0, 0, .78) 100%);
 }
 
+html[data-theme='neon'] .home-page .hero-header {
+  transform: translate(0, 16px);
+}
+
 html[data-theme='neon'] .home-page .hero-logo {
   width: min(
     100%,
