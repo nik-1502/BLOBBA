@@ -94,6 +94,8 @@ let pendingKeyboardPositionCleanup: (() => void) | undefined
 let maximumVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
 const ACTIVE_PLAYER_KEYBOARD_GAP = 68
 const DEFAULT_IOS_KEYBOARD_DURATION = 250
+const ANIMATION_SPEED_MULTIPLIER = 1.15
+const KEYBOARD_FRAME_FOLLOW_FACTOR = 1 / ANIMATION_SPEED_MULTIPLIER
 const VIEWPORT_ANIMATION_EPSILON = .5
 const REQUIRED_STABLE_VIEWPORT_FRAMES = 3
 const PLAYER_TAP_MOVE_THRESHOLD = 8
@@ -111,7 +113,7 @@ let playerMotionFrame = 0
 let keyboardTrackingFrame = 0
 let playerMotionOffset = 0
 let playerMotionElement: HTMLElement | null = null
-let lastKeyboardAnimationDuration = DEFAULT_IOS_KEYBOARD_DURATION
+let lastKeyboardAnimationDuration = DEFAULT_IOS_KEYBOARD_DURATION * ANIMATION_SPEED_MULTIPLIER
 let lastVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
 let lastVisualViewportOffsetTop = window.visualViewport?.offsetTop ?? 0
 let playerTapPointerId: number | null = null
@@ -1242,8 +1244,8 @@ function trackKeyboardOpening(
 
       if (stableFrames >= REQUIRED_STABLE_VIEWPORT_FRAMES) {
         keyboardTrackingFrame = 0
-        lastKeyboardAnimationDuration = Math.max(180, Math.min(now - movementStartedAt, 450))
-        applyPlayerPositionForKeyboardTop(row, content, offsetTop + height)
+        lastKeyboardAnimationDuration = adjustedKeyboardAnimationDuration(now - movementStartedAt)
+        applyPlayerPositionForKeyboardTop(row, content, offsetTop + height, true)
         resolve(true)
         return
       }
@@ -1262,6 +1264,7 @@ function applyPlayerPositionForKeyboardTop(
   row: HTMLElement,
   content: HTMLElement,
   keyboardTop: number,
+  snapToTarget = false,
 ) {
   if (playerMotionElement !== content) {
     playerMotionElement?.style.removeProperty('transform')
@@ -1269,8 +1272,15 @@ function applyPlayerPositionForKeyboardTop(
     playerMotionOffset = 0
   }
   const untransformedBottom = row.getBoundingClientRect().bottom - playerMotionOffset
-  playerMotionOffset = keyboardTop - ACTIVE_PLAYER_KEYBOARD_GAP - untransformedBottom
+  const targetOffset = keyboardTop - ACTIVE_PLAYER_KEYBOARD_GAP - untransformedBottom
+  playerMotionOffset = snapToTarget
+    ? targetOffset
+    : playerMotionOffset + (targetOffset - playerMotionOffset) * KEYBOARD_FRAME_FOLLOW_FACTOR
   content.style.transform = `translate3d(0, ${playerMotionOffset.toFixed(2)}px, 0)`
+}
+
+function adjustedKeyboardAnimationDuration(measuredDuration: number) {
+  return Math.max(230, Math.min(measuredDuration * ANIMATION_SPEED_MULTIPLIER, 360))
 }
 
 async function beginPlayerFocusTransition(input: HTMLInputElement, selectAll: boolean) {
@@ -1358,6 +1368,7 @@ function startKeyboardSynchronizedClose(startKeyboardTop: number) {
   let previousHeight = window.visualViewport?.height ?? window.innerHeight
   let previousOffsetTop = window.visualViewport?.offsetTop ?? 0
   let stableFrames = 0
+  let smoothedProgress = 0
 
   const updateFrame = (now: number) => {
     if (transitionId !== focusTransitionId || !content.isConnected || !page.isConnected) {
@@ -1368,10 +1379,11 @@ function startKeyboardSynchronizedClose(startKeyboardTop: number) {
     const height = viewport?.height ?? window.innerHeight
     const offsetTop = viewport?.offsetTop ?? 0
     const keyboardTop = offsetTop + height
-    const progress = Math.max(0, Math.min((keyboardTop - startKeyboardTop) / keyboardTravel, 1))
-    playerMotionOffset = startOffset * (1 - progress)
+    const rawProgress = Math.max(0, Math.min((keyboardTop - startKeyboardTop) / keyboardTravel, 1))
+    smoothedProgress += (rawProgress - smoothedProgress) * KEYBOARD_FRAME_FOLLOW_FACTOR
+    playerMotionOffset = startOffset * (1 - smoothedProgress)
     content.style.transform = `translate3d(0, ${playerMotionOffset.toFixed(2)}px, 0)`
-    page.scrollTop = startScrollTop + (targetScrollTop - startScrollTop) * progress
+    page.scrollTop = startScrollTop + (targetScrollTop - startScrollTop) * smoothedProgress
 
     const viewportStable = Math.abs(height - previousHeight) <= VIEWPORT_ANIMATION_EPSILON
       && Math.abs(offsetTop - previousOffsetTop) <= VIEWPORT_ANIMATION_EPSILON
@@ -1379,9 +1391,12 @@ function startKeyboardSynchronizedClose(startKeyboardTop: number) {
     previousHeight = height
     previousOffsetTop = offsetTop
 
-    if (progress >= 1 || stableFrames >= REQUIRED_STABLE_VIEWPORT_FRAMES) {
+    const smoothingSettled = Math.abs(rawProgress - smoothedProgress) <= .005
+    if ((rawProgress >= 1 && smoothingSettled)
+      || (stableFrames >= REQUIRED_STABLE_VIEWPORT_FRAMES && smoothingSettled)
+      || stableFrames >= 12) {
       keyboardTrackingFrame = 0
-      lastKeyboardAnimationDuration = Math.max(180, Math.min(now - startedAt, 450))
+      lastKeyboardAnimationDuration = adjustedKeyboardAnimationDuration(now - startedAt)
       playerMotionOffset = 0
       content.style.transform = 'translate3d(0, 0, 0)'
       page.scrollTop = targetScrollTop
