@@ -92,6 +92,18 @@ let pendingInviteCode: string | null = null
 let onlineNotice = ''
 let pendingKeyboardPositionCleanup: (() => void) | undefined
 let maximumVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
+const ACTIVE_PLAYER_KEYBOARD_GAP = 68
+type PlayerActivationSource = 'add' | 'tap' | 'keyboard-navigation'
+let activePlayerInputId: string | null = null
+let pendingSelectAllPlayerId: string | null = null
+let pointerPlayerInputId: string | null = null
+let playerPositionUpdateFrame = 0
+let playerPositionMeasureFrame = 0
+let playerMotionFrame = 0
+let playerMotionOffset = 0
+let playerMotionTarget = 0
+let playerMotionElement: HTMLElement | null = null
+let playerMotionLastTime = 0
 let appTheme = loadAppTheme()
 
 function loadAppTheme(): AppTheme {
@@ -900,29 +912,17 @@ function bindOfflineSetup() {
     if (!playerId) return
     editingPlayerId = playerId
     renderModeMenu()
-    focusPlayerNameInput(playerId)
+    activatePlayerInput(playerId, { selectAll: true, source: 'tap' })
   }))
   app.querySelectorAll<HTMLInputElement>('[data-player-entry]').forEach((input) => {
-    const selectName = () => requestAnimationFrame(() => {
-      input.select()
-      input.setSelectionRange(0, input.value.length)
-    })
-    input.addEventListener('focus', () => {
-      positionFocusedPlayerAboveKeyboard(input)
-      selectName()
-    })
-    input.addEventListener('click', (event) => {
-      event.stopPropagation()
-    })
-    input.addEventListener('pointerdown', (event) => {
-      event.stopPropagation()
-    })
+    input.addEventListener('focus', () => handlePlayerInputFocus(input))
+    input.addEventListener('click', (event) => event.stopPropagation())
+    input.addEventListener('pointerdown', (event) => handlePlayerInputPointerDown(event, input))
     input.addEventListener('pointerup', (event) => event.stopPropagation())
     input.addEventListener('touchstart', (event) => event.stopPropagation(), { passive: true })
-    input.addEventListener('touchend', (event) => {
-      event.stopPropagation()
-    }, { passive: true })
+    input.addEventListener('touchend', (event) => event.stopPropagation(), { passive: true })
     input.addEventListener('input', () => {
+      clearPlayerNameSelection(input)
       players = players.map((player) => player.id === input.dataset.playerEntry ? { ...player, name: input.value } : player)
     })
   })
@@ -970,127 +970,185 @@ function bindOfflineSetup() {
     players.push(player)
     editingPlayerId = player.id
     renderModeMenu()
-    focusPlayerNameInput(player.id, true)
+    activatePlayerInput(player.id, { selectAll: true, source: 'add' })
   })
   app.querySelector<HTMLButtonElement>('[data-start-game]')!.addEventListener('click', () => {
     startSetupGame(players, true)
   })
 }
 
-function focusPlayerNameInput(playerId: string, confirmSelection = false) {
+function activatePlayerInput(
+  playerId: string,
+  options: { selectAll: boolean; source: PlayerActivationSource },
+) {
   const input = app.querySelector<HTMLInputElement>(`[data-player-entry="${playerId}"]`)
   if (!input) return
-  input.focus({ preventScroll: true })
-  const selectionTimers: number[] = []
-  let userStartedEditing = false
-  const selectPlayerName = () => {
-    if (userStartedEditing || !input.isConnected || document.activeElement !== input) return
-    if (confirmSelection) input.classList.add('is-new-player-name-selected')
-    input.select()
-    input.setSelectionRange(0, input.value.length)
+  const isAlreadyActive = activePlayerInputId === playerId && document.activeElement === input
+  pendingSelectAllPlayerId = options.selectAll && !isAlreadyActive ? playerId : null
+  if (isAlreadyActive) {
+    clearPlayerNameSelection(input)
+    return
   }
-  requestAnimationFrame(selectPlayerName)
-  if (confirmSelection) {
-    const stopSelectionConfirmation = () => {
-      userStartedEditing = true
-      input.classList.remove('is-new-player-name-selected')
-      selectionTimers.forEach((timer) => window.clearTimeout(timer))
-      window.visualViewport?.removeEventListener('resize', selectPlayerName)
-    }
-    input.addEventListener('beforeinput', stopSelectionConfirmation, { once: true })
-    input.addEventListener('keydown', stopSelectionConfirmation, { once: true })
-    input.addEventListener('pointerdown', stopSelectionConfirmation, { once: true })
-    input.addEventListener('blur', stopSelectionConfirmation, { once: true })
-    window.visualViewport?.addEventListener('resize', selectPlayerName)
-    ;[60, 160, 300, 480, 700].forEach((delay) => {
-      selectionTimers.push(window.setTimeout(selectPlayerName, delay))
-    })
-    selectionTimers.push(window.setTimeout(() => {
-      window.visualViewport?.removeEventListener('resize', selectPlayerName)
-    }, 900))
-  }
-  positionAddPlayerOnceAboveKeyboard()
+  input.focus({ preventScroll: options.source === 'add' })
+  if (document.activeElement === input) handlePlayerInputFocus(input)
 }
 
-function playerKeyboardScrollContainer(element: HTMLElement, stage: HTMLElement) {
-  const page = element.closest<HTMLElement>('.player-selection-page')
-  return page?.classList.contains('is-content-expanded')
-    ? page
-    : element.closest<HTMLElement>('.offline-panel') ?? stage
+function handlePlayerInputPointerDown(event: PointerEvent, input: HTMLInputElement) {
+  event.stopPropagation()
+  const playerId = input.dataset.playerEntry ?? null
+  pointerPlayerInputId = playerId
+  if (playerId && activePlayerInputId === playerId && document.activeElement === input) {
+    pendingSelectAllPlayerId = null
+    clearPlayerNameSelection(input)
+  } else if (playerId && document.activeElement === input) {
+    pendingSelectAllPlayerId = playerId
+    requestAnimationFrame(() => handlePlayerInputFocus(input))
+  }
 }
 
-function positionFocusedPlayerAboveKeyboard(input: HTMLInputElement) {
-  const row = input.closest<HTMLElement>('[data-player-row]')
-  const stage = app.querySelector<HTMLElement>('.setup-stage')
-  const addPlayerButton = app.querySelector<HTMLElement>('[data-add-player]')
-  if (!row || !stage || !addPlayerButton) return
-  const scrollContainer = playerKeyboardScrollContainer(input, stage)
-  const lastRow = app.querySelector<HTMLElement>('[data-player-row]:last-child')
-  if (!lastRow) return
-
-  const position = () => requestAnimationFrame(() => {
-    const visibleBottom = window.visualViewport
-      ? window.visualViewport.offsetTop + window.visualViewport.height
-      : window.innerHeight
-    const addButtonRect = addPlayerButton.getBoundingClientRect()
-    const rowGap = Math.max(8, addButtonRect.top - lastRow.getBoundingClientRect().bottom)
-    const targetRowBottom = visibleBottom - 10 - addButtonRect.height - rowGap
-    const delta = row.getBoundingClientRect().bottom - targetRowBottom
-    if (Math.abs(delta) >= 1) scrollContainer.scrollTop += delta
+function handlePlayerInputFocus(input: HTMLInputElement) {
+  const playerId = input.dataset.playerEntry
+  if (!playerId) return
+  const changedPlayer = activePlayerInputId !== playerId
+  const samePlayerTap = pointerPlayerInputId === playerId && !changedPlayer
+  const selectAll = !samePlayerTap && (changedPlayer || pendingSelectAllPlayerId === playerId)
+  pointerPlayerInputId = null
+  activePlayerInputId = playerId
+  pendingSelectAllPlayerId = null
+  app.querySelectorAll<HTMLInputElement>('[data-player-entry]').forEach((entry) => {
+    if (entry !== input) clearPlayerNameSelection(entry)
   })
-
-  position()
-  ;[80, 180, 320].forEach((delay) => window.setTimeout(position, delay))
+  if (selectAll) selectEntirePlayerName(input)
+  bindActivePlayerViewport()
+  scheduleActivePlayerPositionUpdate()
 }
 
-function positionAddPlayerOnceAboveKeyboard() {
-  pendingKeyboardPositionCleanup?.()
-  const viewport = window.visualViewport
-  const stage = app.querySelector<HTMLElement>('.setup-stage')
-  const addPlayerButton = app.querySelector<HTMLElement>('[data-add-player]')
-  if (!stage || !addPlayerButton) return
-  const scrollContainer = playerKeyboardScrollContainer(addPlayerButton, stage)
-  const settleTimers: number[] = []
+function selectEntirePlayerName(input: HTMLInputElement) {
+  input.classList.add('is-new-player-name-selected')
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (document.activeElement !== input || !input.isConnected) return
+      input.select()
+      input.setSelectionRange(0, input.value.length)
+    })
+  })
+}
 
+function clearPlayerNameSelection(input: HTMLInputElement) {
+  input.classList.remove('is-new-player-name-selected')
+}
+
+function bindActivePlayerViewport() {
+  if (pendingKeyboardPositionCleanup) return
+  const viewport = window.visualViewport
   const cleanup = () => {
-    viewport?.removeEventListener('resize', position)
-    viewport?.removeEventListener('scroll', position)
-    window.removeEventListener('resize', position)
-    window.removeEventListener('scroll', position)
-    settleTimers.forEach((timer) => window.clearTimeout(timer))
-    scrollContainer.style.removeProperty('padding-bottom')
+    viewport?.removeEventListener('resize', handleVisualViewportChange)
+    viewport?.removeEventListener('scroll', handleVisualViewportChange)
+    window.removeEventListener('resize', handleVisualViewportChange)
+    if (playerPositionUpdateFrame) cancelAnimationFrame(playerPositionUpdateFrame)
+    if (playerPositionMeasureFrame) cancelAnimationFrame(playerPositionMeasureFrame)
+    if (playerMotionFrame) cancelAnimationFrame(playerMotionFrame)
+    playerPositionUpdateFrame = 0
+    playerPositionMeasureFrame = 0
+    playerMotionFrame = 0
+    playerMotionElement?.style.removeProperty('transform')
+    playerMotionElement = null
+    playerMotionOffset = 0
+    playerMotionTarget = 0
+    activePlayerInputId = null
+    pendingSelectAllPlayerId = null
+    pointerPlayerInputId = null
+    const page = app.querySelector<HTMLElement>('.player-selection-page')
+    page?.classList.remove('is-player-keyboard-open')
     if (pendingKeyboardPositionCleanup === cleanup) pendingKeyboardPositionCleanup = undefined
   }
-  const position = () => {
-    if (viewport) maximumVisualViewportHeight = Math.max(maximumVisualViewportHeight, viewport.height)
-    const visibleBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight
-    const keyboardHeight = viewport
-      ? Math.max(0, maximumVisualViewportHeight - viewport.height - viewport.offsetTop)
-      : 0
-    stage.style.setProperty('--keyboard-position-space', `${Math.ceil(keyboardHeight)}px`)
-    if (keyboardHeight > 40) {
-      scrollContainer.style.paddingBottom = `${Math.ceil(keyboardHeight + 16)}px`
-    } else {
-      scrollContainer.style.removeProperty('padding-bottom')
-    }
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        const targetBottom = Math.min(visibleBottom, scrollContainer.getBoundingClientRect().bottom) - 10
-        const delta = addPlayerButton.getBoundingClientRect().bottom - targetBottom
-        if (delta > 0) scrollContainer.scrollTop += delta
-      })
-    })
-  }
-
   pendingKeyboardPositionCleanup = cleanup
-  viewport?.addEventListener('resize', position)
-  viewport?.addEventListener('scroll', position)
-  window.addEventListener('resize', position)
-  window.addEventListener('scroll', position)
-  position()
-  ;[80, 180, 320, 520, 760, 1100, 1500].forEach((delay) => {
-    settleTimers.push(window.setTimeout(position, delay))
+  viewport?.addEventListener('resize', handleVisualViewportChange)
+  viewport?.addEventListener('scroll', handleVisualViewportChange)
+  window.addEventListener('resize', handleVisualViewportChange)
+}
+
+function handleVisualViewportChange() {
+  const viewport = window.visualViewport
+  if (viewport) maximumVisualViewportHeight = Math.max(maximumVisualViewportHeight, viewport.height)
+  const keyboardHeight = viewport
+    ? Math.max(0, maximumVisualViewportHeight - viewport.height - viewport.offsetTop)
+    : 0
+  const page = app.querySelector<HTMLElement>('.player-selection-page')
+  if (keyboardHeight <= 40) {
+    page?.classList.remove('is-player-keyboard-open')
+    app.querySelectorAll<HTMLInputElement>('[data-player-entry]').forEach(clearPlayerNameSelection)
+    activePlayerInputId = null
+    pendingSelectAllPlayerId = null
+    resetPlayerContentOffset()
+    return
+  }
+  page?.classList.add('is-player-keyboard-open')
+  scheduleActivePlayerPositionUpdate()
+}
+
+function scheduleActivePlayerPositionUpdate() {
+  if (playerPositionUpdateFrame) cancelAnimationFrame(playerPositionUpdateFrame)
+  if (playerPositionMeasureFrame) cancelAnimationFrame(playerPositionMeasureFrame)
+  playerPositionUpdateFrame = requestAnimationFrame(() => {
+    playerPositionUpdateFrame = 0
+    playerPositionMeasureFrame = requestAnimationFrame(() => {
+      playerPositionMeasureFrame = 0
+      positionActivePlayer()
+    })
   })
+}
+
+function positionActivePlayer() {
+  if (!activePlayerInputId) return
+  const input = app.querySelector<HTMLInputElement>(`[data-player-entry="${activePlayerInputId}"]`)
+  const row = input?.closest<HTMLElement>('[data-player-row]')
+  const content = input?.closest<HTMLElement>('.setup-shell')
+  const viewport = window.visualViewport
+  if (!input || !row || !content || document.activeElement !== input) return
+  const keyboardHeight = viewport
+    ? Math.max(0, maximumVisualViewportHeight - viewport.height - viewport.offsetTop)
+    : 0
+  if (keyboardHeight <= 40) return
+  const keyboardTop = (viewport?.offsetTop ?? 0) + (viewport?.height ?? window.innerHeight)
+  const targetBottom = keyboardTop - ACTIVE_PLAYER_KEYBOARD_GAP
+  const delta = targetBottom - row.getBoundingClientRect().bottom
+  animatePlayerContentTo(content, playerMotionOffset + delta)
+}
+
+function animatePlayerContentTo(content: HTMLElement, targetOffset: number) {
+  playerMotionElement = content
+  playerMotionTarget = targetOffset
+  if (playerMotionFrame) return
+  playerMotionLastTime = performance.now()
+  const animate = (now: number) => {
+    if (!playerMotionElement) {
+      playerMotionFrame = 0
+      return
+    }
+    const elapsed = Math.min(34, now - playerMotionLastTime)
+    playerMotionLastTime = now
+    const remaining = playerMotionTarget - playerMotionOffset
+    const progress = 1 - Math.exp(-elapsed / 52)
+    playerMotionOffset += remaining * progress
+    if (Math.abs(remaining) < .5) playerMotionOffset = playerMotionTarget
+    playerMotionElement.style.transform = `translate3d(0, ${playerMotionOffset.toFixed(2)}px, 0)`
+    if (playerMotionOffset !== playerMotionTarget) {
+      playerMotionFrame = requestAnimationFrame(animate)
+      return
+    }
+    playerMotionFrame = 0
+  }
+  playerMotionFrame = requestAnimationFrame(animate)
+}
+
+function resetPlayerContentOffset() {
+  if (playerMotionFrame) cancelAnimationFrame(playerMotionFrame)
+  playerMotionFrame = 0
+  playerMotionOffset = 0
+  playerMotionTarget = 0
+  playerMotionElement?.style.removeProperty('transform')
+  playerMotionElement = null
 }
 
 function bindOnlineSetup() {

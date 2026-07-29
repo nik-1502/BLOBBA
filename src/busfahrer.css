@@ -902,6 +902,10 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   width: min(1180px, 100%);
 }
 
+.player-selection-page.is-player-keyboard-open .setup-shell {
+  will-change: transform;
+}
+
 .player-selection-page .busfahrer-header {
   min-height: 48px;
 }
