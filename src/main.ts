@@ -97,13 +97,11 @@ type PlayerActivationSource = 'add' | 'tap' | 'keyboard-navigation'
 let activePlayerInputId: string | null = null
 let pendingSelectAllPlayerId: string | null = null
 let pointerPlayerInputId: string | null = null
-let playerPositionUpdateFrame = 0
-let playerPositionMeasureFrame = 0
+let playerPositionFrame = 0
 let playerMotionFrame = 0
 let playerMotionOffset = 0
-let playerMotionTarget = 0
 let playerMotionElement: HTMLElement | null = null
-let playerMotionLastTime = 0
+let playerMotionNeedsFinalMeasurement = false
 let appTheme = loadAppTheme()
 
 function loadAppTheme(): AppTheme {
@@ -929,18 +927,9 @@ function bindOfflineSetup() {
   app.querySelectorAll<HTMLButtonElement>('[data-remove-player]').forEach((button) => button.addEventListener('click', () => {
     if (players.length === 1) return
     playActionSound('remove-player')
-    const previousPageScroll = app.querySelector<HTMLElement>('.player-selection-page')?.scrollTop ?? 0
-    const previousWindowScroll = window.scrollY
     if (editingPlayerId === button.dataset.removePlayer) editingPlayerId = null
     players = players.filter((player) => player.id !== button.dataset.removePlayer)
     renderModeMenu()
-    const restoreScrollPosition = () => {
-      const page = app.querySelector<HTMLElement>('.player-selection-page')
-      if (page) page.scrollTop = previousPageScroll
-      window.scrollTo({ top: previousWindowScroll, behavior: 'instant' })
-    }
-    restoreScrollPosition()
-    requestAnimationFrame(restoreScrollPosition)
   }))
   app.querySelectorAll<HTMLButtonElement>('[data-edit-player-avatar]').forEach((button) => button.addEventListener('click', () => {
     playSound('ui-click')
@@ -989,7 +978,7 @@ function activatePlayerInput(
     clearPlayerNameSelection(input)
     return
   }
-  input.focus({ preventScroll: options.source === 'add' })
+  input.focus({ preventScroll: true })
   if (document.activeElement === input) handlePlayerInputFocus(input)
 }
 
@@ -1002,7 +991,7 @@ function handlePlayerInputPointerDown(event: PointerEvent, input: HTMLInputEleme
     clearPlayerNameSelection(input)
   } else if (playerId && document.activeElement === input) {
     pendingSelectAllPlayerId = playerId
-    requestAnimationFrame(() => handlePlayerInputFocus(input))
+    queueMicrotask(() => handlePlayerInputFocus(input))
   }
 }
 
@@ -1020,17 +1009,16 @@ function handlePlayerInputFocus(input: HTMLInputElement) {
   })
   if (selectAll) selectEntirePlayerName(input)
   bindActivePlayerViewport()
+  cancelPlayerMotionForRemeasure()
   scheduleActivePlayerPositionUpdate()
 }
 
 function selectEntirePlayerName(input: HTMLInputElement) {
   input.classList.add('is-new-player-name-selected')
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      if (document.activeElement !== input || !input.isConnected) return
-      input.select()
-      input.setSelectionRange(0, input.value.length)
-    })
+  queueMicrotask(() => {
+    if (document.activeElement !== input || !input.isConnected) return
+    input.select()
+    input.setSelectionRange(0, input.value.length)
   })
 }
 
@@ -1045,16 +1033,14 @@ function bindActivePlayerViewport() {
     viewport?.removeEventListener('resize', handleVisualViewportChange)
     viewport?.removeEventListener('scroll', handleVisualViewportChange)
     window.removeEventListener('resize', handleVisualViewportChange)
-    if (playerPositionUpdateFrame) cancelAnimationFrame(playerPositionUpdateFrame)
-    if (playerPositionMeasureFrame) cancelAnimationFrame(playerPositionMeasureFrame)
+    if (playerPositionFrame) cancelAnimationFrame(playerPositionFrame)
     if (playerMotionFrame) cancelAnimationFrame(playerMotionFrame)
-    playerPositionUpdateFrame = 0
-    playerPositionMeasureFrame = 0
+    playerPositionFrame = 0
     playerMotionFrame = 0
     playerMotionElement?.style.removeProperty('transform')
     playerMotionElement = null
     playerMotionOffset = 0
-    playerMotionTarget = 0
+    playerMotionNeedsFinalMeasurement = false
     activePlayerInputId = null
     pendingSelectAllPlayerId = null
     pointerPlayerInputId = null
@@ -1088,15 +1074,21 @@ function handleVisualViewportChange() {
 }
 
 function scheduleActivePlayerPositionUpdate() {
-  if (playerPositionUpdateFrame) cancelAnimationFrame(playerPositionUpdateFrame)
-  if (playerPositionMeasureFrame) cancelAnimationFrame(playerPositionMeasureFrame)
-  playerPositionUpdateFrame = requestAnimationFrame(() => {
-    playerPositionUpdateFrame = 0
-    playerPositionMeasureFrame = requestAnimationFrame(() => {
-      playerPositionMeasureFrame = 0
-      positionActivePlayer()
-    })
+  if (playerMotionFrame) {
+    playerMotionNeedsFinalMeasurement = true
+    return
+  }
+  if (playerPositionFrame) cancelAnimationFrame(playerPositionFrame)
+  playerPositionFrame = requestAnimationFrame(() => {
+    playerPositionFrame = 0
+    positionActivePlayer()
   })
+}
+
+function cancelPlayerMotionForRemeasure() {
+  if (playerMotionFrame) cancelAnimationFrame(playerMotionFrame)
+  playerMotionFrame = 0
+  playerMotionNeedsFinalMeasurement = false
 }
 
 function positionActivePlayer() {
@@ -1106,47 +1098,69 @@ function positionActivePlayer() {
   const content = input?.closest<HTMLElement>('.setup-shell')
   const viewport = window.visualViewport
   if (!input || !row || !content || document.activeElement !== input) return
+  if (playerMotionElement !== content) {
+    if (playerMotionFrame) cancelAnimationFrame(playerMotionFrame)
+    playerMotionElement?.style.removeProperty('transform')
+    playerMotionFrame = 0
+    playerMotionElement = content
+    playerMotionOffset = 0
+  }
   const keyboardHeight = viewport
     ? Math.max(0, maximumVisualViewportHeight - viewport.height - viewport.offsetTop)
     : 0
   if (keyboardHeight <= 40) return
   const keyboardTop = (viewport?.offsetTop ?? 0) + (viewport?.height ?? window.innerHeight)
   const targetBottom = keyboardTop - ACTIVE_PLAYER_KEYBOARD_GAP
-  const delta = targetBottom - row.getBoundingClientRect().bottom
-  animatePlayerContentTo(content, playerMotionOffset + delta)
+  const currentBottom = row.getBoundingClientRect().bottom
+  const untransformedBottom = currentBottom - playerMotionOffset
+  const absoluteTargetOffset = targetBottom - untransformedBottom
+  animatePlayerContentTo(content, absoluteTargetOffset)
 }
 
 function animatePlayerContentTo(content: HTMLElement, targetOffset: number) {
+  if (playerMotionFrame) cancelAnimationFrame(playerMotionFrame)
   playerMotionElement = content
-  playerMotionTarget = targetOffset
-  if (playerMotionFrame) return
-  playerMotionLastTime = performance.now()
+  playerMotionFrame = 0
+  playerMotionNeedsFinalMeasurement = false
+  const startOffset = playerMotionOffset
+  const distance = targetOffset - startOffset
+  if (Math.abs(distance) < .5) {
+    playerMotionOffset = targetOffset
+    content.style.transform = `translate3d(0, ${targetOffset.toFixed(2)}px, 0)`
+    return
+  }
+  const startedAt = performance.now()
+  const duration = 240
   const animate = (now: number) => {
-    if (!playerMotionElement) {
+    if (playerMotionElement !== content) {
       playerMotionFrame = 0
       return
     }
-    const elapsed = Math.min(34, now - playerMotionLastTime)
-    playerMotionLastTime = now
-    const remaining = playerMotionTarget - playerMotionOffset
-    const progress = 1 - Math.exp(-elapsed / 52)
-    playerMotionOffset += remaining * progress
-    if (Math.abs(remaining) < .5) playerMotionOffset = playerMotionTarget
+    const progress = Math.min(1, (now - startedAt) / duration)
+    const easedProgress = 1 - Math.pow(1 - progress, 3)
+    playerMotionOffset = startOffset + distance * easedProgress
     playerMotionElement.style.transform = `translate3d(0, ${playerMotionOffset.toFixed(2)}px, 0)`
-    if (playerMotionOffset !== playerMotionTarget) {
+    if (progress < 1) {
       playerMotionFrame = requestAnimationFrame(animate)
       return
     }
     playerMotionFrame = 0
+    playerMotionOffset = targetOffset
+    if (playerMotionNeedsFinalMeasurement) {
+      playerMotionNeedsFinalMeasurement = false
+      scheduleActivePlayerPositionUpdate()
+    }
   }
   playerMotionFrame = requestAnimationFrame(animate)
 }
 
 function resetPlayerContentOffset() {
   if (playerMotionFrame) cancelAnimationFrame(playerMotionFrame)
+  if (playerPositionFrame) cancelAnimationFrame(playerPositionFrame)
   playerMotionFrame = 0
+  playerPositionFrame = 0
   playerMotionOffset = 0
-  playerMotionTarget = 0
+  playerMotionNeedsFinalMeasurement = false
   playerMotionElement?.style.removeProperty('transform')
   playerMotionElement = null
 }
