@@ -1287,7 +1287,7 @@ html.is-standalone #app > .home-page {
 .home-page .hero-logo {
   position: relative;
   z-index: 2;
-  transform: translateY(-8px) scale(1.08) rotate(3deg);
+  transform: translateY(-8px) scale(1.08);
   filter: drop-shadow(0 7px 11px rgba(0, 48, 122, .24));
 }
 
