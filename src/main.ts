@@ -436,6 +436,63 @@ function bindPlayerSelectionPinch() {
 
 bindPlayerSelectionPinch()
 
+const PAGE_SCROLL_TOLERANCE = 2
+let pageScrollModeFrame = 0
+let observedPageScrollContainer: HTMLElement | null = null
+const pageScrollResizeObserver = new ResizeObserver(() => schedulePageScrollModeUpdate())
+
+function getPageScrollContainer() {
+  return app.querySelector<HTMLElement>('.player-selection-page')
+    ?? app.querySelector<HTMLElement>('.home-page')
+    ?? app.querySelector<HTMLElement>('.setup-page .setup-stage')
+    ?? app.querySelector<HTMLElement>('.busfahrer-page > .busfahrer-shell')
+}
+
+function updatePageScrollMode() {
+  pageScrollModeFrame = 0
+  if (playerPinchController.active) return
+  const container = getPageScrollContainer()
+  if (container !== observedPageScrollContainer) {
+    pageScrollResizeObserver.disconnect()
+    observedPageScrollContainer = container
+    if (container) {
+      pageScrollResizeObserver.observe(container)
+      const content = container.firstElementChild
+      if (content instanceof HTMLElement) pageScrollResizeObserver.observe(content)
+    }
+  }
+  if (!container) return
+
+  const keyboardMode = container.classList.contains('player-selection-page')
+    && (container.classList.contains('is-player-keyboard-open') || getKeyboardHeight() > 40)
+  const availableHeight = container.classList.contains('player-selection-page')
+    || container.classList.contains('home-page')
+    ? app.clientHeight
+    : container.clientHeight
+  const needsScroll = keyboardMode
+    || container.scrollHeight > availableHeight + PAGE_SCROLL_TOLERANCE
+  const wasScrollable = container.classList.contains('is-app-scrollable')
+  if (needsScroll === wasScrollable
+    && container.classList.contains(needsScroll ? 'is-app-scrollable' : 'is-app-scroll-locked')) return
+
+  container.classList.toggle('is-app-scrollable', needsScroll)
+  container.classList.toggle('is-app-scroll-locked', !needsScroll)
+  if (!needsScroll && container.scrollTop !== 0) container.scrollTop = 0
+}
+
+function schedulePageScrollModeUpdate() {
+  if (pageScrollModeFrame) return
+  pageScrollModeFrame = requestAnimationFrame(updatePageScrollMode)
+}
+
+const pageScrollMutationObserver = new MutationObserver(() => schedulePageScrollModeUpdate())
+pageScrollMutationObserver.observe(app, { childList: true, subtree: true })
+window.addEventListener('resize', schedulePageScrollModeUpdate)
+window.addEventListener('orientationchange', schedulePageScrollModeUpdate)
+window.visualViewport?.addEventListener('resize', schedulePageScrollModeUpdate)
+window.visualViewport?.addEventListener('scroll', schedulePageScrollModeUpdate)
+schedulePageScrollModeUpdate()
+
 function createId() {
   return crypto.randomUUID()
 }

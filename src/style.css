@@ -54,6 +54,24 @@ body {
 }
 
 body {
+  position: fixed;
+  inset: 0;
+}
+
+.is-app-scroll-locked {
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+  overscroll-behavior-y: none;
+}
+
+.is-app-scrollable {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+body {
   min-height: 100vh;
   min-height: 100svh;
   min-height: 100dvh;
