@@ -95,7 +95,7 @@ let maximumVisualViewportHeight = window.visualViewport?.height ?? window.innerH
 let previousVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
 const ACTIVE_PLAYER_KEYBOARD_GAP = 68
 const PLAYER_SCROLL_DURATION = 220
-type PlayerActivationSource = 'add' | 'tap' | 'keyboard-navigation'
+type PlayerActivationSource = 'add' | 'tap'
 type FocusTransitionState = 'idle' | 'waiting-for-native-focus' | 'animating' | 'restoring-normal-layout'
 let activePlayerInputId: string | null = null
 let pendingSelectAllPlayerId: string | null = null
@@ -108,6 +108,9 @@ let playerPositionFrame = 0
 let playerMotionFrame = 0
 let playerMotionOffset = 0
 let playerMotionElement: HTMLElement | null = null
+let keyboardSessionActive = false
+let keyboardSessionBaseScrollTop = 0
+let keyboardSessionSettledScrollTop = 0
 let appTheme = loadAppTheme()
 
 function loadAppTheme(): AppTheme {
@@ -768,6 +771,10 @@ function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER',
 
 function renderModeMenu() {
   const preservedMotionOffset = playerMotionOffset
+  const preservedPageScrollTop = app.querySelector<HTMLElement>('.player-selection-page')?.scrollTop ?? 0
+  const preservedKeyboardSessionActive = keyboardSessionActive
+  const preservedKeyboardSessionBaseScrollTop = keyboardSessionBaseScrollTop
+  const preservedKeyboardSessionSettledScrollTop = keyboardSessionSettledScrollTop
   const gameLayoutClass = activeGame === 'klatschen'
     ? 'player-selection-blobben'
     : 'player-selection-busfahrer'
@@ -787,6 +794,13 @@ function renderModeMenu() {
     renderedShell.style.transform = `translate3d(0, ${preservedMotionOffset.toFixed(2)}px, 0)`
     renderedShell.closest('.player-selection-page')?.classList.add('is-player-keyboard-open')
   }
+  const renderedPage = app.querySelector<HTMLElement>('.player-selection-page')
+  if (renderedPage) renderedPage.scrollTop = preservedPageScrollTop
+  if (preservedKeyboardSessionActive && getKeyboardHeight() > 40) {
+    keyboardSessionActive = true
+    keyboardSessionBaseScrollTop = preservedKeyboardSessionBaseScrollTop
+    keyboardSessionSettledScrollTop = preservedKeyboardSessionSettledScrollTop
+  }
   app.querySelector<HTMLButtonElement>('[data-add-player]')?.replaceChildren('+ Spieler')
   bindSetupModeSwitch()
   setupMode === 'offline' ? bindOfflineSetup() : bindOnlineSetup()
@@ -799,7 +813,7 @@ function expandPlayerSelectionFrameForContent() {
   const page = app.querySelector<HTMLElement>('.player-selection-page')
   const panel = page?.querySelector<HTMLElement>('.setup-game-panel')
   const content = panel?.querySelector<HTMLElement>('.offline-panel, .online-panel')
-  if (!page || !panel || !content || content.scrollHeight <= content.clientHeight + 1) return
+  if (!page || !panel || !content) return
   panel.style.setProperty('--selection-collapsed-height', `${Math.ceil(panel.getBoundingClientRect().height)}px`)
   page.classList.add('is-content-expanded')
 }
@@ -880,7 +894,7 @@ function renderPlayerAvatarEditor() {
 
 function playerNameInputMarkup(player: SetupPlayer, index: number) {
   const safeId = player.id.replace(/[^a-zA-Z0-9_-]/g, '-')
-  return `<input class="player-entry-input" id="blobba-entry-${safeId}" name="blobba-entry" type="text" data-player-entry="${player.id}" value="${escapeHtml(player.name || defaultPlayerName(index + 1))}" maxlength="24" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" inputmode="text" aria-label="Spieler ${index + 1} bearbeiten">`
+  return `<input class="player-entry-input" id="blobba-entry-${safeId}" name="blobba-entry" type="text" data-player-entry="${player.id}" value="${escapeHtml(player.name || defaultPlayerName(index + 1))}" maxlength="24" autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" inputmode="text" tabindex="${activePlayerInputId === player.id ? '0' : '-1'}" aria-label="Spieler ${index + 1} bearbeiten">`
 }
 
 function renderOnlineModal() {
@@ -938,6 +952,7 @@ function bindOfflineSetup() {
       players = players.map((player) => player.id === input.dataset.playerEntry ? { ...player, name: input.value } : player)
     })
   })
+  updatePlayerInputTabState(activePlayerInputId)
   app.querySelectorAll<HTMLButtonElement>('[data-remove-player]').forEach((button) => button.addEventListener('click', () => {
     if (players.length === 1) return
     playActionSound('remove-player')
@@ -958,7 +973,6 @@ function bindOfflineSetup() {
     })
     const addButton = app.querySelector<HTMLButtonElement>('[data-add-player]')
     if (addButton) addButton.disabled = players.length >= MAX_PLAYERS
-    clampPlayerSelectionFrameToContent()
   }))
   app.querySelectorAll<HTMLButtonElement>('[data-edit-player-avatar]').forEach((button) => button.addEventListener('click', () => {
     playSound('ui-click')
@@ -1001,6 +1015,7 @@ function activatePlayerInput(
 ) {
   const input = app.querySelector<HTMLInputElement>(`[data-player-entry="${playerId}"]`)
   if (!input) return
+  updatePlayerInputTabState(playerId)
   const isAlreadyActive = activePlayerInputId === playerId && document.activeElement === input
   pendingSelectAllPlayerId = options.selectAll && !isAlreadyActive ? playerId : null
   if (isAlreadyActive) {
@@ -1015,6 +1030,14 @@ function handlePlayerInputPointerDown(event: PointerEvent, input: HTMLInputEleme
   event.stopPropagation()
   const playerId = input.dataset.playerEntry ?? null
   pointerPlayerInputId = playerId
+  if (playerId && (activePlayerInputId !== playerId || document.activeElement !== input)) {
+    event.preventDefault()
+    pendingSelectAllPlayerId = playerId
+    updatePlayerInputTabState(playerId)
+    input.focus({ preventScroll: true })
+    if (document.activeElement === input && activePlayerInputId !== playerId) handlePlayerInputFocus(input)
+    return
+  }
   if (playerId && activePlayerInputId === playerId && document.activeElement === input) {
     pendingSelectAllPlayerId = null
     clearPlayerNameSelection(input)
@@ -1032,6 +1055,7 @@ function handlePlayerInputFocus(input: HTMLInputElement) {
   const selectAll = !samePlayerTap && (changedPlayer || pendingSelectAllPlayerId === playerId)
   pointerPlayerInputId = null
   activePlayerInputId = playerId
+  updatePlayerInputTabState(playerId)
   pendingSelectAllPlayerId = null
   app.querySelectorAll<HTMLInputElement>('[data-player-entry]').forEach((entry) => {
     if (entry !== input) clearPlayerNameSelection(entry)
@@ -1039,6 +1063,12 @@ function handlePlayerInputFocus(input: HTMLInputElement) {
   if (selectAll) input.classList.add('is-new-player-name-selected')
   bindActivePlayerViewport()
   void beginPlayerFocusTransition(input, selectAll)
+}
+
+function updatePlayerInputTabState(activePlayerId: string | null) {
+  app.querySelectorAll<HTMLInputElement>('[data-player-entry]').forEach((input) => {
+    input.tabIndex = input.dataset.playerEntry === activePlayerId ? 0 : -1
+  })
 }
 
 function selectEntirePlayerName(input: HTMLInputElement) {
@@ -1065,6 +1095,9 @@ function bindActivePlayerViewport() {
     playerMotionElement?.style.removeProperty('transform')
     playerMotionElement = null
     playerMotionOffset = 0
+    keyboardSessionActive = false
+    keyboardSessionBaseScrollTop = 0
+    keyboardSessionSettledScrollTop = 0
     focusTransitionId += 1
     focusTransitionState = 'idle'
     pendingFocusPlayerId = null
@@ -1163,6 +1196,12 @@ async function beginPlayerFocusTransition(input: HTMLInputElement, selectAll: bo
 
   const transitionId = ++focusTransitionId
   cancelPlayerPositionWork()
+  const page = input.closest<HTMLElement>('.player-selection-page')
+  if (!keyboardSessionActive) {
+    keyboardSessionBaseScrollTop = page?.scrollTop ?? 0
+    keyboardSessionSettledScrollTop = keyboardSessionBaseScrollTop
+    keyboardSessionActive = true
+  }
   pendingFocusPlayerId = playerId
   focusTransitionState = 'waiting-for-native-focus'
   viewportChangedDuringFocus = false
@@ -1191,6 +1230,7 @@ async function beginPlayerFocusTransition(input: HTMLInputElement, selectAll: bo
   pendingFocusPlayerId = null
   focusTransitionState = 'idle'
   viewportChangedDuringFocus = false
+  keyboardSessionSettledScrollTop = input.closest<HTMLElement>('.player-selection-page')?.scrollTop ?? 0
 }
 
 function scheduleActivePlayerPositionUpdate() {
@@ -1227,11 +1267,24 @@ function restoreNormalPlayerLayout() {
   const content = playerMotionElement?.isConnected
     ? playerMotionElement
     : app.querySelector<HTMLElement>('.player-selection-page .setup-shell')
-  if (!content || Math.abs(playerMotionOffset) < .5) {
+  const page = app.querySelector<HTMLElement>('.player-selection-page')
+  const normalMaxScrollTop = page ? Math.max(0, page.scrollHeight - page.clientHeight) : 0
+  const currentScrollTop = page?.scrollTop ?? 0
+  const userChangedNormalScroll = keyboardSessionActive
+    && Math.abs(currentScrollTop - keyboardSessionSettledScrollTop) > 2
+  const preferredNormalScrollTop = userChangedNormalScroll
+    ? currentScrollTop
+    : keyboardSessionActive ? keyboardSessionBaseScrollTop : currentScrollTop
+  const targetScrollTop = Math.max(0, Math.min(
+    preferredNormalScrollTop,
+    normalMaxScrollTop,
+  ))
+  if (!content || (Math.abs(playerMotionOffset) < .5 && Math.abs(currentScrollTop - targetScrollTop) < 2)) {
+    if (page) page.scrollTop = targetScrollTop
     finishNormalPlayerLayout(transitionId, content)
     return
   }
-  void animatePlayerContentTo(content, 0, transitionId).then((completed) => {
+  void animatePlayerContentTo(content, 0, transitionId, page, targetScrollTop).then((completed) => {
     if (completed) finishNormalPlayerLayout(transitionId, content)
   })
 }
@@ -1241,9 +1294,11 @@ function finishNormalPlayerLayout(transitionId: number, content: HTMLElement | n
   content?.style.removeProperty('transform')
   playerMotionElement = null
   playerMotionOffset = 0
+  keyboardSessionActive = false
+  keyboardSessionBaseScrollTop = 0
+  keyboardSessionSettledScrollTop = 0
   app.querySelector('.player-selection-page')?.classList.remove('is-player-keyboard-open')
   focusTransitionState = 'idle'
-  clampPlayerSelectionFrameToContent()
 }
 
 function finishNormalPlayerLayoutImmediately() {
@@ -1252,6 +1307,9 @@ function finishNormalPlayerLayoutImmediately() {
   playerMotionElement?.style.removeProperty('transform')
   playerMotionElement = null
   playerMotionOffset = 0
+  keyboardSessionActive = false
+  keyboardSessionBaseScrollTop = 0
+  keyboardSessionSettledScrollTop = 0
   activePlayerInputId = null
   pendingFocusPlayerId = null
   pendingSelectAllPlayerId = null
@@ -1259,15 +1317,6 @@ function finishNormalPlayerLayoutImmediately() {
   viewportChangedDuringFocus = false
   focusTransitionState = 'idle'
   app.querySelector('.player-selection-page')?.classList.remove('is-player-keyboard-open')
-}
-
-function clampPlayerSelectionFrameToContent() {
-  const page = app.querySelector<HTMLElement>('.player-selection-page')
-  const panel = page?.querySelector<HTMLElement>('.setup-game-panel')
-  if (!page || !panel || !page.classList.contains('is-content-expanded')) return
-  if (page.scrollHeight > page.clientHeight + 1) return
-  page.classList.remove('is-content-expanded')
-  panel.style.removeProperty('--selection-collapsed-height')
 }
 
 async function positionActivePlayer(transitionId: number) {
@@ -1297,15 +1346,24 @@ async function positionActivePlayer(transitionId: number) {
   return animatePlayerContentTo(content, absoluteTargetOffset, transitionId)
 }
 
-function animatePlayerContentTo(content: HTMLElement, targetOffset: number, transitionId: number) {
+function animatePlayerContentTo(
+  content: HTMLElement,
+  targetOffset: number,
+  transitionId: number,
+  scrollContainer?: HTMLElement | null,
+  targetScrollTop = scrollContainer?.scrollTop ?? 0,
+) {
   if (playerMotionFrame) cancelAnimationFrame(playerMotionFrame)
   playerMotionElement = content
   playerMotionFrame = 0
   const startOffset = playerMotionOffset
   const distance = targetOffset - startOffset
-  if (Math.abs(distance) < .5) {
+  const startScrollTop = scrollContainer?.scrollTop ?? targetScrollTop
+  const scrollDistance = targetScrollTop - startScrollTop
+  if (Math.abs(distance) < .5 && Math.abs(scrollDistance) < .5) {
     playerMotionOffset = targetOffset
     content.style.transform = `translate3d(0, ${targetOffset.toFixed(2)}px, 0)`
+    if (scrollContainer) scrollContainer.scrollTop = targetScrollTop
     return Promise.resolve(true)
   }
   const startedAt = performance.now()
@@ -1321,6 +1379,7 @@ function animatePlayerContentTo(content: HTMLElement, targetOffset: number, tran
       const easedProgress = 1 - Math.pow(1 - progress, 3)
       playerMotionOffset = startOffset + distance * easedProgress
       playerMotionElement.style.transform = `translate3d(0, ${playerMotionOffset.toFixed(2)}px, 0)`
+      if (scrollContainer) scrollContainer.scrollTop = startScrollTop + scrollDistance * easedProgress
       if (progress < 1) {
         playerMotionFrame = requestAnimationFrame(animate)
         return
