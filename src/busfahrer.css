@@ -763,6 +763,11 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
 .profile-auth-row { display: flex; margin-bottom: 10px; justify-content: flex-end; }
 .profile-auth-button { min-height: 40px; padding: 8px 13px; }
 .primary-profile-editor-panel { position: relative; }
+.primary-profile-editor-panel > .profile-preview {
+  z-index: 1;
+  transform: scale(1.15);
+  transform-origin: 50% 0;
+}
 .primary-profile-editor-panel > .profile-auth-row {
   position: absolute;
   top: clamp(18px, 4vw, 36px);
