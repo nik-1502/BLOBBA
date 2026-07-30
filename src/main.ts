@@ -1210,54 +1210,8 @@ function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER',
     <section class="setup-stage"><div class="setup-stack">${centerTitle ? `<h1 class="setup-title">${title}</h1>` : ''}${content}</div></section>
   </div>${zoomLayerEnd}</main>`
   if (pageClass.includes('player-selection-page')) initializePlayerPinchTransform()
-  if (pageClass.includes('primary-profile-page')) bindPrimaryPageTitleAlignment()
   app.querySelector<HTMLButtonElement>('[data-setup-back]')!.addEventListener('click', () => { playSound('ui-back'); window.location.hash = backTarget })
 }
-
-let primaryPageTitleAlignmentFrame = 0
-const primaryPageTitleResizeObserver = new ResizeObserver(() => schedulePrimaryPageTitleAlignment())
-
-function bindPrimaryPageTitleAlignment() {
-  primaryPageTitleResizeObserver.disconnect()
-  const panel = app.querySelector<HTMLElement>('.primary-profile-page .shared-main-panel')
-  const title = app.querySelector<HTMLElement>('.primary-profile-page .busfahrer-header h1')
-  if (panel) primaryPageTitleResizeObserver.observe(panel)
-  if (title) primaryPageTitleResizeObserver.observe(title)
-  schedulePrimaryPageTitleAlignment()
-  void document.fonts.ready.then(() => schedulePrimaryPageTitleAlignment())
-}
-
-function schedulePrimaryPageTitleAlignment() {
-  if (primaryPageTitleAlignmentFrame) cancelAnimationFrame(primaryPageTitleAlignmentFrame)
-  primaryPageTitleAlignmentFrame = requestAnimationFrame(() => {
-    primaryPageTitleAlignmentFrame = requestAnimationFrame(() => {
-      primaryPageTitleAlignmentFrame = 0
-      const panel = app.querySelector<HTMLElement>('.primary-profile-page .shared-main-panel')
-      const title = app.querySelector<HTMLElement>('.primary-profile-page .busfahrer-header h1')
-      if (!panel || !title) return
-      title.style.translate = 'none'
-      const panelRight = panel.getBoundingClientRect().right
-      const titleRect = title.getBoundingClientRect()
-      const titleStyle = getComputedStyle(title)
-      const context = document.createElement('canvas').getContext('2d')
-      let visibleTextRight = titleRect.right
-      if (context) {
-        context.font = `${titleStyle.fontWeight} ${titleStyle.fontSize} ${titleStyle.fontFamily}`
-        const metrics = context.measureText(title.textContent ?? '')
-        const letterSpacing = Number.parseFloat(titleStyle.letterSpacing) || 0
-        visibleTextRight = titleRect.left
-          + metrics.actualBoundingBoxRight
-          + letterSpacing * Math.max(0, (title.textContent?.length ?? 1) - 1)
-      }
-      const offset = panelRight - visibleTextRight
-      title.style.translate = `${offset.toFixed(2)}px 0`
-    })
-  })
-}
-
-window.addEventListener('resize', () => {
-  if (app.querySelector('.primary-profile-page')) schedulePrimaryPageTitleAlignment()
-})
 
 function renderModeMenu() {
   const preservedPageScrollTop = app.querySelector<HTMLElement>('.player-selection-page')?.scrollTop ?? 0
