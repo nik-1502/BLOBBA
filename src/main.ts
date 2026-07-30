@@ -1210,8 +1210,30 @@ function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER',
     <section class="setup-stage"><div class="setup-stack">${centerTitle ? `<h1 class="setup-title">${title}</h1>` : ''}${content}</div></section>
   </div>${zoomLayerEnd}</main>`
   if (pageClass.includes('player-selection-page')) initializePlayerPinchTransform()
+  if (pageClass.includes('primary-profile-page')) schedulePrimaryPageTitleAlignment()
   app.querySelector<HTMLButtonElement>('[data-setup-back]')!.addEventListener('click', () => { playSound('ui-back'); window.location.hash = backTarget })
 }
+
+let primaryPageTitleAlignmentFrame = 0
+
+function schedulePrimaryPageTitleAlignment() {
+  if (primaryPageTitleAlignmentFrame) cancelAnimationFrame(primaryPageTitleAlignmentFrame)
+  primaryPageTitleAlignmentFrame = requestAnimationFrame(() => {
+    primaryPageTitleAlignmentFrame = requestAnimationFrame(() => {
+      primaryPageTitleAlignmentFrame = 0
+      const panel = app.querySelector<HTMLElement>('.primary-profile-page .shared-main-panel')
+      const title = app.querySelector<HTMLElement>('.primary-profile-page .busfahrer-header h1')
+      if (!panel || !title) return
+      title.style.translate = 'none'
+      const offset = panel.getBoundingClientRect().right - title.getBoundingClientRect().right
+      title.style.translate = `${offset.toFixed(2)}px 0`
+    })
+  })
+}
+
+window.addEventListener('resize', () => {
+  if (app.querySelector('.primary-profile-page')) schedulePrimaryPageTitleAlignment()
+})
 
 function renderModeMenu() {
   const preservedPageScrollTop = app.querySelector<HTMLElement>('.player-selection-page')?.scrollTop ?? 0
