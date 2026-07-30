@@ -907,9 +907,9 @@ function renderHome() {
         <input type="search" placeholder="Spiele suchen" value="${escapeHtml(homeSearchQuery)}" aria-label="Spiele suchen">
       </label>
       <div class="game-toolbar">
-        <button class="categories-filter-button" type="button" aria-expanded="${categoryMenuOpen}" aria-controls="home-category-menu">
+        <button class="categories-filter-button${selectedHomeCategory !== 'Alle' ? ' is-active' : ''}" type="button" aria-expanded="${categoryMenuOpen}" aria-controls="home-category-menu">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"></path></svg>
-          <span>Kategorien</span>
+          <span class="category-filter-label">${escapeHtml(selectedHomeCategory === 'Alle' ? 'Kategorien' : selectedHomeCategory)}</span>
         </button>
         <button class="favorites-filter-button" type="button" aria-pressed="${favoritesOnly}">
           <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 20.4 3.7 12.7a5.2 5.2 0 0 1 7.4-7.3l.9.9.9-.9a5.2 5.2 0 0 1 7.4 7.3Z"></path></svg>
@@ -1102,9 +1102,22 @@ function updateHomeFilters() {
 function updateCategoryMenu() {
   const menu = app.querySelector<HTMLElement>('.category-menu')
   const button = app.querySelector<HTMLButtonElement>('.categories-filter-button')
+  const label = button?.querySelector<HTMLElement>('.category-filter-label')
+  const hasActiveCategory = selectedHomeCategory !== 'Alle'
+  const nextLabel = hasActiveCategory ? selectedHomeCategory : 'Kategorien'
   if (menu) menu.hidden = !categoryMenuOpen
   button?.setAttribute('aria-expanded', String(categoryMenuOpen))
-  button?.classList.toggle('is-active', categoryMenuOpen || selectedHomeCategory !== 'Alle')
+  button?.classList.toggle('is-active', hasActiveCategory)
+  if (label && label.textContent !== nextLabel) {
+    label.textContent = nextLabel
+    label.animate(
+      [
+        { opacity: .35 },
+        { opacity: 1 },
+      ],
+      { duration: 170, easing: 'ease-out' },
+    )
+  }
   app.querySelectorAll<HTMLButtonElement>('.category-chip').forEach((chip) => {
     const selected = chip.dataset.homeCategory === selectedHomeCategory
     chip.classList.toggle('is-selected', selected)
