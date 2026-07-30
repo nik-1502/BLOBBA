@@ -984,7 +984,6 @@ function renderHome() {
     button.addEventListener('click', () => {
       playSound('ui-click')
       selectedHomeCategory = button.dataset.homeCategory as HomeGameCategory
-      categoryMenuOpen = false
       updateCategoryMenu()
       updateHomeFilters()
     })
