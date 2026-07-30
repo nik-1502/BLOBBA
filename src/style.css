@@ -1492,9 +1492,9 @@ html[data-theme='neon'] .home-page :is(.game-search, .categories-filter-button, 
   background:
     linear-gradient(
       110deg,
-      rgba(255, 18, 172, .56) 0%,
-      rgba(178, 42, 232, .48) 48%,
-      rgba(20, 137, 255, .54) 100%
+      rgba(185, 8, 124, .56) 0%,
+      rgba(112, 20, 178, .48) 48%,
+      rgba(8, 82, 190, .54) 100%
     ) padding-box,
     radial-gradient(circle at 18% 20%, rgba(73, 13, 100, .28), transparent 42%) padding-box,
     linear-gradient(145deg, #090c33, #07184d 54%, #061f5e) padding-box,
@@ -1522,9 +1522,9 @@ html[data-theme='neon'] .home-page :is(.game-search, .categories-filter-button, 
   z-index: -1;
   border-radius: calc(var(--home-control-radius) - 2px);
   background:
-    radial-gradient(ellipse 58% 84% at 5% 0%, rgba(255, 34, 180, .32), transparent 56%),
-    radial-gradient(ellipse 58% 84% at 95% 100%, rgba(24, 143, 255, .30), transparent 58%),
-    linear-gradient(110deg, rgba(241, 28, 183, .12), rgba(168, 48, 228, .10) 48%, rgba(21, 139, 255, .13));
+    radial-gradient(ellipse 58% 84% at 5% 0%, rgba(222, 20, 151, .26), transparent 56%),
+    radial-gradient(ellipse 58% 84% at 95% 100%, rgba(12, 99, 218, .25), transparent 58%),
+    linear-gradient(110deg, rgba(183, 15, 136, .10), rgba(106, 27, 174, .08) 48%, rgba(9, 86, 194, .11));
   box-shadow: inset 0 0 0 1px rgba(128, 62, 226, .22);
   pointer-events: none;
 }
@@ -1539,9 +1539,9 @@ html[data-theme='neon'] .home-page .games-search-bar {
   background:
     linear-gradient(
       110deg,
-      rgba(255, 18, 172, .46) 0%,
-      rgba(178, 42, 232, .39) 48%,
-      rgba(20, 137, 255, .44) 100%
+      rgba(185, 8, 124, .46) 0%,
+      rgba(112, 20, 178, .39) 48%,
+      rgba(8, 82, 190, .44) 100%
     ) padding-box,
     radial-gradient(circle at 18% 20%, rgba(73, 13, 100, .28), transparent 42%) padding-box,
     linear-gradient(145deg, #090c33, #07184d 54%, #061f5e) padding-box,
@@ -1574,7 +1574,7 @@ html[data-theme='neon'] .home-page .game-search input::placeholder {
 html[data-theme='neon'] .home-page :is(.categories-filter-button, .favorites-filter-button).is-active {
   border-color: transparent;
   background:
-    linear-gradient(110deg, rgba(255, 17, 174, .68), rgba(181, 39, 234, .60) 48%, rgba(17, 140, 255, .65)) padding-box,
+    linear-gradient(110deg, rgba(203, 8, 136, .68), rgba(126, 19, 194, .60) 48%, rgba(7, 91, 207, .65)) padding-box,
     radial-gradient(circle at 18% 20%, rgba(73, 13, 100, .28), transparent 42%) padding-box,
     linear-gradient(145deg, #090c33, #07184d 54%, #061f5e) padding-box,
     linear-gradient(110deg, #ff59b1, #c345f1 48%, #27a5ff) border-box;
