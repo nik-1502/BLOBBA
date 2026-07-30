@@ -31,6 +31,7 @@ import busfahrerGameImageNeon from './assets/spielbild icons/blobb-fahrer-cover-
 import blobbenGameImageNeon from './assets/spielbild icons/blobben-cover-neon-exclamation-v42.png'
 import heroLogo from './assets/überschrift/blobba-logo-clean-outlined.png'
 import heroLogoNeon from './assets/überschrift/blobba-logo-neon-original.png'
+import heroLogoNeonMobile from './assets/überschrift/blobba-logo-neon-mobile.png'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 const PROFILE_STORAGE_KEY = 'blobba.profiles.v1'
@@ -874,7 +875,12 @@ function renderHome() {
       <svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 21a7.5 7.5 0 0 1 15 0c-2.2 1.25-12.8 1.25-15 0Z"></path></svg>
     </button>
     <header class="hero-header">
-      <img class="hero-logo" src="${appTheme === 'neon' ? heroLogoNeon : heroLogo}" alt="BLOBBA">
+      ${appTheme === 'neon'
+        ? `<picture class="hero-logo-picture">
+            <source media="(max-width: 700px)" srcset="${heroLogoNeonMobile}">
+            <img class="hero-logo" src="${heroLogoNeon}" alt="BLOBBA">
+          </picture>`
+        : `<img class="hero-logo" src="${heroLogo}" alt="BLOBBA">`}
     </header>
     <div class="home-games-area">
       <section class="game-filters" aria-label="Spiele filtern">

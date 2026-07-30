@@ -869,6 +869,10 @@ html.is-standalone #app > .setup-page > .player-selection-zoom-layer > .setup-sh
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+.hero-logo-picture {
+  display: contents;
+}
+
 .home-page {
   transform: translate3d(0, 0, 0) scale(1);
   transform-origin: center center;
