@@ -309,8 +309,8 @@ function resetPlayerPinchTransform() {
   cancelPlayerPinchFrames()
   const layer = playerPinchController.layer
   if (layer?.isConnected) {
-    layer.style.transform = 'translate3d(0, 0, 0) scale(1)'
-    layer.style.transformOrigin = 'center center'
+    layer.style.removeProperty('transform')
+    layer.style.removeProperty('transform-origin')
   }
   playerPinchController.active = false
   playerPinchController.startDistance = 0
@@ -376,10 +376,6 @@ function animatePlayerPinchBack() {
 
 function initializePlayerPinchTransform() {
   resetPlayerPinchTransform()
-  const layer = resolveAppPinchLayer()
-  if (!layer) return
-  layer.style.transform = 'translate3d(0, 0, 0) scale(1)'
-  layer.style.transformOrigin = 'center center'
 }
 
 function bindPlayerSelectionPinch() {
@@ -1223,14 +1219,16 @@ function renderModeMenu() {
     ? 'player-selection-blobben'
     : 'player-selection-busfahrer'
   const useSeparateSetupTitle = activeGame === 'klatschen'
-  const setupPanel = `<div class="setup-panel setup-game-panel">
+  const sharedPanelClass = activeGame === 'busfahrer' ? ' shared-main-panel' : ''
+  const setupPanel = `<div class="setup-panel setup-game-panel${sharedPanelClass}">
     ${renderModeSwitch()}
     ${setupMode === 'offline' ? renderOfflineSetupContent() : renderOnlineSetupContent()}
   </div>`
   const positionedSetupPanel = activeGame === 'busfahrer'
     ? `<div class="player-selection-turn-frame">${setupPanel}</div>`
     : setupPanel
-  setupShell(`${positionedSetupPanel}${renderOnlineModal()}`, '', gameTitle(), 'BLOBBA präsentiert', `player-selection-page ${gameLayoutClass}`, useSeparateSetupTitle)
+  const sharedLayoutPageClass = `player-selection-page${activeGame === 'busfahrer' ? ' shared-main-layout' : ''} ${gameLayoutClass}`
+  setupShell(`${positionedSetupPanel}${renderOnlineModal()}`, '', gameTitle(), 'BLOBBA präsentiert', sharedLayoutPageClass, useSeparateSetupTitle)
   const renderedShell = app.querySelector<HTMLElement>('.player-selection-page .setup-shell')
   if (renderedShell && getKeyboardHeight() > 40) renderedShell.closest('.player-selection-page')?.classList.add('is-player-keyboard-open')
   const renderedPage = app.querySelector<HTMLElement>('.player-selection-page')
@@ -1252,6 +1250,11 @@ function expandPlayerSelectionFrameForContent() {
   const panel = page?.querySelector<HTMLElement>('.setup-game-panel')
   const content = panel?.querySelector<HTMLElement>('.offline-panel, .online-panel')
   if (!page || !panel || !content) return
+  if (panel.classList.contains('shared-main-panel')) {
+    page.classList.remove('is-content-expanded')
+    schedulePlayerSelectionScrollState()
+    return
+  }
   panel.style.setProperty('--selection-collapsed-height', `${Math.ceil(panel.getBoundingClientRect().height)}px`)
   page.classList.add('is-content-expanded')
   schedulePlayerSelectionScrollState()
@@ -2364,7 +2367,7 @@ function renderProfileEditor() {
   let selectedAvatarId = draftProfile.avatarId ?? DEFAULT_AVATAR_ID
   const backTarget = isPrimary ? '' : profileEditorContext.mode === 'edit-player' ? gameRoute('-offline') : gameRoute('-profile-picker')
 
-  setupShell(`<form class="setup-panel profile-editor-panel${isPrimary ? ' primary-profile-editor-panel' : ''}" data-profile-form>
+  setupShell(`${isPrimary ? '<div class="primary-profile-frame">' : ''}<form class="setup-panel profile-editor-panel${isPrimary ? ' primary-profile-editor-panel shared-main-panel' : ''}" data-profile-form>
     <div class="profile-auth-row"><button class="game-button profile-auth-button" type="button" data-auth-action="${currentUser() ? 'logout' : 'login'}">${currentUser() ? 'Logout' : 'Login'}</button></div>
     ${isPrimary ? '' : `<p class="eyebrow">${isNew ? 'Neues Spielerprofil' : 'Spielerprofil'}</p>
     <h2>${isNew ? 'Profil anlegen' : 'Profil bearbeiten'}</h2>`}
@@ -2375,7 +2378,7 @@ function renderProfileEditor() {
       ${avatarOptions.map((avatar) => `<button class="avatar-choice ${selectedAvatarId === avatar.id ? 'is-selected' : ''}" type="button" data-avatar-id="${avatar.id}" aria-label="${avatar.label}" aria-pressed="${selectedAvatarId === avatar.id}"><span class="avatar-choice-visual" style="--avatar-ring:${avatar.color}">${avatarVisualMarkup(avatar.id)}</span></button>`).join('')}
     </div></fieldset>
     <button class="game-button primary profile-save-button" type="submit">Speichern</button>
-  </form>${renderAuthModal()}`, backTarget, isPrimary ? 'Benutzerprofil' : 'Profil', 'BLOBBA', `profile-page${isPrimary ? ' primary-profile-page' : ''}`, false)
+  </form>${isPrimary ? '</div>' : ''}${renderAuthModal()}`, backTarget, isPrimary ? 'Benutzerprofil' : 'Profil', 'BLOBBA', `profile-page${isPrimary ? ' primary-profile-page shared-main-layout' : ''}`, false)
 
   const preview = app.querySelector<HTMLElement>('[data-profile-preview]')!
   const input = app.querySelector<HTMLInputElement>('#profile-name')!

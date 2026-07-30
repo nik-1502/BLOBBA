@@ -776,60 +776,21 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
   margin: 0;
 }
 
-/* Shared frame metrics. Blobben player selection remains the visual source of
-   truth; the primary profile consumes the same values without changing it. */
-.player-selection-page.player-selection-blobben,
-.primary-profile-page {
-  --main-page-panel-width: min(620px, 100%);
-  --main-page-panel-rule-margin: clamp(6px, 1.3dvh, 12px);
-  --main-page-panel-rule-height: 27px;
-  --main-page-panel-frame-gap: clamp(40px, 6dvh, 64px);
-  --main-page-panel-radius: clamp(24px, 4vw, 30px);
-  --main-page-panel-border: 1px solid var(--blobba-panel-border);
-  --main-page-panel-shadow: var(--blobba-shadow-panel), inset 0 1px var(--blobba-panel-highlight);
-}
-
-.primary-profile-page .setup-stage {
-  padding: 0;
-  overflow: hidden;
-}
-
-.primary-profile-page .setup-shell {
+.shared-main-layout .setup-shell {
   width: min(1180px, 100%);
-  padding-bottom: clamp(8px, 2vh, 20px);
 }
 
-.primary-profile-page .setup-stack {
-  display: block;
-  width: var(--main-page-panel-width);
-  height: 100%;
-  min-height: 0;
+.shared-main-layout .setup-stage {
+  padding: 0;
+  overflow: visible;
+}
+
+.shared-main-layout .busfahrer-header {
+  min-height: 48px;
 }
 
 .primary-profile-page .primary-profile-editor-panel {
-  --primary-profile-title-reserve: clamp(64px, 8.5dvh, 84px);
-  width: var(--main-page-panel-width);
-  height: calc(
-    100% -
-    var(--main-page-panel-rule-margin) -
-    var(--main-page-panel-rule-height) -
-    var(--main-page-panel-rule-margin) -
-    var(--main-page-panel-frame-gap) -
-    var(--primary-profile-title-reserve)
-  );
-  min-height: 0;
-  margin-top: calc(
-    var(--main-page-panel-rule-margin) +
-    var(--main-page-panel-rule-height) +
-    var(--main-page-panel-rule-margin)
-  );
-  padding: clamp(18.54px, 4.12vw, 37.08px);
   overflow: hidden;
-  border: var(--main-page-panel-border);
-  border-radius: var(--main-page-panel-radius);
-  box-shadow: var(--main-page-panel-shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
 }
 
 .primary-profile-page .primary-profile-editor-panel > .profile-auth-row {
@@ -949,13 +910,9 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
     padding-right: 10px;
     padding-left: 10px;
   }
-  .primary-profile-page .primary-profile-editor-panel {
-    padding: 20.6px 14.42px;
-    border-radius: 24px;
-  }
   .primary-profile-page .primary-profile-editor-panel > .profile-auth-row {
-    top: 20.6px;
-    right: 14.42px;
+    top: 16px;
+    right: 12px;
   }
   .setup-mode-actions, .online-actions, .online-invite-link, .modal-actions { grid-template-columns: 1fr; }
   .setup-mode-switch { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -1000,10 +957,12 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
   width: 100%;
   height: 100%;
   min-height: 100%;
-  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.player-selection-page .player-selection-zoom-layer {
+  transform: none;
   transform-origin: center center;
   backface-visibility: hidden;
-  will-change: transform;
 }
 
 .player-selection-page .player-selection-bottom-spacer {
@@ -1437,7 +1396,7 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   pointer-events: none;
 }
 
-.player-selection-page.player-selection-busfahrer .setup-stack {
+.shared-main-layout .setup-stack {
   --selection-turn-row: clamp(14px, 2.5dvh, 22px);
   --selection-turn-gap: clamp(8px, 3vw, 16px);
   --selection-phase-gap: clamp(6px, 1.4dvh, 16px);
@@ -1491,7 +1450,7 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   }
 }
 
-.player-selection-page.player-selection-busfahrer .player-selection-turn-frame {
+.shared-main-layout :is(.player-selection-turn-frame, .primary-profile-frame) {
   position: relative;
   display: flex;
   width: 100%;
@@ -1504,15 +1463,34 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   overflow: visible;
 }
 
-.player-selection-page.player-selection-busfahrer .setup-game-panel {
+.shared-main-panel {
   position: relative;
   top: calc(-1 * var(--selection-turn-extension));
   width: 100%;
   height: calc(79% + var(--selection-turn-extension));
   min-height: 0;
+  padding: clamp(18px, 4vw, 34px);
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: clamp(24px, 4vw, 30px);
+  color: #fff;
+  background: linear-gradient(160deg, rgba(61, 51, 48, .9), rgba(31, 27, 29, .9));
+  box-shadow: 0 26px 64px rgba(82, 24, 0, .3), inset 0 1px rgba(255, 255, 255, .08);
   margin-top: 0;
   flex: 0 0 auto;
   align-self: start;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.shared-main-layout :is(.player-selection-turn-frame, .primary-profile-frame) {
+  grid-row: 3;
+}
+
+@media (max-width: 520px) {
+  .shared-main-panel {
+    padding: 16px 12px;
+    border-radius: 24px;
+  }
 }
 
 .player-selection-page.player-selection-blobben .setup-shell {
@@ -1520,23 +1498,23 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
 }
 
 .player-selection-page.player-selection-blobben .setup-game-panel {
-  width: var(--main-page-panel-width);
+  --blobben-selection-rule-margin: clamp(6px, 1.3dvh, 12px);
+  --blobben-selection-rule-height: 27px;
+  --blobben-selection-frame-gap: clamp(40px, 6dvh, 64px);
+  width: 100%;
   height: calc(
     100% -
-    var(--main-page-panel-rule-margin) -
-    var(--main-page-panel-rule-height) -
-    var(--main-page-panel-rule-margin) -
-    var(--main-page-panel-frame-gap)
+    var(--blobben-selection-rule-margin) -
+    var(--blobben-selection-rule-height) -
+    var(--blobben-selection-rule-margin) -
+    var(--blobben-selection-frame-gap)
   );
   min-height: 0;
   margin-top: calc(
-    var(--main-page-panel-rule-margin) +
-    var(--main-page-panel-rule-height) +
-    var(--main-page-panel-rule-margin)
+    var(--blobben-selection-rule-margin) +
+    var(--blobben-selection-rule-height) +
+    var(--blobben-selection-rule-margin)
   );
-  border: var(--main-page-panel-border);
-  border-radius: var(--main-page-panel-radius);
-  box-shadow: var(--main-page-panel-shadow);
 }
 
 /* If the player list no longer fits, grow the complete selection frame and

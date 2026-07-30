@@ -890,10 +890,7 @@ html.is-standalone #app > .setup-page > .player-selection-zoom-layer > .setup-sh
 }
 
 .home-page {
-  transform: translate3d(0, 0, 0) scale(1);
-  transform-origin: center center;
-  backface-visibility: hidden;
-  will-change: transform;
+  transform: none;
 }
 
 /* Startseite: freundlichere, kompakte Party-App-Oberfläche */
