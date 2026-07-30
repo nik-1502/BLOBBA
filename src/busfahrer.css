@@ -867,10 +867,22 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
 .profile-save-button { width: 100%; }
 .sound-settings-panel { display: flex; overflow: hidden; flex-direction: column; gap: 24px; }
 .primary-profile-page .busfahrer-header > div {
+  display: flex;
   grid-column: 3;
   grid-row: 1;
+  align-items: center;
   justify-self: end;
   text-align: right;
+}
+
+.primary-profile-page .busfahrer-header > div::after {
+  content: "L";
+  visibility: hidden;
+  flex: 0 0 auto;
+  font-family: 'Fredoka', Inter, system-ui, sans-serif;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-weight: 700;
+  letter-spacing: .015em;
 }
 .settings-control-row { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 24px; }
 .settings-control-row strong, .settings-control-row > span { color: #fff; font-size: 1.05rem; }
