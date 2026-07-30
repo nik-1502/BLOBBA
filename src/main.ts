@@ -895,7 +895,7 @@ function renderHome() {
     <header class="hero-header">
       ${appTheme === 'neon'
         ? `<picture class="hero-logo-picture">
-            <source media="(max-width: 700px)" srcset="${heroLogoNeonMobile}">
+            <source media="(max-width: 1024px)" srcset="${heroLogoNeonMobile}">
             <img class="hero-logo" src="${heroLogoNeon}" alt="BLOBBA">
           </picture>`
         : `<img class="hero-logo" src="${heroLogo}" alt="BLOBBA">`}
