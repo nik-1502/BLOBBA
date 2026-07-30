@@ -765,7 +765,7 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
 .primary-profile-editor-panel { position: relative; }
 .primary-profile-editor-panel > .profile-preview {
   z-index: 1;
-  transform: scale(1.15);
+  transform: scale(var(--primary-preview-scale, 1.15));
   transform-origin: 50% 0;
 }
 .primary-profile-editor-panel > .profile-auth-row {

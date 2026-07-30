@@ -2278,6 +2278,20 @@ function bindProfileNameKeyboardPosition(input: HTMLInputElement) {
   pendingKeyboardPositionCleanup = cleanup
 }
 
+function balancePrimaryProfilePreview(
+  panel: HTMLElement,
+  preview: HTMLElement,
+  nameInput: HTMLInputElement,
+) {
+  const panelTop = panel.getBoundingClientRect().top
+  const previewTop = preview.getBoundingClientRect().top
+  const nameInputTop = nameInput.getBoundingClientRect().top
+  const topGap = Math.max(0, previewTop - panelTop)
+  const targetPreviewHeight = Math.max(preview.offsetHeight, nameInputTop - previewTop - topGap)
+  const scale = Math.min(1.8, Math.max(1, targetPreviewHeight / preview.offsetHeight))
+  preview.style.setProperty('--primary-preview-scale', scale.toFixed(4))
+}
+
 function renderProfileEditor() {
   const isPrimary = profileEditorContext.mode === 'primary'
   const isNew = profileEditorContext.mode === 'new-player'
@@ -2301,6 +2315,14 @@ function renderProfileEditor() {
 
   const preview = app.querySelector<HTMLElement>('[data-profile-preview]')!
   const input = app.querySelector<HTMLInputElement>('#profile-name')!
+  const primaryPanel = app.querySelector<HTMLElement>('.primary-profile-editor-panel')
+  if (primaryPanel) {
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (primaryPanel.isConnected && preview.isConnected && input.isConnected) {
+        balancePrimaryProfilePreview(primaryPanel, preview, input)
+      }
+    }))
+  }
   bindProfileNameKeyboardPosition(input)
   bindAuthModal()
   app.querySelector<HTMLButtonElement>('[data-auth-action]')?.addEventListener('click', () => {
