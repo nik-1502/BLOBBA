@@ -775,6 +775,74 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
   z-index: 2;
   margin: 0;
 }
+
+/* The main profile uses the same viewport-sized frame geometry as player
+   selection. Only whitespace is expanded; controls retain their dimensions. */
+.primary-profile-page .setup-stage {
+  padding: 0;
+  overflow: hidden;
+}
+
+.primary-profile-page .setup-shell {
+  width: min(1180px, 100%);
+  padding-bottom: clamp(8px, 2vh, 20px);
+}
+
+.primary-profile-page .setup-stack {
+  width: min(620px, 100%);
+  height: 100%;
+  min-height: 0;
+}
+
+.primary-profile-page .primary-profile-editor-panel {
+  --primary-profile-space-scale: 1.1;
+  --primary-profile-rule-margin: clamp(6px, 1.3dvh, 12px);
+  --primary-profile-rule-height: 27px;
+  --primary-profile-frame-gap: clamp(40px, 6dvh, 64px);
+  --primary-profile-title-reserve: clamp(64px, 8.5dvh, 84px);
+  width: min(620px, 100%);
+  height: calc(
+    100% -
+    var(--primary-profile-rule-margin) -
+    var(--primary-profile-rule-height) -
+    var(--primary-profile-rule-margin) -
+    var(--primary-profile-frame-gap) -
+    var(--primary-profile-title-reserve)
+  );
+  min-height: 0;
+  margin-top: calc(
+    var(--primary-profile-rule-margin) +
+    var(--primary-profile-rule-height) +
+    var(--primary-profile-rule-margin)
+  );
+  padding: clamp(19.8px, 4.4vw, 39.6px);
+}
+
+.primary-profile-page .primary-profile-editor-panel > .profile-auth-row {
+  top: clamp(19.8px, 4.4vw, 39.6px);
+  right: clamp(19.8px, 4.4vw, 39.6px);
+}
+
+.primary-profile-page .primary-profile-editor-panel > .profile-preview {
+  margin-bottom: 26.4px;
+}
+
+.primary-profile-page .primary-profile-editor-panel > .profile-name-label {
+  margin-bottom: 8.8px;
+}
+
+.primary-profile-page .primary-profile-editor-panel > .profile-name-input,
+.primary-profile-page .primary-profile-editor-panel > .avatar-fieldset {
+  margin-bottom: 26.4px;
+}
+
+.primary-profile-page .primary-profile-editor-panel > .avatar-fieldset legend {
+  margin-bottom: 13.2px;
+}
+
+.primary-profile-page .primary-profile-editor-panel .avatar-choice-grid {
+  gap: 11px;
+}
 .auth-switch-button { width: 100%; margin-top: 10px; }
 .profile-preview { position: relative; display: grid; width: 112px; height: 112px; margin: 0 auto 24px; overflow: visible; isolation: isolate; place-items: center; background: transparent; box-shadow: none; }
 .profile-preview img, .profile-card-avatar img, .avatar-choice-visual img { z-index: 0; width: 100%; height: 100%; object-fit: contain; object-position: 50% 50%; transform: none; }
@@ -858,6 +926,21 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
   .primary-profile-editor-panel > .profile-auth-row {
     top: 20px;
     right: 14px;
+  }
+  .primary-profile-page .setup-stage {
+    padding-right: 0;
+    padding-left: 0;
+  }
+  .primary-profile-page .setup-shell {
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+  .primary-profile-page .primary-profile-editor-panel {
+    padding: 22px 15.4px;
+  }
+  .primary-profile-page .primary-profile-editor-panel > .profile-auth-row {
+    top: 22px;
+    right: 15.4px;
   }
   .setup-mode-actions, .online-actions, .online-invite-link, .modal-actions { grid-template-columns: 1fr; }
   .setup-mode-switch { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }

@@ -2311,7 +2311,7 @@ function renderProfileEditor() {
       ${avatarOptions.map((avatar) => `<button class="avatar-choice ${selectedAvatarId === avatar.id ? 'is-selected' : ''}" type="button" data-avatar-id="${avatar.id}" aria-label="${avatar.label}" aria-pressed="${selectedAvatarId === avatar.id}"><span class="avatar-choice-visual" style="--avatar-ring:${avatar.color}">${avatarVisualMarkup(avatar.id)}</span></button>`).join('')}
     </div></fieldset>
     <button class="game-button primary profile-save-button" type="submit">Speichern</button>
-  </form>${renderAuthModal()}`, backTarget, isPrimary ? 'Benutzerprofil' : 'Profil', 'BLOBBA', 'profile-page', false)
+  </form>${renderAuthModal()}`, backTarget, isPrimary ? 'Benutzerprofil' : 'Profil', 'BLOBBA', `profile-page${isPrimary ? ' primary-profile-page' : ''}`, false)
 
   const preview = app.querySelector<HTMLElement>('[data-profile-preview]')!
   const input = app.querySelector<HTMLInputElement>('#profile-name')!
