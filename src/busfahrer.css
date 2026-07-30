@@ -866,9 +866,24 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
 .avatar-choice-visual .default-profile-icon, .profile-preview .default-profile-icon, .profile-card-avatar .default-profile-icon { width: 66%; height: 66%; }
 .profile-save-button { width: 100%; }
 .sound-settings-panel { display: flex; overflow: hidden; flex-direction: column; gap: 24px; }
-.shared-main-layout .busfahrer-header > div {
-  width: 14ch;
+.primary-profile-page .busfahrer-header > div {
+  display: grid;
   text-align: left;
+}
+
+.primary-profile-page .busfahrer-header > div::before,
+.primary-profile-page .busfahrer-header > div > h1 {
+  grid-area: 1 / 1;
+}
+
+.primary-profile-page .busfahrer-header > div::before {
+  content: "Benutzerprofil";
+  visibility: hidden;
+  font-family: 'Fredoka', Inter, system-ui, sans-serif;
+  font-size: clamp(1.8rem, 5vw, 3rem);
+  font-weight: 700;
+  letter-spacing: .015em;
+  white-space: nowrap;
 }
 .settings-control-row { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 24px; }
 .settings-control-row strong, .settings-control-row > span { color: #fff; font-size: 1.05rem; }
@@ -1564,4 +1579,13 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
 .player-selection-page.is-content-expanded :is(.offline-panel, .online-panel) {
   max-height: none;
   overflow: visible;
+}
+
+/* BLOBBEN's selection title is the single typography source for every
+   top-level game and setup heading. */
+.busfahrer-page :is(.setup-title, .setup-shell .busfahrer-header h1) {
+  font-family: 'Fredoka', Inter, system-ui, sans-serif !important;
+  font-size: clamp(1.8rem, 5vw, 3rem) !important;
+  font-weight: 700 !important;
+  letter-spacing: .015em;
 }
