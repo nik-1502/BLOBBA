@@ -535,7 +535,7 @@ function renderGame() {
   if (!gameRoot) return
   const content = phase === 'player-intro' ? renderPlayerIntro() : phase === 'questions' ? renderQuestions() : phase === 'pyramid' ? renderPyramid() : phase === 'summary' ? renderSummary() : phase === 'final' ? renderSummary(true) : renderBus()
   gameRoot.innerHTML = `<div class="busfahrer-shell"><header class="busfahrer-header">
-    <button class="back-button bus-back blobba-nav-action ipad-pwa-header-button" type="button" data-action="back">Beenden</button><div><p>BLOBBA präsentiert</p><h1>BLOBB-FAHRER</h1></div>
+    <button class="back-button bus-back blobba-nav-action ipad-pwa-header-button" type="button" data-action="back">Beenden</button><div><p>BLOBBA präsentiert</p><h1 class="busfahrer-game-title"><span>BLOBB-</span><span>FAHRER</span></h1></div>
     <button class="restart-button blobba-nav-action ipad-pwa-header-button" type="button" data-action="restart">Neu starten</button></header>
     <p class="responsibility-note">Trink verantwortungsvoll. Dieses Spiel ist nur für Erwachsene.</p><div class="game-stage">${content}${phase === 'bus' ? busUsedCardsMarkup() : ''}${currentPlayerFooterMarkup()}</div></div>`
   gameRoot.querySelector('.responsibility-note')?.remove()

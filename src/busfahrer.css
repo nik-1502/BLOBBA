@@ -1641,3 +1641,25 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
     font-size: clamp(1rem, 5vw, 1.55rem);
   }
 }
+
+.busfahrer-page:not(.setup-page) .busfahrer-game-title {
+  display: grid;
+  place-items: center;
+  line-height: .88;
+  text-align: center;
+}
+
+.busfahrer-page:not(.setup-page) .busfahrer-game-title > span {
+  display: block;
+}
+
+.busfahrer-page:not(.setup-page) > .klatschen-shell > .busfahrer-header h1 {
+  font-size: clamp(1.4rem, 5.4vw, 3rem);
+  text-align: center;
+}
+
+@media (max-width: 680px) {
+  .busfahrer-page:not(.setup-page) > .klatschen-shell > .busfahrer-header h1 {
+    font-size: clamp(1.3rem, 6.2vw, 2rem);
+  }
+}
