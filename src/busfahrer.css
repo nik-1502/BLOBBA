@@ -1623,7 +1623,14 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   min-width: 0;
 }
 
+.busfahrer-page:not(.setup-page) > .busfahrer-shell > .busfahrer-header {
+  position: relative;
+}
+
 .busfahrer-page:not(.setup-page) > .busfahrer-shell > .busfahrer-header h1 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   max-width: 100%;
   margin-inline: auto;
   overflow: hidden;
@@ -1633,6 +1640,7 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   letter-spacing: .015em;
   line-height: 1.05;
   text-overflow: clip;
+  translate: -50% -50%;
   white-space: nowrap;
 }
 
@@ -1653,13 +1661,19 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   display: block;
 }
 
-.busfahrer-page:not(.setup-page) > .klatschen-shell > .busfahrer-header h1 {
+.busfahrer-page:not(.setup-page) :is(
+  .busfahrer-game-title,
+  .klatschen-shell > .busfahrer-header h1
+) {
   font-size: clamp(1.4rem, 5.4vw, 3rem);
   text-align: center;
 }
 
 @media (max-width: 680px) {
-  .busfahrer-page:not(.setup-page) > .klatschen-shell > .busfahrer-header h1 {
+  .busfahrer-page:not(.setup-page) :is(
+    .busfahrer-game-title,
+    .klatschen-shell > .busfahrer-header h1
+  ) {
     font-size: clamp(1.3rem, 6.2vw, 2rem);
   }
 }
