@@ -2288,8 +2288,8 @@ function renderProfileEditor() {
 
   setupShell(`<form class="setup-panel profile-editor-panel${isPrimary ? ' primary-profile-editor-panel' : ''}" data-profile-form>
     <div class="profile-auth-row"><button class="game-button profile-auth-button" type="button" data-auth-action="${currentUser() ? 'logout' : 'login'}">${currentUser() ? 'Logout' : 'Login'}</button></div>
-    <p class="eyebrow">${isPrimary ? 'Benutzerprofil' : isNew ? 'Neues Spielerprofil' : 'Spielerprofil'}</p>
-    <h2>${isPrimary ? 'Dein Profil' : isNew ? 'Profil anlegen' : 'Profil bearbeiten'}</h2>
+    ${isPrimary ? '' : `<p class="eyebrow">${isNew ? 'Neues Spielerprofil' : 'Spielerprofil'}</p>
+    <h2>${isNew ? 'Profil anlegen' : 'Profil bearbeiten'}</h2>`}
     <div class="profile-preview" data-profile-preview style="--avatar-ring:${avatarColor(selectedAvatarId)}">${avatarVisualMarkup(selectedAvatarId)}</div>
     <label class="profile-name-label" for="profile-name">Spielername</label>
     <input class="profile-name-input" id="profile-name" name="profile-name" value="${escapeHtml(draftProfile.name)}" maxlength="24" autocomplete="nickname" placeholder="Spielername eingeben">
@@ -2297,7 +2297,7 @@ function renderProfileEditor() {
       ${avatarOptions.map((avatar) => `<button class="avatar-choice ${selectedAvatarId === avatar.id ? 'is-selected' : ''}" type="button" data-avatar-id="${avatar.id}" aria-label="${avatar.label}" aria-pressed="${selectedAvatarId === avatar.id}"><span class="avatar-choice-visual" style="--avatar-ring:${avatar.color}">${avatarVisualMarkup(avatar.id)}</span></button>`).join('')}
     </div></fieldset>
     <button class="game-button primary profile-save-button" type="submit">Speichern</button>
-  </form>${renderAuthModal()}`, backTarget, 'Profil', 'BLOBBA', 'profile-page', false)
+  </form>${renderAuthModal()}`, backTarget, isPrimary ? 'Benutzerprofil' : 'Profil', 'BLOBBA', 'profile-page', false)
 
   const preview = app.querySelector<HTMLElement>('[data-profile-preview]')!
   const input = app.querySelector<HTMLInputElement>('#profile-name')!
