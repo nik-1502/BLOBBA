@@ -1218,17 +1218,12 @@ function renderModeMenu() {
   const gameLayoutClass = activeGame === 'klatschen'
     ? 'player-selection-blobben'
     : 'player-selection-busfahrer'
-  const useSeparateSetupTitle = activeGame === 'klatschen'
-  const sharedPanelClass = activeGame === 'busfahrer' ? ' shared-main-panel' : ''
-  const setupPanel = `<div class="setup-panel setup-game-panel${sharedPanelClass}">
+  const useSeparateSetupTitle = true
+  const setupPanel = `<div class="setup-panel setup-game-panel">
     ${renderModeSwitch()}
     ${setupMode === 'offline' ? renderOfflineSetupContent() : renderOnlineSetupContent()}
   </div>`
-  const positionedSetupPanel = activeGame === 'busfahrer'
-    ? `<div class="player-selection-turn-frame">${setupPanel}</div>`
-    : setupPanel
-  const sharedLayoutPageClass = `player-selection-page${activeGame === 'busfahrer' ? ' shared-main-layout' : ''} ${gameLayoutClass}`
-  setupShell(`${positionedSetupPanel}${renderOnlineModal()}`, '', gameTitle(), 'BLOBBA präsentiert', sharedLayoutPageClass, useSeparateSetupTitle)
+  setupShell(`${setupPanel}${renderOnlineModal()}`, '', gameTitle(), 'BLOBBA präsentiert', `player-selection-page ${gameLayoutClass}`, useSeparateSetupTitle)
   const renderedShell = app.querySelector<HTMLElement>('.player-selection-page .setup-shell')
   if (renderedShell && getKeyboardHeight() > 40) renderedShell.closest('.player-selection-page')?.classList.add('is-player-keyboard-open')
   const renderedPage = app.querySelector<HTMLElement>('.player-selection-page')

@@ -1320,6 +1320,10 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
     position: relative;
   }
 
+  .player-selection-page.player-selection-busfahrer .setup-stack {
+    position: relative;
+  }
+
   .player-selection-page.player-selection-blobben .setup-title {
     top: 0;
     z-index: 2;
@@ -1513,6 +1517,30 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
 
 .player-selection-page.player-selection-blobben .setup-shell {
   padding-bottom: clamp(8px, 2vh, 20px);
+}
+
+.player-selection-page.player-selection-busfahrer .setup-shell {
+  padding-bottom: clamp(8px, 2vh, 20px);
+}
+
+.player-selection-page.player-selection-busfahrer .setup-game-panel {
+  --blobben-selection-rule-margin: clamp(6px, 1.3dvh, 12px);
+  --blobben-selection-rule-height: 27px;
+  --blobben-selection-frame-gap: clamp(40px, 6dvh, 64px);
+  width: 100%;
+  height: calc(
+    100% -
+    var(--blobben-selection-rule-margin) -
+    var(--blobben-selection-rule-height) -
+    var(--blobben-selection-rule-margin) -
+    var(--blobben-selection-frame-gap)
+  );
+  min-height: 0;
+  margin-top: calc(
+    var(--blobben-selection-rule-margin) +
+    var(--blobben-selection-rule-height) +
+    var(--blobben-selection-rule-margin)
+  );
 }
 
 .player-selection-page.player-selection-blobben .setup-game-panel {
