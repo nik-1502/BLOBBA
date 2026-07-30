@@ -816,6 +816,7 @@ function gameRoute(suffix = '') {
 
 function renderPage() {
   resetPlayerPinchTransform()
+  document.documentElement.classList.remove('home-active')
   document.body.classList.remove('page-player-selection')
   pendingKeyboardPositionCleanup?.()
   pendingKeyboardPositionCleanup = undefined
@@ -885,6 +886,7 @@ function renderPage() {
 }
 
 function renderHome() {
+  document.documentElement.classList.add('home-active')
   app.innerHTML = `<main class="home-page">
     <button class="home-profile-button home-settings-button" type="button" aria-label="Einstellungen öffnen" title="Einstellungen öffnen">
       <svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.09A1.7 1.7 0 0 0 9 19.36a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.63 15a1.7 1.7 0 0 0-1.55-1H3v-4h.09A1.7 1.7 0 0 0 4.64 9a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.63a1.7 1.7 0 0 0 1-1.55V3h4v.09A1.7 1.7 0 0 0 15 4.64a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.37 9a1.7 1.7 0 0 0 1.55 1H21v4h-.09A1.7 1.7 0 0 0 19.4 15Z"></path></svg>
@@ -1097,15 +1099,19 @@ function updateHomeFilters() {
         : normalizedQuery ? 'Kein Spiel gefunden'
           : 'Keine Spiele in dieser Kategorie'
   }
+  schedulePageScrollModeUpdate()
 }
 
 function updateCategoryMenu() {
   const menu = app.querySelector<HTMLElement>('.category-menu')
   const button = app.querySelector<HTMLButtonElement>('.categories-filter-button')
+  const homePage = app.querySelector<HTMLElement>('.home-page')
   const label = button?.querySelector<HTMLElement>('.category-filter-label')
   const hasActiveCategory = selectedHomeCategory !== 'Alle'
   const nextLabel = hasActiveCategory ? selectedHomeCategory : 'Kategorien'
   if (menu) menu.hidden = !categoryMenuOpen
+  homePage?.classList.toggle('is-category-menu-open', categoryMenuOpen)
+  homePage?.classList.toggle('has-active-category', hasActiveCategory)
   button?.setAttribute('aria-expanded', String(categoryMenuOpen))
   button?.classList.toggle('is-active', hasActiveCategory)
   if (label && label.textContent !== nextLabel) {
@@ -1123,6 +1129,7 @@ function updateCategoryMenu() {
     chip.classList.toggle('is-selected', selected)
     chip.setAttribute('aria-pressed', String(selected))
   })
+  schedulePageScrollModeUpdate()
 }
 
 function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER', eyebrow = 'BLOBBA präsentiert', pageClass = '', centerTitle = true) {

@@ -1400,6 +1400,64 @@ html[data-theme='light'] .home-page .favorite-heart-button::after {
   }
 }
 
+/* Startseite: fester Hintergrund und ein eigener, nur bei Bedarf aktiver
+   Vordergrund-Scroller. Andere Seiten behalten ihre bestehende Scrolllogik. */
+html.home-active[data-theme='neon'] .app-neon-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--app-background);
+  background-position: center;
+  background-size: cover;
+}
+
+html.home-active[data-theme='neon'].is-standalone .app-neon-background {
+  inset: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-width: 100%;
+  min-height: 100dvh;
+  background: var(--pwa-neon-background);
+  background-position: center;
+  background-size: cover;
+}
+
+html.home-active[data-theme='neon'] body,
+html.home-active[data-theme='neon'] #app,
+html.home-active[data-theme='neon'] #app > .home-page {
+  background: transparent;
+}
+
+html.home-active #app {
+  z-index: 1;
+}
+
+html.home-active #app > .home-page {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-height: 100dvh;
+  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+  overscroll-behavior-y: contain;
+}
+
+html.home-active[data-theme='neon'] #app > .home-page::before,
+html.home-active[data-theme='neon'] #app > .home-page::after {
+  display: none;
+}
+
+html.home-active #app > .home-page:is(.is-category-menu-open, .has-active-category) {
+  padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+}
+
 html[data-theme='light'] .home-page .category-menu {
   color: #fff;
   border-color: rgba(255, 255, 255, .22);
@@ -2048,4 +2106,28 @@ html[data-theme='neon'] .home-page .favorite-heart-button {
       2px 0 6px rgba(22, 135, 255, .15),
       0 4px 8px rgba(0, 0, 0, .34);
   }
+}
+
+html[data-theme='neon'] .home-page .categories-filter-button.is-active {
+  border: 2px solid transparent;
+  color: #fff;
+  background:
+    linear-gradient(110deg, rgba(224, 24, 174, .88), rgba(131, 43, 214, .90) 48%, rgba(27, 111, 233, .88)) padding-box,
+    linear-gradient(110deg, #ff7ac8, #d46cff 48%, #65b2ff) border-box;
+  box-shadow:
+    0 9px 20px rgba(0, 1, 22, .48),
+    -5px 0 16px rgba(255, 25, 166, .36),
+    5px 0 16px rgba(31, 131, 255, .34),
+    0 0 0 1px rgba(190, 83, 239, .42),
+    inset 0 1px 0 rgba(255, 167, 234, .28),
+    inset 0 -6px 12px rgba(10, 18, 92, .30);
+  font-weight: 850;
+}
+
+html[data-theme='neon'] .home-page .categories-filter-button.is-active svg {
+  fill: none;
+  stroke: #fff;
+  filter:
+    drop-shadow(-1px 0 4px rgba(255, 62, 183, .58))
+    drop-shadow(1px 0 4px rgba(65, 154, 255, .58));
 }
