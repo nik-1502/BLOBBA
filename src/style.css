@@ -1492,11 +1492,11 @@ html[data-theme='neon'] .home-page :is(.game-search, .categories-filter-button, 
   background:
     linear-gradient(
       110deg,
-      rgba(212, 18, 157, .92) 0%,
-      rgba(126, 29, 177, .94) 48%,
-      rgba(27, 70, 196, .92) 100%
+      rgba(126, 18, 105, .94) 0%,
+      rgba(70, 25, 120, .95) 48%,
+      rgba(18, 45, 116, .94) 100%
     ) padding-box,
-    linear-gradient(110deg, #ff63c7 0%, #bb4ef0 47%, #3e8cff 100%) border-box;
+    linear-gradient(110deg, #d94aa9 0%, #9342c8 47%, #3979d2 100%) border-box;
   box-shadow:
     0 9px 20px rgba(4, 5, 33, .40),
     0 0 0 1px rgba(65, 35, 168, .78),
@@ -1535,11 +1535,11 @@ html[data-theme='neon'] .home-page .games-search-bar {
   background:
     linear-gradient(
       110deg,
-      rgba(190, 18, 145, .62) 0%,
-      rgba(101, 34, 162, .66) 48%,
-      rgba(27, 71, 188, .65) 100%
+      rgba(111, 18, 94, .72) 0%,
+      rgba(61, 27, 108, .75) 48%,
+      rgba(17, 43, 108, .74) 100%
     ) padding-box,
-    linear-gradient(110deg, rgba(255, 114, 207, .86), rgba(177, 82, 237, .84) 48%, rgba(70, 145, 255, .88)) border-box;
+    linear-gradient(110deg, rgba(218, 76, 171, .82), rgba(147, 67, 199, .80) 48%, rgba(57, 122, 211, .84)) border-box;
   box-shadow:
     0 7px 17px rgba(4, 5, 33, .32),
     0 0 0 1px rgba(69, 40, 178, .66),
@@ -1568,8 +1568,8 @@ html[data-theme='neon'] .home-page .game-search input::placeholder {
 html[data-theme='neon'] .home-page :is(.categories-filter-button, .favorites-filter-button).is-active {
   border-color: transparent;
   background:
-    linear-gradient(110deg, rgba(231, 18, 164, .96), rgba(142, 31, 190, .97) 48%, rgba(36, 79, 211, .95)) padding-box,
-    linear-gradient(110deg, #ff8dd9, #d56aff 48%, #69a8ff) border-box;
+    linear-gradient(110deg, rgba(158, 21, 125, .96), rgba(89, 30, 137, .97) 48%, rgba(23, 53, 133, .96)) padding-box,
+    linear-gradient(110deg, #e85ab5, #a34bd1 48%, #4788df) border-box;
   box-shadow:
     0 7px 17px rgba(4, 5, 33, .30),
     0 0 0 1px rgba(107, 57, 210, .62),
