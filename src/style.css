@@ -1492,18 +1492,19 @@ html[data-theme='neon'] .home-page :is(.game-search, .categories-filter-button, 
   background:
     linear-gradient(
       110deg,
-      rgba(232, 24, 169, .34) 0%,
-      rgba(138, 42, 194, .28) 48%,
-      rgba(37, 103, 224, .32) 100%
+      rgba(242, 20, 177, .46) 0%,
+      rgba(149, 39, 211, .39) 48%,
+      rgba(34, 111, 241, .44) 100%
     ) padding-box,
     radial-gradient(circle at 50% 46%, #162c55 0%, #142a52 42%, #12274e 70%, #102349 100%) padding-box,
     linear-gradient(110deg, #ec55b8 0%, #a94bda 47%, #438be8 100%) border-box;
   box-shadow:
     0 9px 20px rgba(4, 5, 33, .40),
-    0 0 0 1px rgba(65, 35, 168, .78),
-    0 0 10px rgba(123, 51, 218, .18),
-    inset 0 1px 0 rgba(255, 255, 255, .40),
-    inset 0 0 0 1px rgba(255, 255, 255, .13),
+    -3px 0 9px rgba(238, 27, 174, .22),
+    3px 0 9px rgba(35, 116, 244, .22),
+    0 0 0 1px rgba(111, 49, 198, .74),
+    inset 0 1px 0 rgba(221, 72, 211, .25),
+    inset 0 0 0 1px rgba(72, 104, 218, .18),
     inset 0 -6px 12px rgba(6, 8, 62, .31);
   text-shadow: 0 1px 3px rgba(8, 6, 45, .55);
   transition:
@@ -1520,9 +1521,10 @@ html[data-theme='neon'] .home-page :is(.game-search, .categories-filter-button, 
   z-index: -1;
   border-radius: calc(var(--home-control-radius) - 2px);
   background:
-    radial-gradient(ellipse 62% 78% at 10% 0%, rgba(255, 255, 255, .26), transparent 53%),
-    linear-gradient(180deg, rgba(255, 255, 255, .12), transparent 46%);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .10);
+    radial-gradient(ellipse 58% 84% at 5% 0%, rgba(255, 53, 190, .24), transparent 56%),
+    radial-gradient(ellipse 58% 84% at 95% 100%, rgba(40, 126, 255, .22), transparent 58%),
+    linear-gradient(110deg, rgba(224, 36, 181, .08), rgba(139, 52, 215, .06) 48%, rgba(38, 115, 241, .09));
+  box-shadow: inset 0 0 0 1px rgba(127, 71, 216, .16);
   pointer-events: none;
 }
 
@@ -1536,17 +1538,17 @@ html[data-theme='neon'] .home-page .games-search-bar {
   background:
     linear-gradient(
       110deg,
-      rgba(232, 24, 169, .25) 0%,
-      rgba(138, 42, 194, .20) 48%,
-      rgba(37, 103, 224, .24) 100%
+      rgba(242, 20, 177, .36) 0%,
+      rgba(149, 39, 211, .30) 48%,
+      rgba(34, 111, 241, .34) 100%
     ) padding-box,
     radial-gradient(circle at 50% 46%, #162c55 0%, #142a52 42%, #12274e 70%, #102349 100%) padding-box,
     linear-gradient(110deg, rgba(235, 85, 184, .84), rgba(169, 75, 218, .82) 48%, rgba(67, 139, 232, .86)) border-box;
   box-shadow:
     0 7px 17px rgba(4, 5, 33, .32),
     0 0 0 1px rgba(69, 40, 178, .66),
-    inset 0 1px 0 rgba(255, 255, 255, .38),
-    inset 0 0 0 1px rgba(255, 255, 255, .10),
+    inset 0 1px 0 rgba(221, 72, 211, .22),
+    inset 0 0 0 1px rgba(72, 104, 218, .16),
     inset 0 -5px 10px rgba(8, 10, 66, .22);
   -webkit-backdrop-filter: blur(12px) saturate(125%);
   backdrop-filter: blur(12px) saturate(125%);
@@ -1570,13 +1572,13 @@ html[data-theme='neon'] .home-page .game-search input::placeholder {
 html[data-theme='neon'] .home-page :is(.categories-filter-button, .favorites-filter-button).is-active {
   border-color: transparent;
   background:
-    linear-gradient(110deg, rgba(239, 24, 174, .48), rgba(145, 43, 200, .40) 48%, rgba(40, 108, 229, .44)) padding-box,
+    linear-gradient(110deg, rgba(247, 20, 181, .58), rgba(157, 40, 218, .50) 48%, rgba(37, 117, 245, .54)) padding-box,
     radial-gradient(circle at 50% 46%, #162c55 0%, #142a52 42%, #12274e 70%, #102349 100%) padding-box,
     linear-gradient(110deg, #f266bf, #b756df 48%, #5295ed) border-box;
   box-shadow:
     0 7px 17px rgba(4, 5, 33, .30),
     0 0 0 1px rgba(107, 57, 210, .62),
-    inset 0 1px 0 rgba(255, 255, 255, .30),
+    inset 0 1px 0 rgba(227, 78, 217, .24),
     inset 0 -5px 10px rgba(8, 10, 66, .22);
 }
 
@@ -1618,8 +1620,8 @@ html[data-theme='neon'] .home-page .game-search:focus-within {
       0 7px 16px rgba(4, 5, 33, .36),
       0 0 0 1px rgba(65, 35, 168, .68),
       0 0 8px rgba(123, 51, 218, .14),
-      inset 0 1px 0 rgba(255, 255, 255, .36),
-      inset 0 0 0 1px rgba(255, 255, 255, .11),
+      inset 0 1px 0 rgba(221, 72, 211, .22),
+      inset 0 0 0 1px rgba(72, 104, 218, .16),
       inset 0 -5px 9px rgba(8, 10, 66, .27);
   }
 
