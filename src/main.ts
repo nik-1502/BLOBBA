@@ -1075,7 +1075,7 @@ function renderHome() {
 
 function renderSettingsPlaceholder() {
   const sound = getSoundSettings()
-  setupShell(`<div class="setup-panel sound-settings-panel">
+  setupShell(`<div class="primary-profile-frame"><div class="setup-panel sound-settings-panel shared-main-panel">
     <div class="settings-control-row"><strong>Dunkelmodus</strong><label class="sound-toggle"><input type="checkbox" data-dark-mode ${appTheme === 'neon' ? 'checked' : ''}><span aria-hidden="true"></span></label></div>
     <div class="settings-divider" aria-hidden="true"></div>
     <section class="settings-audio-section" aria-labelledby="settings-audio-title">
@@ -1086,7 +1086,7 @@ function renderSettingsPlaceholder() {
         <input type="range" min="0" max="100" step="1" value="${Math.round(sound.volume * 100)}" data-sound-volume ${sound.enabled ? '' : 'disabled'}>
       </label>
     </section>
-  </div>`, '', 'EINSTELLUNGEN')
+  </div></div>`, '', 'Einstellungen', 'BLOBBA', 'profile-page primary-profile-page shared-main-layout settings-page', false)
   const darkMode = app.querySelector<HTMLInputElement>('[data-dark-mode]')!
   const enabled = app.querySelector<HTMLInputElement>('[data-sound-enabled]')!
   const volume = app.querySelector<HTMLInputElement>('[data-sound-volume]')!
