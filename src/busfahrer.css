@@ -866,10 +866,9 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
 .avatar-choice-visual .default-profile-icon, .profile-preview .default-profile-icon, .profile-card-avatar .default-profile-icon { width: 66%; height: 66%; }
 .profile-save-button { width: 100%; }
 .sound-settings-panel { display: flex; overflow: hidden; flex-direction: column; gap: 24px; }
-.settings-page .busfahrer-header > div {
-  grid-column: 3;
-  justify-self: end;
-  text-align: right;
+.shared-main-layout .busfahrer-header > div {
+  width: 14ch;
+  text-align: left;
 }
 .settings-control-row { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 24px; }
 .settings-control-row strong, .settings-control-row > span { color: #fff; font-size: 1.05rem; }
