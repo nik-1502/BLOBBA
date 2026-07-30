@@ -1635,27 +1635,75 @@ html[data-theme='neon'] .home-page .game-search:focus-within {
 }
 
 html[data-theme='neon'] .home-page .category-menu {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 11px;
+  width: 100%;
+  padding: 17px 16px;
   color: #fff;
-  border-color: rgba(255, 255, 255, .22);
-  background: linear-gradient(160deg, rgba(61, 51, 48, .96), rgba(31, 27, 29, .96));
+  border: 1.5px solid transparent;
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, rgba(18, 12, 45, .92), rgba(9, 18, 52, .92)) padding-box,
+    linear-gradient(112deg, rgba(255, 72, 168, .54), rgba(180, 57, 232, .42) 48%, rgba(21, 156, 255, .56)) border-box;
   box-shadow:
-    0 24px 64px rgba(72, 21, 0, .30),
-    inset 0 1px rgba(255, 255, 255, .08);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+    0 12px 28px rgba(0, 1, 20, .42),
+    -3px 0 12px rgba(255, 0, 145, .09),
+    3px 0 12px rgba(20, 139, 255, .10),
+    inset 0 1px 0 rgba(190, 65, 207, .10),
+    inset 0 -8px 18px rgba(0, 3, 32, .22);
+  -webkit-backdrop-filter: blur(12px) saturate(115%);
+  backdrop-filter: blur(12px) saturate(115%);
+}
+
+html[data-theme='neon'] .home-page .category-menu[hidden] {
+  display: none;
 }
 
 html[data-theme='neon'] .home-page .category-chip {
-  color: #fff;
-  border-color: rgba(255, 255, 255, .22);
-  background: linear-gradient(180deg, rgba(75, 63, 59, .94), rgba(42, 34, 33, .94));
-  box-shadow: inset 0 1px rgba(255, 255, 255, .10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 10px;
+  color: rgba(255, 255, 255, .92);
+  border: 1px solid rgba(122, 103, 190, .30);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(35, 37, 75, .72), rgba(16, 23, 58, .78));
+  box-shadow:
+    inset 0 1px 0 rgba(162, 96, 205, .08),
+    inset 0 -4px 9px rgba(2, 4, 28, .18);
+  font-size: clamp(.76rem, 2.8vw, .94rem);
+  font-weight: 750;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  transition: transform 120ms ease;
 }
 
 html[data-theme='neon'] .home-page .category-chip.is-selected {
-  border-color: rgba(255, 255, 255, .72);
-  background: linear-gradient(135deg, #8255e8, #536de3);
-  box-shadow: 0 0 14px rgba(91, 80, 220, .32);
+  color: #fff;
+  border-color: rgba(213, 112, 240, .54);
+  background:
+    linear-gradient(135deg, rgba(205, 39, 208, .94), rgba(111, 64, 225, .96) 52%, rgba(35, 119, 228, .94));
+  box-shadow:
+    0 6px 14px rgba(64, 42, 180, .24),
+    inset 0 1px 0 rgba(235, 118, 244, .20),
+    inset 0 -5px 10px rgba(12, 18, 92, .22);
+}
+
+html[data-theme='neon'] .home-page .category-chip:active {
+  transform: scale(.985);
+}
+
+@media (max-width: 390px) {
+  html[data-theme='neon'] .home-page .category-menu {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
 }
 
 html[data-theme='neon'] .home-page .busfahrer-button {
