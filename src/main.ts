@@ -2225,6 +2225,59 @@ async function submitAuth(email: string, password: string) {
   }
 }
 
+function bindProfileNameKeyboardPosition(input: HTMLInputElement) {
+  const stage = input.closest<HTMLElement>('.setup-stage')
+  const viewport = window.visualViewport
+  if (!stage) return
+
+  let positionFrame = 0
+  let isFocused = false
+
+  const positionAtPlayerKeyboardHeight = () => {
+    positionFrame = 0
+    if (!isFocused || document.activeElement !== input || getKeyboardHeight() <= 40) return
+    const keyboardTop = (viewport?.offsetTop ?? 0) + (viewport?.height ?? window.innerHeight)
+    const targetBottom = keyboardTop - ACTIVE_PLAYER_KEYBOARD_GAP
+    const positionDifference = input.getBoundingClientRect().bottom - targetBottom
+    const keyboardSpace = getKeyboardHeight() + ACTIVE_PLAYER_KEYBOARD_GAP
+    stage.style.setProperty('--keyboard-position-space', `${keyboardSpace.toFixed(2)}px`)
+    stage.scrollTop = Math.max(0, stage.scrollTop + positionDifference)
+  }
+
+  const schedulePosition = () => {
+    if (positionFrame) cancelAnimationFrame(positionFrame)
+    positionFrame = requestAnimationFrame(positionAtPlayerKeyboardHeight)
+  }
+
+  const handleFocus = () => {
+    isFocused = true
+    schedulePosition()
+  }
+  const handleBlur = () => {
+    isFocused = false
+    if (positionFrame) cancelAnimationFrame(positionFrame)
+    positionFrame = 0
+    stage.style.removeProperty('--keyboard-position-space')
+  }
+  const cleanup = () => {
+    input.removeEventListener('focus', handleFocus)
+    input.removeEventListener('blur', handleBlur)
+    viewport?.removeEventListener('resize', schedulePosition)
+    viewport?.removeEventListener('scroll', schedulePosition)
+    window.removeEventListener('resize', schedulePosition)
+    if (positionFrame) cancelAnimationFrame(positionFrame)
+    stage.style.removeProperty('--keyboard-position-space')
+    if (pendingKeyboardPositionCleanup === cleanup) pendingKeyboardPositionCleanup = undefined
+  }
+
+  input.addEventListener('focus', handleFocus)
+  input.addEventListener('blur', handleBlur)
+  viewport?.addEventListener('resize', schedulePosition)
+  viewport?.addEventListener('scroll', schedulePosition)
+  window.addEventListener('resize', schedulePosition)
+  pendingKeyboardPositionCleanup = cleanup
+}
+
 function renderProfileEditor() {
   const isPrimary = profileEditorContext.mode === 'primary'
   const isNew = profileEditorContext.mode === 'new-player'
@@ -2233,7 +2286,7 @@ function renderProfileEditor() {
   let selectedAvatarId = draftProfile.avatarId ?? DEFAULT_AVATAR_ID
   const backTarget = isPrimary ? '' : profileEditorContext.mode === 'edit-player' ? gameRoute('-offline') : gameRoute('-profile-picker')
 
-  setupShell(`<form class="setup-panel profile-editor-panel" data-profile-form>
+  setupShell(`<form class="setup-panel profile-editor-panel${isPrimary ? ' primary-profile-editor-panel' : ''}" data-profile-form>
     <div class="profile-auth-row"><button class="game-button profile-auth-button" type="button" data-auth-action="${currentUser() ? 'logout' : 'login'}">${currentUser() ? 'Logout' : 'Login'}</button></div>
     <p class="eyebrow">${isPrimary ? 'Benutzerprofil' : isNew ? 'Neues Spielerprofil' : 'Spielerprofil'}</p>
     <h2>${isPrimary ? 'Dein Profil' : isNew ? 'Profil anlegen' : 'Profil bearbeiten'}</h2>
@@ -2248,6 +2301,7 @@ function renderProfileEditor() {
 
   const preview = app.querySelector<HTMLElement>('[data-profile-preview]')!
   const input = app.querySelector<HTMLInputElement>('#profile-name')!
+  bindProfileNameKeyboardPosition(input)
   bindAuthModal()
   app.querySelector<HTMLButtonElement>('[data-auth-action]')?.addEventListener('click', () => {
     if (currentUser()) {
