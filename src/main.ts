@@ -538,6 +538,69 @@ function findAllowedTouchScrollContainer(target: EventTarget | null) {
   return null
 }
 
+const KEYBOARD_DISMISS_SWIPE_DISTANCE = 44
+const KEYBOARD_DISMISS_VERTICAL_RATIO = 1.35
+let keyboardDismissTouchId: number | null = null
+let keyboardDismissStartX = 0
+let keyboardDismissStartY = 0
+let keyboardDismissField: HTMLElement | null = null
+let keyboardDismissTriggered = false
+
+function isKeyboardEditingElement(element: Element | null): element is HTMLElement {
+  if (element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) return true
+  if (element instanceof HTMLInputElement) {
+    return !['button', 'checkbox', 'color', 'file', 'hidden', 'image', 'radio', 'range', 'reset', 'submit']
+      .includes(element.type)
+  }
+  return element instanceof HTMLElement && element.isContentEditable
+}
+
+function resetKeyboardDismissSwipe() {
+  keyboardDismissTouchId = null
+  keyboardDismissField = null
+  keyboardDismissTriggered = false
+}
+
+function bindGlobalKeyboardDismissSwipe() {
+  document.addEventListener('touchstart', (event) => {
+    resetKeyboardDismissSwipe()
+    if (event.touches.length !== 1 || playerPinchController.active || getKeyboardHeight() <= 40) return
+    const activeField = document.activeElement
+    if (!isKeyboardEditingElement(activeField)) return
+    const touch = event.touches[0]
+    const keyboardTop = (window.visualViewport?.offsetTop ?? 0)
+      + (window.visualViewport?.height ?? window.innerHeight)
+    if (touch.clientY >= keyboardTop) return
+    keyboardDismissTouchId = touch.identifier
+    keyboardDismissStartX = touch.clientX
+    keyboardDismissStartY = touch.clientY
+    keyboardDismissField = activeField
+  }, { passive: true, capture: true })
+
+  document.addEventListener('touchmove', (event) => {
+    if (keyboardDismissTouchId === null || keyboardDismissTriggered
+      || event.touches.length !== 1 || playerPinchController.active) return
+    const touch = Array.from(event.touches).find((item) => item.identifier === keyboardDismissTouchId)
+    if (!touch) {
+      resetKeyboardDismissSwipe()
+      return
+    }
+    const deltaX = touch.clientX - keyboardDismissStartX
+    const deltaY = touch.clientY - keyboardDismissStartY
+    if (deltaY < KEYBOARD_DISMISS_SWIPE_DISTANCE
+      || deltaY < Math.abs(deltaX) * KEYBOARD_DISMISS_VERTICAL_RATIO) return
+    if (!keyboardDismissField?.isConnected || document.activeElement !== keyboardDismissField) {
+      resetKeyboardDismissSwipe()
+      return
+    }
+    keyboardDismissTriggered = true
+    keyboardDismissField.blur()
+  }, { passive: true, capture: true })
+
+  document.addEventListener('touchend', resetKeyboardDismissSwipe, { passive: true, capture: true })
+  document.addEventListener('touchcancel', resetKeyboardDismissSwipe, { passive: true, capture: true })
+}
+
 function bindGlobalIOSScrollGuard() {
   document.addEventListener('touchstart', (event) => {
     if (event.touches.length === 1) {
@@ -576,6 +639,7 @@ window.addEventListener('resize', schedulePageScrollModeUpdate)
 window.addEventListener('orientationchange', schedulePageScrollModeUpdate)
 window.visualViewport?.addEventListener('resize', schedulePageScrollModeUpdate)
 window.visualViewport?.addEventListener('scroll', schedulePageScrollModeUpdate)
+bindGlobalKeyboardDismissSwipe()
 bindGlobalIOSScrollGuard()
 schedulePageScrollModeUpdate()
 
