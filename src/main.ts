@@ -184,6 +184,24 @@ function updateIPadStandaloneMode() {
 updateIPadStandaloneMode()
 window.addEventListener('resize', updateIPadStandaloneMode)
 
+type LockableScreenOrientation = ScreenOrientation & {
+  lock?: (orientation: 'portrait' | 'portrait-primary') => Promise<void>
+}
+
+function requestPortraitOrientationLock() {
+  const orientation = window.screen.orientation as LockableScreenOrientation | undefined
+  if (!orientation?.lock) return
+  void orientation.lock('portrait-primary').catch(() => {
+    void orientation.lock?.('portrait').catch(() => undefined)
+  })
+}
+
+requestPortraitOrientationLock()
+window.addEventListener('pageshow', requestPortraitOrientationLock)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') requestPortraitOrientationLock()
+})
+
 function alignHomeHeaderButtons() {
   const logo = app.querySelector<HTMLImageElement>('.home-page .hero-logo')
   const buttons = app.querySelectorAll<HTMLButtonElement>('.home-page .home-profile-button')
