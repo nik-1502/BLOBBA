@@ -776,53 +776,86 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
   margin: 0;
 }
 
-/* The main profile uses the same viewport-sized frame geometry as player
-   selection. Only whitespace is expanded; controls retain their dimensions. */
+/* Shared frame metrics. Blobben player selection remains the visual source of
+   truth; the primary profile consumes the same values without changing it. */
+.player-selection-page.player-selection-blobben,
+.primary-profile-page {
+  --main-page-panel-width: min(620px, 100%);
+  --main-page-panel-rule-margin: clamp(6px, 1.3dvh, 12px);
+  --main-page-panel-rule-height: 27px;
+  --main-page-panel-frame-gap: clamp(40px, 6dvh, 64px);
+  --main-page-panel-radius: clamp(24px, 4vw, 30px);
+  --main-page-panel-border: 1px solid var(--blobba-panel-border);
+  --main-page-panel-shadow: var(--blobba-shadow-panel), inset 0 1px var(--blobba-panel-highlight);
+}
+
 .primary-profile-page .setup-stage {
-  padding: 0 clamp(4px, 1vw, 12px) clamp(8px, 2vh, 20px);
+  padding: 0;
   overflow: hidden;
 }
 
+.primary-profile-page .setup-shell {
+  width: min(1180px, 100%);
+  padding-bottom: clamp(8px, 2vh, 20px);
+}
+
 .primary-profile-page .setup-stack {
-  width: min(620px, 100%);
+  display: block;
+  width: var(--main-page-panel-width);
   height: 100%;
   min-height: 0;
 }
 
 .primary-profile-page .primary-profile-editor-panel {
-  --primary-profile-space-scale: 1.18;
-  width: min(620px, 100%);
-  height: calc(100% - clamp(18px, 3dvh, 30px));
+  --primary-profile-title-reserve: clamp(64px, 8.5dvh, 84px);
+  width: var(--main-page-panel-width);
+  height: calc(
+    100% -
+    var(--main-page-panel-rule-margin) -
+    var(--main-page-panel-rule-height) -
+    var(--main-page-panel-rule-margin) -
+    var(--main-page-panel-frame-gap) -
+    var(--primary-profile-title-reserve)
+  );
   min-height: 0;
-  margin-top: clamp(18px, 3dvh, 30px);
-  padding: clamp(21.24px, 4.72vw, 42.48px);
+  margin-top: calc(
+    var(--main-page-panel-rule-margin) +
+    var(--main-page-panel-rule-height) +
+    var(--main-page-panel-rule-margin)
+  );
+  padding: clamp(18.54px, 4.12vw, 37.08px);
   overflow: hidden;
+  border: var(--main-page-panel-border);
+  border-radius: var(--main-page-panel-radius);
+  box-shadow: var(--main-page-panel-shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .primary-profile-page .primary-profile-editor-panel > .profile-auth-row {
-  top: clamp(21.24px, 4.72vw, 42.48px);
-  right: clamp(21.24px, 4.72vw, 42.48px);
+  top: clamp(18.54px, 4.12vw, 37.08px);
+  right: clamp(18.54px, 4.12vw, 37.08px);
 }
 
 .primary-profile-page .primary-profile-editor-panel > .profile-preview {
-  margin-bottom: 28.32px;
+  margin-bottom: 24.72px;
 }
 
 .primary-profile-page .primary-profile-editor-panel > .profile-name-label {
-  margin-bottom: 9.44px;
+  margin-bottom: 8.24px;
 }
 
 .primary-profile-page .primary-profile-editor-panel > .profile-name-input,
 .primary-profile-page .primary-profile-editor-panel > .avatar-fieldset {
-  margin-bottom: 28.32px;
+  margin-bottom: 24.72px;
 }
 
 .primary-profile-page .primary-profile-editor-panel > .avatar-fieldset legend {
-  margin-bottom: 14.16px;
+  margin-bottom: 12.36px;
 }
 
 .primary-profile-page .primary-profile-editor-panel .avatar-choice-grid {
-  gap: 11.8px;
+  gap: 10.3px;
 }
 .auth-switch-button { width: 100%; margin-top: 10px; }
 .profile-preview { position: relative; display: grid; width: 112px; height: 112px; margin: 0 auto 24px; overflow: visible; isolation: isolate; place-items: center; background: transparent; box-shadow: none; }
@@ -909,17 +942,20 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
     right: 14px;
   }
   .primary-profile-page .setup-stage {
-    padding-right: 2px;
-    padding-left: 2px;
+    padding-right: 0;
+    padding-left: 0;
+  }
+  .primary-profile-page .setup-shell {
+    padding-right: 10px;
+    padding-left: 10px;
   }
   .primary-profile-page .primary-profile-editor-panel {
-    height: calc(100% - clamp(6px, 1.4dvh, 14px));
-    margin-top: clamp(6px, 1.4dvh, 14px);
-    padding: 23.6px 16.52px;
+    padding: 20.6px 14.42px;
+    border-radius: 24px;
   }
   .primary-profile-page .primary-profile-editor-panel > .profile-auth-row {
-    top: 23.6px;
-    right: 16.52px;
+    top: 20.6px;
+    right: 14.42px;
   }
   .setup-mode-actions, .online-actions, .online-invite-link, .modal-actions { grid-template-columns: 1fr; }
   .setup-mode-switch { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -1484,23 +1520,23 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
 }
 
 .player-selection-page.player-selection-blobben .setup-game-panel {
-  --blobben-selection-rule-margin: clamp(6px, 1.3dvh, 12px);
-  --blobben-selection-rule-height: 27px;
-  --blobben-selection-frame-gap: clamp(40px, 6dvh, 64px);
-  width: 100%;
+  width: var(--main-page-panel-width);
   height: calc(
     100% -
-    var(--blobben-selection-rule-margin) -
-    var(--blobben-selection-rule-height) -
-    var(--blobben-selection-rule-margin) -
-    var(--blobben-selection-frame-gap)
+    var(--main-page-panel-rule-margin) -
+    var(--main-page-panel-rule-height) -
+    var(--main-page-panel-rule-margin) -
+    var(--main-page-panel-frame-gap)
   );
   min-height: 0;
   margin-top: calc(
-    var(--blobben-selection-rule-margin) +
-    var(--blobben-selection-rule-height) +
-    var(--blobben-selection-rule-margin)
+    var(--main-page-panel-rule-margin) +
+    var(--main-page-panel-rule-height) +
+    var(--main-page-panel-rule-margin)
   );
+  border: var(--main-page-panel-border);
+  border-radius: var(--main-page-panel-radius);
+  box-shadow: var(--main-page-panel-shadow);
 }
 
 /* If the player list no longer fits, grow the complete selection frame and
