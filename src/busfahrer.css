@@ -1504,16 +1504,6 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
 }
 
 .shared-main-panel {
-  position: relative;
-  top: calc(-1 * var(--selection-turn-extension));
-  width: 100%;
-  height: calc(
-    100% +
-    var(--selection-turn-extension) +
-    var(--selection-phase-gap) +
-    var(--selection-phase-gap) -
-    var(--blobben-selection-frame-gap)
-  );
   min-height: 0;
   padding: clamp(18px, 4vw, 34px);
   border: 1px solid rgba(255, 255, 255, .22);
@@ -1521,7 +1511,6 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   color: #fff;
   background: linear-gradient(160deg, rgba(61, 51, 48, .9), rgba(31, 27, 29, .9));
   box-shadow: 0 26px 64px rgba(82, 24, 0, .3), inset 0 1px rgba(255, 255, 255, .08);
-  margin-top: 0;
   flex: 0 0 auto;
   align-self: start;
   backdrop-filter: blur(14px);
@@ -1567,24 +1556,54 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   );
 }
 
-.player-selection-page.player-selection-blobben .setup-game-panel {
-  --blobben-selection-rule-margin: clamp(6px, 1.3dvh, 12px);
-  --blobben-selection-rule-height: 27px;
-  --blobben-selection-frame-gap: clamp(40px, 6dvh, 64px);
+/* BLOBBEN selection, profile and settings use one identical outer frame
+   geometry. Their content remains owned by each panel, but the panel rectangle
+   itself has a single source of truth. */
+:is(
+  .player-selection-page.player-selection-blobben,
+  .primary-profile-page.shared-main-layout
+) .setup-shell {
+  padding-bottom: clamp(8px, 2vh, 20px);
+}
+
+:is(
+  .player-selection-page.player-selection-blobben,
+  .primary-profile-page.shared-main-layout
+) .setup-stack {
+  --shared-main-frame-top: calc(
+    clamp(6px, 1.3dvh, 12px) +
+    27px +
+    clamp(6px, 1.3dvh, 12px)
+  );
+  --shared-main-frame-bottom-gap: clamp(40px, 6dvh, 64px);
+  position: relative;
+  display: block;
+  width: min(620px, 100%);
+  height: 100%;
+  min-height: 0;
+  padding-bottom: 0;
+}
+
+.primary-profile-page.shared-main-layout .primary-profile-frame {
+  display: contents;
+}
+
+:is(
+  .player-selection-page.player-selection-blobben .setup-game-panel,
+  .primary-profile-page.shared-main-layout .shared-main-panel
+) {
+  position: absolute;
+  top: var(--shared-main-frame-top);
+  right: 0;
+  left: 0;
   width: 100%;
   height: calc(
     100% -
-    var(--blobben-selection-rule-margin) -
-    var(--blobben-selection-rule-height) -
-    var(--blobben-selection-rule-margin) -
-    var(--blobben-selection-frame-gap)
+    var(--shared-main-frame-top) -
+    var(--shared-main-frame-bottom-gap)
   );
   min-height: 0;
-  margin-top: calc(
-    var(--blobben-selection-rule-margin) +
-    var(--blobben-selection-rule-height) +
-    var(--blobben-selection-rule-margin)
-  );
+  margin: 0;
 }
 
 /* If the player list no longer fits, grow the complete selection frame and
