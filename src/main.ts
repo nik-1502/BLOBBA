@@ -104,6 +104,7 @@ let cardPresetNameDialogOpen = false
 let cardPresetFormMessage = ''
 let cardPresetPendingDeleteId: string | null = null
 let editingCardPresetId: string | null = null
+let cardPresetNameHasBeenTapped = false
 let setupRulesSnapshot: { difficulty: BusfahrerDifficulty; cardCounts: Record<string, number> } | null = null
 let activeOnlineModal: OnlineModal = null
 let onlineGroup: OnlineGroupState = { joined: false, isHost: false, inviteCode: 'BLOBBA-724', groupId: null, gameKey: 'busfahrer', status: 'lobby', players: [], members: [], gameState: null }
@@ -1421,8 +1422,9 @@ function renderSetupUtilityModal() {
       <p class="eyebrow">${gameName}</p><h2 id="setup-utility-title">Kartenhäufigkeit</h2>
       <section class="card-preset-picker"><h3>Spielstil wählen</h3>
         <div class="card-preset-grid">${fixedPresets.map(({ id, label, copy }) => `<button type="button" class="card-preset-option${selectedCardPreset.type === 'fixed' && selectedCardPreset.id === id ? ' is-selected' : ''}" data-card-preset="${id}" aria-pressed="${selectedCardPreset.type === 'fixed' && selectedCardPreset.id === id}"><strong>${label}</strong><span>${copy}</span></button>`).join('')}</div>
-        ${customCardPresets.length ? `<div class="custom-card-presets"><h3>Eigene Einstellungen</h3>${customCardPresets.map((preset) => `<div class="custom-card-preset player-row${selectedCardPreset.type === 'custom' && selectedCardPreset.id === preset.id ? ' is-selected' : ''}"><button type="button" class="custom-card-preset-icon" data-edit-custom-preset="${preset.id}" aria-label="${escapeHtml(preset.name)} bearbeiten" title="${escapeHtml(preset.name)} bearbeiten"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 20 4.3-1 10.4-10.4a2.1 2.1 0 0 0-3-3L5.3 16 4 20Zm10.2-12.9 2.7 2.7"></path></svg></button><button type="button" class="custom-card-preset-select" data-select-custom-preset="${preset.id}" aria-pressed="${selectedCardPreset.type === 'custom' && selectedCardPreset.id === preset.id}"><strong>${escapeHtml(preset.name)}</strong></button><button type="button" class="player-remove delete-card-preset" data-delete-custom-preset="${preset.id}" aria-label="${escapeHtml(preset.name)} löschen" title="${escapeHtml(preset.name)} löschen"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6"></path></svg></button></div>`).join('')}</div>` : ''}
-        <button type="button" class="customize-card-rules" data-customize-card-rules><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 20 4.3-1 10.4-10.4a2.1 2.1 0 0 0-3-3L5.3 16 4 20Zm10.2-12.9 2.7 2.7"></path></svg><strong>Individuell gestalten</strong><span aria-hidden="true">›</span></button>
+        ${customCardPresets.length ? `<div class="custom-card-presets"><div class="custom-card-presets-heading"><h3>Eigene Einstellungen</h3><span>${customCardPresets.length} / 3</span></div>${customCardPresets.map((preset) => `<div class="custom-card-preset player-row${selectedCardPreset.type === 'custom' && selectedCardPreset.id === preset.id ? ' is-selected' : ''}"><button type="button" class="custom-card-preset-icon" data-edit-custom-preset="${preset.id}" aria-label="${escapeHtml(preset.name)} bearbeiten" title="${escapeHtml(preset.name)} bearbeiten"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 20 4.3-1 10.4-10.4a2.1 2.1 0 0 0-3-3L5.3 16 4 20Zm10.2-12.9 2.7 2.7"></path></svg></button><button type="button" class="custom-card-preset-select" data-select-custom-preset="${preset.id}" aria-pressed="${selectedCardPreset.type === 'custom' && selectedCardPreset.id === preset.id}"><strong>${escapeHtml(preset.name)}</strong></button><button type="button" class="player-remove delete-card-preset" data-delete-custom-preset="${preset.id}" aria-label="${escapeHtml(preset.name)} löschen" title="${escapeHtml(preset.name)} löschen"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6"></path></svg></button></div>`).join('')}</div>` : ''}
+        <button type="button" class="customize-card-rules" data-customize-card-rules ${customCardPresets.length >= 3 ? 'disabled' : ''}><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 20 4.3-1 10.4-10.4a2.1 2.1 0 0 0-3-3L5.3 16 4 20Zm10.2-12.9 2.7 2.7"></path></svg><strong>${customCardPresets.length >= 3 ? 'Maximal 3 Einstellungen' : 'Individuell gestalten'}</strong><span aria-hidden="true">${customCardPresets.length >= 3 ? '✓' : '›'}</span></button>
+        ${customCardPresets.length >= 3 ? '<p class="custom-card-limit">3 / 3 belegt · Lösche eine Einstellung, um eine neue zu erstellen.</p>' : ''}
       </section>
       <button class="game-button primary" type="button" data-save-setup-rules>Übernehmen</button>
       ${cardPresetPendingDeleteId ? renderCardPresetDeleteDialog(cardPresetPendingDeleteId) : ''}
@@ -1436,7 +1438,7 @@ function renderCardPresetNameDialog() {
   return `<div class="card-name-dialog-backdrop">
     <form class="card-name-dialog" data-card-preset-form>
       <h3>Einstellung speichern</h3>
-      <label>Name der Einstellung<input name="presetName" maxlength="24" value="${escapeHtml(selected?.name ?? '')}" placeholder="z. B. Freitagsparty" autocomplete="off"></label>
+      <label>Name der Einstellung<input name="presetName" data-card-preset-name maxlength="24" value="${escapeHtml(selected?.name ?? '')}" placeholder="z. B. Freitagsparty" autocomplete="off"></label>
       ${cardPresetFormMessage ? `<p class="card-preset-form-message" role="alert">${escapeHtml(cardPresetFormMessage)}</p>` : ''}
       <div class="card-dialog-actions"><button type="submit">Speichern</button><button type="button" class="card-dialog-cancel" data-cancel-card-save>Zurück</button></div>
     </form>
@@ -1525,11 +1527,20 @@ function bindSetupUtilityActions() {
   })
   app.querySelector<HTMLButtonElement>('[data-open-card-save]')?.addEventListener('click', () => {
     cardPresetNameDialogOpen = true
+    cardPresetNameHasBeenTapped = false
     cardPresetFormMessage = customCardPresets.length >= 3 && !editingCardPresetId
       ? 'Du kannst maximal drei eigene Einstellungen speichern. Lösche zuerst eine bestehende Einstellung.'
       : ''
     renderModeMenu()
-    queueMicrotask(() => app.querySelector<HTMLInputElement>('[name="presetName"]')?.focus())
+  })
+  app.querySelector<HTMLInputElement>('[data-card-preset-name]')?.addEventListener('click', (event) => {
+    const input = event.currentTarget as HTMLInputElement
+    if (!cardPresetNameHasBeenTapped) {
+      input.select()
+      cardPresetNameHasBeenTapped = true
+      return
+    }
+    input.setSelectionRange(input.value.length, input.value.length)
   })
   app.querySelector<HTMLButtonElement>('[data-cancel-card-save]')?.addEventListener('click', () => {
     cardPresetNameDialogOpen = false
