@@ -1439,6 +1439,7 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   --selection-turn-row: clamp(14px, 2.5dvh, 22px);
   --selection-turn-gap: clamp(8px, 3vw, 16px);
   --selection-phase-gap: clamp(6px, 1.4dvh, 16px);
+  --blobben-selection-frame-gap: clamp(40px, 6dvh, 64px);
   --selection-turn-title-height: clamp(18px, 3dvh, 24px);
   --selection-turn-hand-height: clamp(62.9px, 12.75dvh, 107.1px);
   --selection-turn-extension: calc(
@@ -1506,7 +1507,13 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   position: relative;
   top: calc(-1 * var(--selection-turn-extension));
   width: 100%;
-  height: calc(79% + var(--selection-turn-extension));
+  height: calc(
+    100% +
+    var(--selection-turn-extension) +
+    var(--selection-phase-gap) +
+    var(--selection-phase-gap) -
+    var(--blobben-selection-frame-gap)
+  );
   min-height: 0;
   padding: clamp(18px, 4vw, 34px);
   border: 1px solid rgba(255, 255, 255, .22);
