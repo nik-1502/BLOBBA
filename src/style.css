@@ -901,7 +901,7 @@ html.is-standalone #app > .setup-page > .player-selection-zoom-layer > .setup-sh
   height: 100dvh;
   overflow: hidden;
   pointer-events: none;
-  background: #120012;
+  background: transparent;
   contain: layout paint;
 }
 
