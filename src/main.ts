@@ -35,6 +35,16 @@ import heroLogoNeon from './assets/überschrift/blobba-logo-neon-original.png'
 import heroLogoNeonMobile from './assets/überschrift/blobba-logo-neon-mobile.png'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
+
+document.addEventListener('contextmenu', (event) => {
+  const target = event.target instanceof Element ? event.target : null
+  if (!target?.closest('input, textarea, select, [contenteditable="true"]')) event.preventDefault()
+})
+
+document.addEventListener('dragstart', (event) => {
+  if (event.target instanceof Element && event.target.closest('#app')) event.preventDefault()
+})
+
 const PROFILE_STORAGE_KEY = 'blobba.profiles.v1'
 const PREVIOUS_PROFILE_STORAGE_KEY = atob('Z2V0ZHJ1bmsucHJvZmlsZXMudjE=')
 const FAVORITE_GAMES_STORAGE_KEY = 'blobbaFavoriteGames'

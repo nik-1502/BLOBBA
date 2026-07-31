@@ -2128,3 +2128,37 @@ html[data-theme='neon'] .home-page .categories-filter-button.is-active svg {
     drop-shadow(-1px 0 4px rgba(255, 62, 183, .58))
     drop-shadow(1px 0 4px rgba(65, 154, 255, .58));
 }
+
+/* Home controls must never change their screen position on mouse or touch.
+   Visual hover/press feedback may change paint only. */
+.home-page :is(
+  button,
+  a,
+  [role='button'],
+  .busfahrer-button,
+  .game-tile-wrap
+):is(:hover, :active, :focus) {
+  transform: none !important;
+  translate: none !important;
+}
+
+/* Prevent long-press selection/copy affordances throughout the app while
+   preserving normal editing and selection inside actual form fields. */
+#app,
+#app * {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+#app :is(input, textarea, select, [contenteditable='true']) {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+#app img,
+#app svg {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
