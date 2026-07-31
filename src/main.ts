@@ -337,6 +337,9 @@ window.addEventListener('pageshow', requestPortraitOrientationLock)
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') requestPortraitOrientationLock()
 })
+document.addEventListener('pointerup', () => {
+  if (document.documentElement.classList.contains('is-ipad-tablet')) requestPortraitOrientationLock()
+}, { passive: true })
 
 function alignHomeHeaderButtons() {
   const logo = app.querySelector<HTMLImageElement>('.home-page .hero-logo')

@@ -893,6 +893,41 @@ html.is-standalone #app > .setup-page > .player-selection-zoom-layer > .setup-sh
   transform: none;
 }
 
+.ipad-portrait-guard {
+  display: none;
+}
+
+@media (orientation: landscape) {
+  html.is-ipad-tablet .ipad-portrait-guard {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    display: flex;
+    padding: max(32px, env(safe-area-inset-top)) max(32px, env(safe-area-inset-right)) max(32px, env(safe-area-inset-bottom)) max(32px, env(safe-area-inset-left));
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 20px;
+    color: #fff;
+    background: var(--app-background);
+    font-family: "Fredoka", Inter, system-ui, sans-serif;
+    text-align: center;
+    touch-action: none;
+  }
+
+  html.is-ipad-tablet .ipad-portrait-guard span {
+    font-size: clamp(4rem, 12vw, 7rem);
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  html.is-ipad-tablet .ipad-portrait-guard strong {
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 900;
+  }
+}
+
 .page-transition-viewport {
   position: fixed;
   inset: 0;
