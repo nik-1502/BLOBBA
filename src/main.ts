@@ -1315,6 +1315,7 @@ function updateCategoryMenu() {
 function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER', eyebrow = 'BLOBBA präsentiert', pageClass = '', centerTitle = true) {
   pendingKeyboardPositionCleanup?.()
   pendingKeyboardPositionCleanup = undefined
+  const useSharedStageTitle = centerTitle || pageClass.includes('primary-profile-page')
   const headerEnd = pageClass.includes('player-selection-page')
     ? `<div class="selection-utility-actions">
         <button class="selection-utility-button" type="button" data-setup-info aria-label="Spiel erklären" title="Spiel erklären">i</button>
@@ -1332,8 +1333,8 @@ function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER',
     ? '<div class="player-selection-bottom-spacer" aria-hidden="true"></div></div>'
     : ''
   app.innerHTML = `<main class="busfahrer-page setup-page ${pageClass}">${fixedPlayerBackground}${zoomLayerStart}<div class="busfahrer-shell setup-shell">
-    <header class="busfahrer-header"><button class="back-button bus-back blobba-nav-action" type="button" data-setup-back>← Zurück</button>${centerTitle ? '<span></span>' : `<div><p>${eyebrow}</p><h1>${title}</h1></div>`}${headerEnd}</header>
-    <section class="setup-stage"><div class="setup-stack">${centerTitle ? `<h1 class="setup-title">${title}</h1>` : ''}${content}</div></section>
+    <header class="busfahrer-header"><button class="back-button bus-back blobba-nav-action" type="button" data-setup-back>← Zurück</button>${useSharedStageTitle ? '<span></span>' : `<div><p>${eyebrow}</p><h1>${title}</h1></div>`}${headerEnd}</header>
+    <section class="setup-stage"><div class="setup-stack">${useSharedStageTitle ? `<h1 class="setup-title">${title}</h1>` : ''}${content}</div></section>
   </div>${zoomLayerEnd}</main>`
   if (pageClass.includes('player-selection-page')) initializePlayerPinchTransform()
   app.querySelector<HTMLButtonElement>('[data-setup-back]')!.addEventListener('click', () => { playSound('ui-back'); window.location.hash = backTarget })

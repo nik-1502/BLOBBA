@@ -1409,6 +1409,11 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   overflow: visible;
 }
 
+.player-selection-page:is(.player-selection-busfahrer, .player-selection-blobben) .setup-stack,
+.primary-profile-page .setup-stack {
+  position: relative;
+}
+
 .player-selection-page:is(.player-selection-busfahrer, .player-selection-blobben) .setup-stack {
   display: block;
   width: min(620px, 100%);
@@ -1416,7 +1421,8 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   min-height: 0;
 }
 
-.player-selection-page:is(.player-selection-busfahrer, .player-selection-blobben) .setup-title {
+.player-selection-page:is(.player-selection-busfahrer, .player-selection-blobben) .setup-title,
+.primary-profile-page .setup-title {
   position: absolute;
   top: 0;
   right: clamp(8px, 3vw, 36px);
@@ -1673,7 +1679,7 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
 }
 
 .player-selection-page:is(.player-selection-busfahrer, .player-selection-blobben) .setup-title,
-.primary-profile-page .setup-shell > .busfahrer-header h1,
+.primary-profile-page .setup-title,
 .busfahrer-page:not(.setup-page) :is(
   .busfahrer-game-title,
   .klatschen-shell > .busfahrer-header h1
@@ -1683,7 +1689,7 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
 }
 
 .player-selection-page:is(.player-selection-busfahrer, .player-selection-blobben) .setup-title,
-.primary-profile-page .setup-shell > .busfahrer-header h1,
+.primary-profile-page .setup-title,
 .busfahrer-page:not(.setup-page) > .klatschen-shell > .busfahrer-header h1,
 .busfahrer-page:not(.setup-page) .busfahrer-game-title > span {
   color: #FFB45C !important;
@@ -1696,7 +1702,7 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
 
 @media (max-width: 680px) {
   .player-selection-page:is(.player-selection-busfahrer, .player-selection-blobben) .setup-title,
-  .primary-profile-page .setup-shell > .busfahrer-header h1,
+  .primary-profile-page .setup-title,
   .busfahrer-page:not(.setup-page) :is(
     .busfahrer-game-title,
     .klatschen-shell > .busfahrer-header h1
