@@ -1666,9 +1666,21 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   .busfahrer-game-title,
   .klatschen-shell > .busfahrer-header h1
 ) {
-  color: #E68931 !important;
   font-size: clamp(1.4rem, 5.4vw, 3rem) !important;
   text-align: center;
+}
+
+.player-selection-page:is(.player-selection-busfahrer, .player-selection-blobben) .setup-title,
+.busfahrer-page:not(.setup-page) > .klatschen-shell > .busfahrer-header h1,
+.busfahrer-page:not(.setup-page) .busfahrer-game-title > span {
+  color: transparent !important;
+  background-image: linear-gradient(90deg, #ff0084 0%, #9f00ff 50%, #005dff 100%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 4px 14px rgba(91, 80, 220, .3);
 }
 
 @media (max-width: 680px) {
