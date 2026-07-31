@@ -1781,6 +1781,10 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
 .card-name-dialog button { min-height: 40px; padding: 0 12px; border: 1px solid rgba(255, 255, 255, .16); border-radius: 10px; color: #fff; background: rgba(255, 255, 255, .08); font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; }
 .card-name-dialog button[type="submit"] { border-color: rgba(255, 180, 92, .4); background: rgba(157, 78, 225, .42); }
 .card-preset-form-message { margin: -4px 0 0; color: #ffbdc5; font-size: .8rem; line-height: 1.35; }
+.card-delete-dialog p { margin: 0; color: var(--setup-text-muted); line-height: 1.45; }
+.card-delete-dialog .confirm-card-delete { border-color: rgba(255, 88, 111, .66); color: #ffb4bf; background: rgba(126, 34, 49, .68); box-shadow: 0 0 9px rgba(255, 55, 87, .2); }
+.card-delete-dialog .confirm-card-delete:hover,
+.card-delete-dialog .confirm-card-delete:active { border-color: rgba(255, 112, 130, .78); color: #fff; background: rgba(159, 41, 57, .78); }
 
 @media (max-width: 520px) {
   .selection-utility-actions { gap: 6px; }

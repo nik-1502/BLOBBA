@@ -102,6 +102,7 @@ let cardRulesDraft = { ...blobbenCardCounts }
 let cardRulesDraftBaseline = { ...blobbenCardCounts }
 let cardPresetNameDialogOpen = false
 let cardPresetFormMessage = ''
+let cardPresetPendingDeleteId: string | null = null
 let setupRulesSnapshot: { difficulty: BusfahrerDifficulty; cardCounts: Record<string, number> } | null = null
 let activeOnlineModal: OnlineModal = null
 let onlineGroup: OnlineGroupState = { joined: false, isHost: false, inviteCode: 'BLOBBA-724', groupId: null, gameKey: 'busfahrer', status: 'lobby', players: [], members: [], gameState: null }
@@ -1414,6 +1415,7 @@ function renderSetupUtilityModal() {
         <button type="button" class="customize-card-rules" data-customize-card-rules><span aria-hidden="true">☷</span><strong>Individuell gestalten</strong><span aria-hidden="true">›</span></button>
       </section>
       <button class="game-button primary" type="button" data-save-setup-rules>Übernehmen</button>
+      ${cardPresetPendingDeleteId ? renderCardPresetDeleteDialog(cardPresetPendingDeleteId) : ''}
     </article>
   </div>`
 }
@@ -1431,6 +1433,18 @@ function renderCardPresetNameDialog() {
   </div>`
 }
 
+function renderCardPresetDeleteDialog(presetId: string) {
+  const preset = customCardPresets.find(({ id }) => id === presetId)
+  if (!preset) return ''
+  return `<div class="card-name-dialog-backdrop">
+    <div class="card-name-dialog card-delete-dialog" role="alertdialog" aria-modal="true" aria-labelledby="card-delete-title" aria-describedby="card-delete-copy">
+      <h3 id="card-delete-title">Einstellung löschen?</h3>
+      <p id="card-delete-copy">Möchtest du „${escapeHtml(preset.name)}“ wirklich löschen?</p>
+      <div><button type="button" data-cancel-card-delete>Zurück</button><button type="button" class="confirm-card-delete" data-confirm-card-delete="${preset.id}">Löschen</button></div>
+    </div>
+  </div>`
+}
+
 function bindSetupUtilityActions() {
   app.querySelector<HTMLButtonElement>('[data-setup-info]')?.addEventListener('click', () => {
     playSound('ui-click')
@@ -1443,6 +1457,7 @@ function bindSetupUtilityActions() {
     cardRulesView = 'presets'
     cardPresetNameDialogOpen = false
     cardPresetFormMessage = ''
+    cardPresetPendingDeleteId = null
     setupUtilityModal = 'rules'
     renderModeMenu()
   })
@@ -1538,13 +1553,23 @@ function bindSetupUtilityActions() {
   })
   app.querySelectorAll<HTMLButtonElement>('[data-delete-custom-preset]').forEach((button) => button.addEventListener('click', () => {
     const id = button.dataset.deleteCustomPreset!
-    const preset = customCardPresets.find((entry) => entry.id === id)
-    if (!preset || !window.confirm(`„${preset.name}“ löschen?`)) return
+    if (!customCardPresets.some((entry) => entry.id === id)) return
+    cardPresetPendingDeleteId = id
+    renderModeMenu()
+  }))
+  app.querySelector<HTMLButtonElement>('[data-cancel-card-delete]')?.addEventListener('click', () => {
+    cardPresetPendingDeleteId = null
+    renderModeMenu()
+  })
+  app.querySelector<HTMLButtonElement>('[data-confirm-card-delete]')?.addEventListener('click', (event) => {
+    const id = (event.currentTarget as HTMLButtonElement).dataset.confirmCardDelete!
     customCardPresets = customCardPresets.filter((entry) => entry.id !== id)
     if (selectedCardPreset.type === 'custom' && selectedCardPreset.id === id) selectedCardPreset = { type: 'fixed', id: 'classic' }
     saveCustomCardPresets()
+    cardPresetPendingDeleteId = null
+    playSound('ui-confirm')
     renderModeMenu()
-  }))
+  })
   app.querySelector<HTMLButtonElement>('[data-save-setup-rules]')?.addEventListener('click', () => {
     if (activeGame === 'klatschen') blobbenCardCounts = selectedCardCounts()
     if (activeGame === 'klatschen' && Object.values(blobbenCardCounts).every((count) => count === 0)) {
