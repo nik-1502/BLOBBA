@@ -1690,3 +1690,69 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
     font-size: clamp(1.3rem, 6.2vw, 2rem) !important;
   }
 }
+
+/* Player-selection utility actions and game-specific rule dialogs. */
+.selection-utility-actions { display: flex; justify-self: end; gap: 8px; }
+.selection-utility-button {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border: 1px solid rgba(255, 180, 92, .5);
+  border-radius: 50%;
+  place-items: center;
+  color: #FFB45C;
+  background: rgba(31, 22, 45, .78);
+  box-shadow: 0 7px 18px rgba(28, 5, 53, .3), inset 0 1px rgba(255, 255, 255, .12);
+  font: inherit;
+  font-family: 'Fredoka', Inter, system-ui, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.selection-utility-button svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.selection-utility-button:hover,
+.selection-utility-button:active { border-color: #FFB45C; background: rgba(104, 54, 139, .72); box-shadow: 0 0 18px rgba(157, 78, 225, .38), inset 0 1px rgba(255, 255, 255, .16); }
+.player-selection-page .setup-utility-modal { position: relative; width: min(560px, 100%); max-height: min(82dvh, 720px); overflow: hidden; text-align: left; }
+.setup-utility-modal > h2,
+.setup-utility-modal > .eyebrow { text-align: center; }
+.setup-utility-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 50%;
+  place-items: center;
+  color: #fff;
+  background: rgba(255, 255, 255, .08);
+  font: inherit;
+  font-size: 1.55rem;
+  cursor: pointer;
+}
+.setup-info-copy { display: grid; color: var(--setup-text-muted); line-height: 1.5; gap: 12px; }
+.setup-info-copy ol { display: grid; margin: 0; padding-left: 24px; gap: 10px; }
+.setup-info-copy p { margin: 0; padding: 12px 14px; border: 1px solid rgba(255, 180, 92, .24); border-radius: 14px; color: #ffe2bd; background: rgba(255, 180, 92, .08); }
+.difficulty-options { display: grid; margin-bottom: 18px; gap: 10px; }
+.difficulty-option { display: grid; padding: 14px 16px; border: 1px solid rgba(255, 255, 255, .16); border-radius: 14px; color: #fff; background: rgba(255, 255, 255, .06); gap: 4px; font: inherit; text-align: left; cursor: pointer; }
+.difficulty-option span { color: var(--setup-text-muted); font-size: .88rem; }
+.difficulty-option.is-selected { border-color: #FFB45C; background: rgba(159, 77, 218, .2); box-shadow: 0 0 0 2px rgba(255, 180, 92, .1); }
+.card-rule-presets { display: grid; margin-bottom: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.card-rule-presets button,
+.card-count-row button { min-height: 38px; border: 1px solid rgba(255, 255, 255, .16); border-radius: 10px; color: #fff; background: rgba(255, 255, 255, .08); font: inherit; font-weight: 700; cursor: pointer; }
+.card-count-list { display: grid; min-height: 0; margin-bottom: 14px; overflow: auto; border: 1px solid rgba(255, 255, 255, .1); border-radius: 14px; scrollbar-color: rgba(255, 180, 92, .7) transparent; }
+.card-count-row { display: grid; min-height: 52px; padding: 7px 9px 7px 13px; border-bottom: 1px solid rgba(255, 255, 255, .08); grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.card-count-row:last-child { border-bottom: 0; }
+.card-count-row > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-count-row > div { display: grid; grid-template-columns: 38px 34px 38px; align-items: center; text-align: center; }
+.card-count-row output { color: #FFB45C; font-weight: 800; }
+.setup-card-rules-modal { grid-template-rows: auto auto auto minmax(120px, 1fr) auto; }
+
+@media (max-width: 520px) {
+  .selection-utility-actions { gap: 6px; }
+  .selection-utility-button { width: 42px; height: 42px; padding: 9px; }
+  .setup-utility-modal { max-height: 88dvh; }
+}

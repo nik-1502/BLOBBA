@@ -1,6 +1,7 @@
 import './style.css'
 import { applyBusfahrerState, getBusfahrerState, mountBusfahrer, type BusfahrerGameState } from './busfahrer.ts'
 import { applyKlatschenState, getKlatschenState, mountKlatschen, type KlatschenGameState } from './games/klatschen/KlatschenGame.ts'
+import { klatschenCardGroups } from './games/klatschen/klatschenCards.ts'
 import { avatarColor, avatarOptions, avatarSource, avatarVisualMarkup } from './profiles.ts'
 import { getSoundSettings, playActionSound, playSound, setSoundEffectsEnabled, setSoundEffectsVolume } from './audio/audioManager.ts'
 import {
@@ -38,6 +39,7 @@ const PROFILE_STORAGE_KEY = 'blobba.profiles.v1'
 const PREVIOUS_PROFILE_STORAGE_KEY = atob('Z2V0ZHJ1bmsucHJvZmlsZXMudjE=')
 const FAVORITE_GAMES_STORAGE_KEY = 'blobbaFavoriteGames'
 const THEME_STORAGE_KEY = 'blobba.theme.v1'
+const GAME_RULES_STORAGE_KEY = 'blobba.game-rules.v1'
 const MAX_PLAYERS = 9
 const DEFAULT_AVATAR_ID = 'bier'
 const HOME_GAME_CATEGORIES = ['Kartenspiele', 'Schnell', 'Klassiker', 'Lustig', 'Denkspiele', 'Verteilspiele', 'Teamspiele', 'Wettkampf'] as const
@@ -71,6 +73,8 @@ type SetupMode = 'offline' | 'online'
 type GameKey = 'busfahrer' | 'klatschen'
 type OnlineModal = 'create' | 'join' | 'invite' | null
 type AuthModal = 'login' | 'register' | null
+type SetupUtilityModal = 'info' | 'rules' | null
+type BusfahrerDifficulty = 'locker' | 'standard' | 'hart'
 type SharedGameState = BusfahrerGameState | KlatschenGameState
 type OnlineGroupState = { joined: boolean; isHost: boolean; inviteCode: string; groupId: string | null; gameKey: GameKey; status: 'lobby' | 'playing' | 'finished'; players: SetupPlayer[]; members: OnlineMember[]; gameState: SharedGameState | null }
 
@@ -83,6 +87,10 @@ let avatarEditorPlayerId: string | null = null
 let editingPlayerId: string | null = null
 let setupMode: SetupMode = 'offline'
 let activeGame: GameKey = 'busfahrer'
+let setupUtilityModal: SetupUtilityModal = null
+let busfahrerDifficulty: BusfahrerDifficulty = 'standard'
+let blobbenCardCounts = Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [title, cards.length]))
+let setupRulesSnapshot: { difficulty: BusfahrerDifficulty; cardCounts: Record<string, number> } | null = null
 let activeOnlineModal: OnlineModal = null
 let onlineGroup: OnlineGroupState = { joined: false, isHost: false, inviteCode: 'BLOBBA-724', groupId: null, gameKey: 'busfahrer', status: 'lobby', players: [], members: [], gameState: null }
 let authSession: Session | null = null
@@ -91,6 +99,28 @@ let authNotice = ''
 let onlineUnsubscribe: (() => void) | undefined
 let pendingInviteCode: string | null = null
 let onlineNotice = ''
+
+try {
+  const storedRules = JSON.parse(localStorage.getItem(GAME_RULES_STORAGE_KEY) ?? '{}') as {
+    busfahrerDifficulty?: BusfahrerDifficulty
+    blobbenCardCounts?: Record<string, number>
+  }
+  if (storedRules.busfahrerDifficulty && ['locker', 'standard', 'hart'].includes(storedRules.busfahrerDifficulty)) {
+    busfahrerDifficulty = storedRules.busfahrerDifficulty
+  }
+  if (storedRules.blobbenCardCounts) {
+    blobbenCardCounts = Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [
+      title,
+      Math.max(0, Math.min(12, storedRules.blobbenCardCounts?.[title] ?? cards.length)),
+    ]))
+  }
+} catch {
+  // Ungültige gespeicherte Regeln fallen auf die Standardwerte zurück.
+}
+
+function saveGameRules() {
+  localStorage.setItem(GAME_RULES_STORAGE_KEY, JSON.stringify({ busfahrerDifficulty, blobbenCardCounts }))
+}
 let pendingKeyboardPositionCleanup: (() => void) | undefined
 let maximumVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
 const ACTIVE_PLAYER_KEYBOARD_GAP = 68
@@ -895,24 +925,30 @@ function renderPage() {
     activeGame = 'busfahrer'
     const snapshot = gamePlayerSnapshot.length ? gamePlayerSnapshot : players
     app.innerHTML = '<main class="busfahrer-page" id="busfahrer-game"></main>'
-    unmountCurrentPage = mountBusfahrer(app.querySelector<HTMLElement>('#busfahrer-game')!, snapshot.map(({ profileId, name, avatar, avatarColor }) => ({ id: profileId, name, avatar, avatarColor })), setupMode === 'online' && onlineGroup.groupId ? {
+    unmountCurrentPage = mountBusfahrer(app.querySelector<HTMLElement>('#busfahrer-game')!, snapshot.map(({ profileId, name, avatar, avatarColor }) => ({ id: profileId, name, avatar, avatarColor })), {
+      difficulty: busfahrerDifficulty,
+      ...(setupMode === 'online' && onlineGroup.groupId ? {
       localPlayerId: authSession?.user.id,
       initialState: onlineGroup.gameState && 'gamePlayers' in onlineGroup.gameState ? onlineGroup.gameState : null,
       onStateChange: (state) => { if (onlineGroup.groupId && localPlayerIsCurrent(state)) void updateOnlineGameState(onlineGroup.groupId, state, state.phase === 'final' ? 'finished' : 'playing') },
       onLeave: () => { void leaveCurrentOnlineGroup() },
-    } : {})
+      } : {}),
+    })
     return
   }
   if (routeBase === '#klatschen') {
     activeGame = 'klatschen'
     const snapshot = gamePlayerSnapshot.length ? gamePlayerSnapshot : players
     app.innerHTML = '<main class="busfahrer-page" id="klatschen-game"></main>'
-    unmountCurrentPage = mountKlatschen(app.querySelector<HTMLElement>('#klatschen-game')!, snapshot.map(({ profileId, name, avatar, avatarColor }) => ({ id: profileId, name, avatar, avatarColor })), setupMode === 'online' && onlineGroup.groupId ? {
+    unmountCurrentPage = mountKlatschen(app.querySelector<HTMLElement>('#klatschen-game')!, snapshot.map(({ profileId, name, avatar, avatarColor }) => ({ id: profileId, name, avatar, avatarColor })), {
+      cardCounts: blobbenCardCounts,
+      ...(setupMode === 'online' && onlineGroup.groupId ? {
       localPlayerId: authSession?.user.id,
       initialState: onlineGroup.gameState && 'players' in onlineGroup.gameState ? onlineGroup.gameState : null,
       onStateChange: (state) => { if (onlineGroup.groupId) void updateOnlineGameState(onlineGroup.groupId, state, state.phase === 'finished' ? 'finished' : 'playing') },
       onLeave: () => { void leaveCurrentOnlineGroup() },
-    } : {})
+      } : {}),
+    })
     return
   }
   if (routeBase === '#busfahrer-menu' || routeBase === '#klatschen-menu') {
@@ -1194,8 +1230,13 @@ function updateCategoryMenu() {
 function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER', eyebrow = 'BLOBBA präsentiert', pageClass = '', centerTitle = true) {
   pendingKeyboardPositionCleanup?.()
   pendingKeyboardPositionCleanup = undefined
-  const headerEnd = pageClass.includes('player-selection-busfahrer')
-    ? '<button class="restart-button player-selection-header-spacer" type="button" tabindex="-1" aria-hidden="true">Neu starten</button>'
+  const headerEnd = pageClass.includes('player-selection-page')
+    ? `<div class="selection-utility-actions">
+        <button class="selection-utility-button" type="button" data-setup-info aria-label="Spiel erklären" title="Spiel erklären">i</button>
+        <button class="selection-utility-button" type="button" data-setup-rules aria-label="Spielregeln anpassen" title="Spielregeln anpassen">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h10m4 0h2M4 17h2m4 0h10M14 4v6M6 14v6"></path></svg>
+        </button>
+      </div>`
     : '<span></span>'
   const fixedPlayerBackground = pageClass.includes('player-selection-page')
     ? '<div class="player-selection-background" aria-hidden="true"></div>'
@@ -1223,7 +1264,7 @@ function renderModeMenu() {
     ${renderModeSwitch()}
     ${setupMode === 'offline' ? renderOfflineSetupContent() : renderOnlineSetupContent()}
   </div>`
-  setupShell(`${setupPanel}${renderOnlineModal()}`, '', gameTitle(), 'BLOBBA präsentiert', `player-selection-page ${gameLayoutClass}`, useSeparateSetupTitle)
+  setupShell(`${setupPanel}${renderOnlineModal()}${renderSetupUtilityModal()}`, '', gameTitle(), 'BLOBBA präsentiert', `player-selection-page ${gameLayoutClass}`, useSeparateSetupTitle)
   const renderedShell = app.querySelector<HTMLElement>('.player-selection-page .setup-shell')
   if (renderedShell && getKeyboardHeight() > 40) renderedShell.closest('.player-selection-page')?.classList.add('is-player-keyboard-open')
   const renderedPage = app.querySelector<HTMLElement>('.player-selection-page')
@@ -1236,8 +1277,103 @@ function renderModeMenu() {
   bindSetupModeSwitch()
   setupMode === 'offline' ? bindOfflineSetup() : bindOnlineSetup()
   bindOnlineModal()
+  bindSetupUtilityActions()
   maybeAutoJoinInvite()
   expandPlayerSelectionFrameForContent()
+}
+
+function renderSetupUtilityModal() {
+  if (!setupUtilityModal) return ''
+  const gameName = gameTitle()
+  if (setupUtilityModal === 'info') {
+    const content = activeGame === 'busfahrer'
+      ? `<ol><li>Beantwortet nacheinander vier Kartenfragen.</li><li>Baut anschließend gemeinsam die Pyramide ab.</li><li>Die Person mit den meisten Karten fährt zum Schluss Bus.</li></ol>`
+      : `<ol><li>Tippt auf den Kartenkreis und zieht reihum eine Karte.</li><li>Führt die angezeigte Aktion direkt aus.</li><li>Aktionskarten bleiben sichtbar, bis sie eingesetzt oder ersetzt werden.</li></ol>`
+    return `<div class="setup-modal-backdrop setup-utility-backdrop" data-close-setup-utility>
+      <article class="setup-modal setup-utility-modal" role="dialog" aria-modal="true" aria-labelledby="setup-utility-title">
+        <button class="setup-utility-close" type="button" data-close-setup-utility aria-label="Schließen">×</button>
+        <p class="eyebrow">${gameName}</p><h2 id="setup-utility-title">So funktioniert’s</h2>
+        <div class="setup-info-copy">${content}<p>Trinkt verantwortungsvoll. Jede Aufgabe funktioniert selbstverständlich auch alkoholfrei.</p></div>
+      </article>
+    </div>`
+  }
+  if (activeGame === 'busfahrer') {
+    const options: Array<{ id: BusfahrerDifficulty; label: string; copy: string }> = [
+      { id: 'locker', label: 'Locker', copy: '4 Karten in der Bus-Runde' },
+      { id: 'standard', label: 'Standard', copy: '5 Karten · empfohlen' },
+      { id: 'hart', label: 'Hart', copy: '6 Karten in der Bus-Runde' },
+    ]
+    return `<div class="setup-modal-backdrop setup-utility-backdrop" data-close-setup-utility>
+      <article class="setup-modal setup-utility-modal" role="dialog" aria-modal="true" aria-labelledby="setup-utility-title">
+        <button class="setup-utility-close" type="button" data-close-setup-utility aria-label="Schließen">×</button>
+        <p class="eyebrow">${gameName}</p><h2 id="setup-utility-title">Spielregeln</h2>
+        <div class="difficulty-options">${options.map((option) => `<button class="difficulty-option${busfahrerDifficulty === option.id ? ' is-selected' : ''}" type="button" data-bus-difficulty="${option.id}" aria-pressed="${busfahrerDifficulty === option.id}"><strong>${option.label}</strong><span>${option.copy}</span></button>`).join('')}</div>
+        <button class="game-button primary" type="button" data-save-setup-rules>Übernehmen</button>
+      </article>
+    </div>`
+  }
+  return `<div class="setup-modal-backdrop setup-utility-backdrop" data-close-setup-utility>
+    <article class="setup-modal setup-utility-modal setup-card-rules-modal" role="dialog" aria-modal="true" aria-labelledby="setup-utility-title">
+      <button class="setup-utility-close" type="button" data-close-setup-utility aria-label="Schließen">×</button>
+      <p class="eyebrow">${gameName}</p><h2 id="setup-utility-title">Kartenhäufigkeit</h2>
+      <div class="card-rule-presets"><button type="button" data-card-preset="classic">Klassisch</button><button type="button" data-card-preset="short">Kurz</button><button type="button" data-card-preset="chaos">Chaos</button></div>
+      <div class="card-count-list">${klatschenCardGroups.map(({ title }) => `<div class="card-count-row"><span>${escapeHtml(title)}</span><div><button type="button" data-card-count-title="${escapeHtml(title)}" data-card-count-delta="-1" aria-label="${escapeHtml(title)} reduzieren">−</button><output>${blobbenCardCounts[title] ?? 0}</output><button type="button" data-card-count-title="${escapeHtml(title)}" data-card-count-delta="1" aria-label="${escapeHtml(title)} erhöhen">+</button></div></div>`).join('')}</div>
+      <button class="game-button primary" type="button" data-save-setup-rules>Übernehmen</button>
+    </article>
+  </div>`
+}
+
+function bindSetupUtilityActions() {
+  app.querySelector<HTMLButtonElement>('[data-setup-info]')?.addEventListener('click', () => {
+    playSound('ui-click')
+    setupUtilityModal = 'info'
+    renderModeMenu()
+  })
+  app.querySelector<HTMLButtonElement>('[data-setup-rules]')?.addEventListener('click', () => {
+    playSound('ui-click')
+    setupRulesSnapshot = { difficulty: busfahrerDifficulty, cardCounts: { ...blobbenCardCounts } }
+    setupUtilityModal = 'rules'
+    renderModeMenu()
+  })
+  app.querySelectorAll<HTMLElement>('[data-close-setup-utility]').forEach((element) => element.addEventListener('click', (event) => {
+    if (event.target !== element && element.classList.contains('setup-utility-backdrop')) return
+    if (setupRulesSnapshot) {
+      busfahrerDifficulty = setupRulesSnapshot.difficulty
+      blobbenCardCounts = setupRulesSnapshot.cardCounts
+      setupRulesSnapshot = null
+    }
+    setupUtilityModal = null
+    renderModeMenu()
+  }))
+  app.querySelectorAll<HTMLButtonElement>('[data-bus-difficulty]').forEach((button) => button.addEventListener('click', () => {
+    busfahrerDifficulty = button.dataset.busDifficulty as BusfahrerDifficulty
+    renderModeMenu()
+  }))
+  app.querySelectorAll<HTMLButtonElement>('[data-card-count-delta]').forEach((button) => button.addEventListener('click', () => {
+    const title = button.dataset.cardCountTitle!
+    blobbenCardCounts[title] = Math.max(0, Math.min(12, (blobbenCardCounts[title] ?? 0) + Number(button.dataset.cardCountDelta)))
+    renderModeMenu()
+  }))
+  app.querySelectorAll<HTMLButtonElement>('[data-card-preset]').forEach((button) => button.addEventListener('click', () => {
+    blobbenCardCounts = Object.fromEntries(klatschenCardGroups.map(({ title, cards }, index) => [
+      title,
+      button.dataset.cardPreset === 'short' ? Math.max(1, Math.ceil(cards.length * .55))
+        : button.dataset.cardPreset === 'chaos' ? 1 + ((index * 3) % 5)
+          : cards.length,
+    ]))
+    renderModeMenu()
+  }))
+  app.querySelector<HTMLButtonElement>('[data-save-setup-rules]')?.addEventListener('click', () => {
+    if (activeGame === 'klatschen' && Object.values(blobbenCardCounts).every((count) => count === 0)) {
+      const firstTitle = klatschenCardGroups[0]?.title
+      if (firstTitle) blobbenCardCounts[firstTitle] = 1
+    }
+    saveGameRules()
+    setupRulesSnapshot = null
+    playSound('ui-confirm')
+    setupUtilityModal = null
+    renderModeMenu()
+  })
 }
 
 function expandPlayerSelectionFrameForContent() {

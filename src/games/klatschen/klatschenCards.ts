@@ -74,3 +74,8 @@ export const klatschenCards: KlatschenCard[] = [
 ]
 
 export const klatschenCardMap = new Map(klatschenCards.map((card) => [card.id, card]))
+
+export const klatschenCardGroups = [...new Set(klatschenCards.map((card) => card.title))].map((title) => ({
+  title,
+  cards: klatschenCards.filter((card) => card.title === title),
+}))

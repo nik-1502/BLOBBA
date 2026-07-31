@@ -35,6 +35,7 @@ export type BusfahrerGameState = {
   busfahrerUsedCards: Card[]
 }
 type OnlineGameOptions = {
+  difficulty?: 'locker' | 'standard' | 'hart'
   localPlayerId?: string
   initialState?: BusfahrerGameState | null
   onStateChange?: (state: BusfahrerGameState) => void
@@ -66,7 +67,7 @@ const questionPrompts = [
 ]
 const choiceNames: Record<string, string> = { heart: 'Herz', diamond: 'Karo', star: 'Stern', moon: 'Mond' }
 const pyramidOrder = [6, 7, 8, 9, 3, 4, 5, 1, 2, 0]
-const busRoundLength = 5
+let busRoundLength = 5
 
 let deck: Card[] = []
 let phase: Phase = 'player-intro'
@@ -604,6 +605,7 @@ function handleClick(event: Event) {
 export function mountBusfahrer(root: HTMLElement, playerSetups: PlayerSetup[] = [{ name: 'Nick', avatar: '', avatarColor: '#dda15e' }], options: OnlineGameOptions = {}) {
   onlineOptions = options
   configuredPlayers = playerSetups.length ? playerSetups : [{ name: 'Nick', avatar: '', avatarColor: '#dda15e' }]
+  busRoundLength = options.difficulty === 'locker' ? 4 : options.difficulty === 'hart' ? 6 : 5
   gameRoot = root
   if (options.initialState) applyGameState(options.initialState)
   else resetGame()
