@@ -893,6 +893,50 @@ html.is-standalone #app > .setup-page > .player-selection-zoom-layer > .setup-sh
   transform: none;
 }
 
+.page-transition-viewport {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  pointer-events: none;
+  background: #120012;
+  contain: layout paint;
+}
+
+.page-transition-page,
+.page-transition-content {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.page-transition-page {
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.page-transition-content > :first-child {
+  width: 100%;
+  height: 100%;
+}
+
+html.is-page-transitioning,
+html.is-page-transitioning body {
+  overflow: hidden !important;
+  touch-action: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-transition-page {
+    transform: translate3d(0, 0, 0) !important;
+    will-change: opacity;
+  }
+}
+
 /* Startseite: freundlichere, kompakte Party-App-Oberfläche */
 .home-page {
   --home-content-width: 820px;

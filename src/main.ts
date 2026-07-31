@@ -45,6 +45,16 @@ document.addEventListener('dragstart', (event) => {
   if (event.target instanceof Element && event.target.closest('#app')) event.preventDefault()
 })
 
+document.addEventListener('click', (event) => {
+  const target = event.target instanceof Element ? event.target : null
+  const backButton = target?.closest<HTMLButtonElement>('[data-action="back"]')
+  if (!backButton?.closest('#busfahrer-game, #klatschen-game') || isPageTransitionRunning) return
+  event.preventDefault()
+  event.stopImmediatePropagation()
+  playSound('ui-back')
+  void navigateWithHorizontalSlide(`${activeGame}-menu`, 'back')
+}, true)
+
 const PROFILE_STORAGE_KEY = 'blobba.profiles.v1'
 const PREVIOUS_PROFILE_STORAGE_KEY = atob('Z2V0ZHJ1bmsucHJvZmlsZXMudjE=')
 const FAVORITE_GAMES_STORAGE_KEY = 'blobbaFavoriteGames'
@@ -75,6 +85,13 @@ let favoritesOnly = false
 let selectedHomeCategory: HomeGameCategory = 'Alle'
 let categoryMenuOpen = false
 const favoriteGameIds = loadFavoriteGameIds()
+
+const PAGE_TRANSITION_DURATION = 360
+const PAGE_TRANSITION_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)'
+type PageTransitionDirection = 'forward' | 'back'
+const routeScrollPositions = new Map<string, number>()
+let isPageTransitionRunning = false
+let skipNextHashRender = false
 
 type StoredProfile = { id: string; name: string; avatarId: string | null }
 type ProfileStore = { profiles: StoredProfile[]; activeProfileId: string; lastUsedProfileIds: string[] }
@@ -1002,6 +1019,87 @@ function gameRoute(suffix = '') {
   return `${activeGame}${suffix}`
 }
 
+function activePageScrollTop() {
+  return app.querySelector<HTMLElement>('.player-selection-page')?.scrollTop ?? window.scrollY
+}
+
+function restorePageScrollTop(value: number) {
+  const playerPage = app.querySelector<HTMLElement>('.player-selection-page')
+  if (playerPage) playerPage.scrollTop = value
+  else window.scrollTo(0, value)
+}
+
+async function navigateWithHorizontalSlide(targetHash: string, direction: PageTransitionDirection) {
+  if (isPageTransitionRunning) return
+  isPageTransitionRunning = true
+  const currentHash = window.location.hash.replace(/^#/, '')
+  routeScrollPositions.set(currentHash, activePageScrollTop())
+  const outgoingContent = app.cloneNode(true) as HTMLElement
+  outgoingContent.removeAttribute('id')
+  outgoingContent.classList.add('page-transition-content')
+
+  skipNextHashRender = true
+  window.location.hash = targetHash
+  renderPage()
+  restorePageScrollTop(routeScrollPositions.get(targetHash) ?? 0)
+
+  const incomingContent = document.createElement('div')
+  incomingContent.className = 'page-transition-content'
+  while (app.firstChild) incomingContent.append(app.firstChild)
+  const viewport = document.createElement('div')
+  viewport.className = 'page-transition-viewport'
+  const outgoing = document.createElement('div')
+  const incoming = document.createElement('div')
+  outgoing.className = 'page-transition-page is-outgoing'
+  incoming.className = 'page-transition-page is-incoming'
+  outgoing.append(...Array.from(outgoingContent.childNodes))
+  incoming.append(incomingContent)
+  viewport.append(outgoing, incoming)
+  document.body.append(viewport)
+  document.documentElement.classList.add('is-page-transitioning')
+
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const duration = reducedMotion ? 150 : PAGE_TRANSITION_DURATION
+  const outgoingEnd = direction === 'forward' ? '-100%' : '100%'
+  const incomingStart = direction === 'forward' ? '100%' : '-100%'
+  const outgoingFrames = reducedMotion
+    ? [{ opacity: 1 }, { opacity: 0 }]
+    : [{ transform: 'translate3d(0, 0, 0)' }, { transform: `translate3d(${outgoingEnd}, 0, 0)` }]
+  const incomingFrames = reducedMotion
+    ? [{ opacity: 0 }, { opacity: 1 }]
+    : [{ transform: `translate3d(${incomingStart}, 0, 0)` }, { transform: 'translate3d(0, 0, 0)' }]
+  const options: KeyframeAnimationOptions = { duration, easing: PAGE_TRANSITION_EASING, fill: 'forwards' }
+  const animations = [outgoing.animate(outgoingFrames, options), incoming.animate(incomingFrames, options)]
+  await Promise.all(animations.map((animation) => animation.finished.catch(() => undefined)))
+
+  while (incomingContent.firstChild) app.append(incomingContent.firstChild)
+  viewport.remove()
+  document.documentElement.classList.remove('is-page-transitioning')
+  isPageTransitionRunning = false
+}
+
+function bindHomeGameSlide(button: HTMLButtonElement, game: GameKey, route: string) {
+  let pointerStart: { id: number; x: number; y: number } | null = null
+  let moved = false
+  button.addEventListener('pointerdown', (event) => {
+    pointerStart = { id: event.pointerId, x: event.clientX, y: event.clientY }
+    moved = false
+  })
+  button.addEventListener('pointermove', (event) => {
+    if (pointerStart?.id === event.pointerId && Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) > 10) moved = true
+  })
+  button.addEventListener('pointercancel', () => { moved = true; pointerStart = null })
+  button.addEventListener('click', (event) => {
+    if (moved || isPageTransitionRunning) return
+    event.preventDefault()
+    game === 'busfahrer' ? playActionSound('select') : playSound('ui-click')
+    activeGame = game
+    setupMode = 'offline'
+    activeOnlineModal = null
+    void navigateWithHorizontalSlide(route, 'forward')
+  })
+}
+
 function renderPage() {
   resetPlayerPinchTransform()
   document.documentElement.classList.remove('home-active')
@@ -1155,20 +1253,8 @@ function renderHome() {
   requestAnimationFrame(alignHomeHeaderButtons)
   app.querySelector<HTMLButtonElement>('.home-user-button')!.addEventListener('click', () => { playSound('ui-click'); window.location.hash = 'profile' })
   app.querySelector<HTMLButtonElement>('.home-settings-button')!.addEventListener('click', () => { playSound('ui-click'); window.location.hash = 'settings' })
-  app.querySelector<HTMLButtonElement>('.blobfahrer-home-button')!.addEventListener('click', () => {
-    playActionSound('select')
-    activeGame = 'busfahrer'
-    setupMode = 'offline'
-    activeOnlineModal = null
-    window.location.hash = 'busfahrer-menu'
-  })
-  app.querySelector<HTMLButtonElement>('.klatschen-home-button')!.addEventListener('click', () => {
-    playSound('ui-click')
-    activeGame = 'klatschen'
-    setupMode = 'offline'
-    activeOnlineModal = null
-    window.location.hash = 'klatschen-menu'
-  })
+  bindHomeGameSlide(app.querySelector<HTMLButtonElement>('.blobfahrer-home-button')!, 'busfahrer', 'busfahrer-menu')
+  bindHomeGameSlide(app.querySelector<HTMLButtonElement>('.klatschen-home-button')!, 'klatschen', 'klatschen-menu')
   app.querySelector<HTMLInputElement>('.game-search input')!.addEventListener('input', (event) => {
     homeSearchQuery = (event.currentTarget as HTMLInputElement).value
     updateHomeFilters()
@@ -1354,7 +1440,12 @@ function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER',
     <section class="setup-stage"><div class="setup-stack">${useSharedStageTitle ? `<h1 class="setup-title">${title}</h1>` : ''}${content}</div></section>
   </div>${zoomLayerEnd}</main>`
   if (pageClass.includes('player-selection-page')) initializePlayerPinchTransform()
-  app.querySelector<HTMLButtonElement>('[data-setup-back]')!.addEventListener('click', () => { playSound('ui-back'); window.location.hash = backTarget })
+  app.querySelector<HTMLButtonElement>('[data-setup-back]')!.addEventListener('click', () => {
+    if (isPageTransitionRunning) return
+    playSound('ui-back')
+    if (pageClass.includes('player-selection-page') && !backTarget) void navigateWithHorizontalSlide('', 'back')
+    else window.location.hash = backTarget
+  })
 }
 
 function renderModeMenu() {
@@ -2574,7 +2665,7 @@ function startSetupGame(playerList: SetupPlayer[], rememberProfiles: boolean) {
       .filter((id) => profileStore.profiles.some((profile) => profile.id === id))
     saveProfileStore()
   }
-  window.location.hash = activeGame
+  void navigateWithHorizontalSlide(activeGame, 'forward')
 }
 
 function renderOldModeMenu() {
@@ -2848,7 +2939,13 @@ function renderProfileEditor() {
 
 void renderOldModeMenu
 
-window.addEventListener('hashchange', renderPage)
+window.addEventListener('hashchange', () => {
+  if (skipNextHashRender) {
+    skipNextHashRender = false
+    return
+  }
+  renderPage()
+})
 onAuthChanged((session) => {
   authSession = session
   if (!session) onlineUnsubscribe?.()
