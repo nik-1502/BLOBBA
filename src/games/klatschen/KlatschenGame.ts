@@ -52,6 +52,8 @@ const partnerGroupColorCount = 9
 const dealAudio = new Audio(blobbenCardDealUrl)
 dealAudio.preload = 'auto'
 dealAudio.setAttribute('playsinline', '')
+const DEAL_SOUND_AUDIBLE_DURATION = .508
+const DEAL_CARD_DURATION = .11
 
 function shuffle<T>(items: T[]) {
   const result = [...items]
@@ -446,8 +448,9 @@ function startDealVisual(duration: number) {
   const circle = root?.querySelector<HTMLElement>('.klatschen-card-circle.is-dealing')
   const cards = circle?.querySelectorAll<HTMLElement>('.klatschen-circle-slot:not(.klatschen-circle-seam) .klatschen-card-back')
   if (!circle || !cards?.length) return
-  const totalDuration = Number.isFinite(duration) && duration > 0 ? duration : .648
-  const cardDuration = Math.min(.14, totalDuration / Math.max(2, cards.length / 2))
+  const mediaDuration = Number.isFinite(duration) && duration > 0 ? duration : DEAL_SOUND_AUDIBLE_DURATION
+  const totalDuration = Math.min(mediaDuration, DEAL_SOUND_AUDIBLE_DURATION)
+  const cardDuration = cards.length > 1 ? Math.min(DEAL_CARD_DURATION, totalDuration) : totalDuration
   const interval = cards.length > 1 ? (totalDuration - cardDuration) / (cards.length - 1) : 0
   cards.forEach((card, index) => {
     card.style.setProperty('--deal-delay', `${index * interval}s`)

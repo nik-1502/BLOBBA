@@ -19,7 +19,8 @@
 .klatschen-circle-seam { pointer-events: none; }
 .klatschen-circle-seam .klatschen-card-back { clip-path: inset(-2px -2px -2px 50%); }
 .klatschen-card-circle.is-dealing .klatschen-card-back { opacity: 0; }
-.klatschen-card-circle.is-dealing.is-dealing-active .klatschen-card-back { animation: klatschen-deal-card var(--deal-card-duration) cubic-bezier(.18,.76,.25,1) var(--deal-delay) forwards; }
+.klatschen-card-circle.is-dealing .klatschen-card-back { backface-visibility: hidden; will-change: transform,opacity; }
+.klatschen-card-circle.is-dealing.is-dealing-active .klatschen-card-back { animation: klatschen-deal-card var(--deal-card-duration) linear var(--deal-delay) forwards; }
 .klatschen-card-back,
 .klatschen-drawn-back { position: absolute; inset: 0; display: grid; place-items: center; border: clamp(2px, .35vw, 4px) solid #fff; border-radius: clamp(4px, .8vw, 9px); color: rgba(255,255,255,.92); background: repeating-linear-gradient(45deg,#5d3bb6 0 6px,#7957d3 6px 12px); box-shadow: 0 5px 13px rgba(0,0,0,.34); overflow: hidden; backface-visibility: hidden; }
 .klatschen-card-back::after,
@@ -155,9 +156,8 @@
   100% { transform: rotate(0) translateY(0) scale(1) rotateY(180deg); }
 }
 @keyframes klatschen-deal-card {
-  from { opacity: 0; transform: translateY(-13px) scale(.78) rotate(-5deg); }
-  65% { opacity: 1; transform: translateY(2px) scale(1.03) rotate(1deg); }
-  to { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+  from { opacity: 0; transform: translateY(-10px) scale(.88); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes klatschen-actions-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
