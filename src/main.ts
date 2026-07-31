@@ -76,6 +76,19 @@ let selectedHomeCategory: HomeGameCategory = 'Alle'
 let categoryMenuOpen = false
 const favoriteGameIds = loadFavoriteGameIds()
 
+const GAME_OPEN_DURATION = 460
+const GAME_CLOSE_DURATION = 420
+const GAME_TRANSITION_EASING = 'cubic-bezier(0.22, 1, 0.36, 1)'
+type GameTransitionState = {
+  gameId: 'blobfahrer' | 'blobben'
+  sourceScrollTop: number
+  sourceFilter: HomeGameCategory
+  sourceSearchQuery: string
+}
+let gameTransitionState: GameTransitionState | null = null
+let isGameTransitionRunning = false
+let skipNextHashRender = false
+
 type StoredProfile = { id: string; name: string; avatarId: string | null }
 type ProfileStore = { profiles: StoredProfile[]; activeProfileId: string; lastUsedProfileIds: string[] }
 type SetupPlayer = { id: string; profileId: string; name: string; avatarId: string | null; avatar: string; avatarColor: string }
@@ -1002,6 +1015,124 @@ function gameRoute(suffix = '') {
   return `${activeGame}${suffix}`
 }
 
+function setHashAndRender(hash: string) {
+  skipNextHashRender = true
+  window.location.hash = hash
+  renderPage()
+}
+
+function createGameTransitionLayer(card: HTMLElement, rect: DOMRect) {
+  const layer = document.createElement('div')
+  layer.className = 'game-transition-layer'
+  layer.setAttribute('aria-hidden', 'true')
+  const surface = document.createElement('div')
+  surface.className = 'game-transition-surface'
+  const preview = card.cloneNode(true) as HTMLElement
+  preview.classList.add('game-transition-card-preview')
+  surface.append(preview)
+  layer.append(surface)
+  document.body.append(layer)
+  const viewportWidth = window.visualViewport?.width ?? window.innerWidth
+  const viewportHeight = window.visualViewport?.height ?? window.innerHeight
+  surface.style.setProperty('--game-source-x', `${rect.left}px`)
+  surface.style.setProperty('--game-source-y', `${rect.top}px`)
+  surface.style.setProperty('--game-source-scale-x', `${rect.width / viewportWidth}`)
+  surface.style.setProperty('--game-source-scale-y', `${rect.height / viewportHeight}`)
+  const computed = getComputedStyle(card)
+  surface.style.setProperty('--game-source-radius', computed.borderRadius)
+  surface.style.setProperty('--game-source-shadow', computed.boxShadow)
+  return { layer, surface, preview }
+}
+
+async function startGameOpenTransition(card: HTMLButtonElement, gameId: 'blobfahrer' | 'blobben', route: string) {
+  if (isGameTransitionRunning) return
+  isGameTransitionRunning = true
+  const rect = card.getBoundingClientRect()
+  gameTransitionState = { gameId, sourceScrollTop: window.scrollY, sourceFilter: selectedHomeCategory, sourceSearchQuery: homeSearchQuery }
+  const { layer, surface, preview } = createGameTransitionLayer(card, rect)
+  card.style.visibility = 'hidden'
+  document.documentElement.classList.add('is-game-transitioning')
+  activeGame = gameId === 'blobben' ? 'klatschen' : 'busfahrer'
+  setupMode = 'offline'
+  activeOnlineModal = null
+  setHashAndRender(route)
+  app.classList.add('game-transition-target-enter')
+  await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+  const duration = matchMedia('(prefers-reduced-motion: reduce)').matches ? 150 : GAME_OPEN_DURATION
+  const movement = surface.animate([
+    { transform: 'translate3d(var(--game-source-x), var(--game-source-y), 0) scale(var(--game-source-scale-x), var(--game-source-scale-y))', borderRadius: 'var(--game-source-radius)', boxShadow: 'var(--game-source-shadow)' },
+    { transform: 'translate3d(0, 0, 0) scale(1)', borderRadius: '0px', boxShadow: 'none' },
+  ], { duration, easing: GAME_TRANSITION_EASING, fill: 'forwards' })
+  preview.animate([{ opacity: 1 }, { opacity: 1, offset: .15 }, { opacity: 0, offset: .58 }, { opacity: 0 }], { duration, easing: 'ease-out', fill: 'forwards' })
+  app.animate([{ opacity: 0 }, { opacity: 0, offset: .22 }, { opacity: 1, offset: .72 }, { opacity: 1 }], { duration, easing: 'ease-out' })
+  await movement.finished.catch(() => undefined)
+  app.classList.remove('game-transition-target-enter')
+  layer.remove()
+  document.documentElement.classList.remove('is-game-transitioning')
+  isGameTransitionRunning = false
+}
+
+async function startGameCloseTransition() {
+  if (isGameTransitionRunning || !gameTransitionState) {
+    window.location.hash = ''
+    return
+  }
+  isGameTransitionRunning = true
+  const state = gameTransitionState
+  const curtain = document.createElement('div')
+  curtain.className = 'game-transition-page-curtain'
+  document.body.append(curtain)
+  selectedHomeCategory = state.sourceFilter
+  homeSearchQuery = state.sourceSearchQuery
+  setHashAndRender('')
+  window.scrollTo(0, state.sourceScrollTop)
+  await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
+  const card = app.querySelector<HTMLButtonElement>(`[data-home-game="${state.gameId}"] .busfahrer-button`)
+  if (!card || card.getClientRects().length === 0) {
+    curtain.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150, easing: 'ease-out' }).finished.finally(() => curtain.remove())
+    gameTransitionState = null
+    isGameTransitionRunning = false
+    return
+  }
+  const { layer, surface, preview } = createGameTransitionLayer(card, card.getBoundingClientRect())
+  card.style.visibility = 'hidden'
+  curtain.remove()
+  surface.style.transform = 'translate3d(0, 0, 0) scale(1)'
+  surface.style.borderRadius = '0px'
+  preview.style.opacity = '0'
+  const duration = matchMedia('(prefers-reduced-motion: reduce)').matches ? 150 : GAME_CLOSE_DURATION
+  const movement = surface.animate([
+    { transform: 'translate3d(0, 0, 0) scale(1)', borderRadius: '0px', boxShadow: 'none' },
+    { transform: 'translate3d(var(--game-source-x), var(--game-source-y), 0) scale(var(--game-source-scale-x), var(--game-source-scale-y))', borderRadius: 'var(--game-source-radius)', boxShadow: 'var(--game-source-shadow)' },
+  ], { duration, easing: GAME_TRANSITION_EASING, fill: 'forwards' })
+  preview.animate([{ opacity: 0 }, { opacity: 0, offset: .28 }, { opacity: 1, offset: .76 }, { opacity: 1 }], { duration, easing: 'ease-out', fill: 'forwards' })
+  app.animate([{ opacity: .45 }, { opacity: 1 }], { duration, easing: 'ease-out' })
+  await movement.finished.catch(() => undefined)
+  card.style.removeProperty('visibility')
+  layer.remove()
+  gameTransitionState = null
+  isGameTransitionRunning = false
+}
+
+function bindGameCardTransition(button: HTMLButtonElement, gameId: 'blobfahrer' | 'blobben', route: string) {
+  let pointerStart: { id: number; x: number; y: number } | null = null
+  let moved = false
+  button.addEventListener('pointerdown', (event) => {
+    pointerStart = { id: event.pointerId, x: event.clientX, y: event.clientY }
+    moved = false
+  })
+  button.addEventListener('pointermove', (event) => {
+    if (pointerStart?.id === event.pointerId && Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) > 10) moved = true
+  })
+  button.addEventListener('pointercancel', () => { pointerStart = null; moved = true })
+  button.addEventListener('click', (event) => {
+    if (moved || isGameTransitionRunning) return
+    event.preventDefault()
+    gameId === 'blobfahrer' ? playActionSound('select') : playSound('ui-click')
+    void startGameOpenTransition(button, gameId, route)
+  })
+}
+
 function renderPage() {
   resetPlayerPinchTransform()
   document.documentElement.classList.remove('home-active')
@@ -1155,20 +1286,8 @@ function renderHome() {
   requestAnimationFrame(alignHomeHeaderButtons)
   app.querySelector<HTMLButtonElement>('.home-user-button')!.addEventListener('click', () => { playSound('ui-click'); window.location.hash = 'profile' })
   app.querySelector<HTMLButtonElement>('.home-settings-button')!.addEventListener('click', () => { playSound('ui-click'); window.location.hash = 'settings' })
-  app.querySelector<HTMLButtonElement>('.blobfahrer-home-button')!.addEventListener('click', () => {
-    playActionSound('select')
-    activeGame = 'busfahrer'
-    setupMode = 'offline'
-    activeOnlineModal = null
-    window.location.hash = 'busfahrer-menu'
-  })
-  app.querySelector<HTMLButtonElement>('.klatschen-home-button')!.addEventListener('click', () => {
-    playSound('ui-click')
-    activeGame = 'klatschen'
-    setupMode = 'offline'
-    activeOnlineModal = null
-    window.location.hash = 'klatschen-menu'
-  })
+  bindGameCardTransition(app.querySelector<HTMLButtonElement>('.blobfahrer-home-button')!, 'blobfahrer', 'busfahrer-menu')
+  bindGameCardTransition(app.querySelector<HTMLButtonElement>('.klatschen-home-button')!, 'blobben', 'klatschen-menu')
   app.querySelector<HTMLInputElement>('.game-search input')!.addEventListener('input', (event) => {
     homeSearchQuery = (event.currentTarget as HTMLInputElement).value
     updateHomeFilters()
@@ -1354,7 +1473,11 @@ function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER',
     <section class="setup-stage"><div class="setup-stack">${useSharedStageTitle ? `<h1 class="setup-title">${title}</h1>` : ''}${content}</div></section>
   </div>${zoomLayerEnd}</main>`
   if (pageClass.includes('player-selection-page')) initializePlayerPinchTransform()
-  app.querySelector<HTMLButtonElement>('[data-setup-back]')!.addEventListener('click', () => { playSound('ui-back'); window.location.hash = backTarget })
+  app.querySelector<HTMLButtonElement>('[data-setup-back]')!.addEventListener('click', () => {
+    playSound('ui-back')
+    if (pageClass.includes('player-selection-page') && !backTarget && gameTransitionState) void startGameCloseTransition()
+    else window.location.hash = backTarget
+  })
 }
 
 function renderModeMenu() {
@@ -2848,7 +2971,13 @@ function renderProfileEditor() {
 
 void renderOldModeMenu
 
-window.addEventListener('hashchange', renderPage)
+window.addEventListener('hashchange', () => {
+  if (skipNextHashRender) {
+    skipNextHashRender = false
+    return
+  }
+  renderPage()
+})
 onAuthChanged((session) => {
   authSession = session
   if (!session) onlineUnsubscribe?.()
