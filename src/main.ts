@@ -1411,7 +1411,7 @@ function renderSetupUtilityModal() {
       <p class="eyebrow">${gameName}</p><h2 id="setup-utility-title">Kartenhäufigkeit</h2>
       <section class="card-preset-picker"><h3>Spielstil wählen</h3>
         <div class="card-preset-grid">${fixedPresets.map(({ id, label, copy }) => `<button type="button" class="card-preset-option${selectedCardPreset.type === 'fixed' && selectedCardPreset.id === id ? ' is-selected' : ''}" data-card-preset="${id}" aria-pressed="${selectedCardPreset.type === 'fixed' && selectedCardPreset.id === id}"><strong>${label}</strong><span>${copy}</span></button>`).join('')}</div>
-        ${customCardPresets.length ? `<div class="custom-card-presets"><h3>Eigene Einstellungen</h3>${customCardPresets.map((preset) => `<div class="custom-card-preset${selectedCardPreset.type === 'custom' && selectedCardPreset.id === preset.id ? ' is-selected' : ''}"><button type="button" data-select-custom-preset="${preset.id}" aria-pressed="${selectedCardPreset.type === 'custom' && selectedCardPreset.id === preset.id}"><span aria-hidden="true">☷</span><strong>${escapeHtml(preset.name)}</strong></button><button type="button" class="player-remove delete-card-preset" data-delete-custom-preset="${preset.id}" aria-label="${escapeHtml(preset.name)} löschen" title="${escapeHtml(preset.name)} löschen"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6"></path></svg></button></div>`).join('')}</div>` : ''}
+        ${customCardPresets.length ? `<div class="custom-card-presets"><h3>Eigene Einstellungen</h3>${customCardPresets.map((preset) => `<div class="custom-card-preset player-row${selectedCardPreset.type === 'custom' && selectedCardPreset.id === preset.id ? ' is-selected' : ''}"><span class="custom-card-preset-icon" aria-hidden="true">☷</span><button type="button" class="custom-card-preset-select" data-select-custom-preset="${preset.id}" aria-pressed="${selectedCardPreset.type === 'custom' && selectedCardPreset.id === preset.id}"><strong>${escapeHtml(preset.name)}</strong></button><button type="button" class="player-remove delete-card-preset" data-delete-custom-preset="${preset.id}" aria-label="${escapeHtml(preset.name)} löschen" title="${escapeHtml(preset.name)} löschen"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6"></path></svg></button></div>`).join('')}</div>` : ''}
         <button type="button" class="customize-card-rules" data-customize-card-rules><span aria-hidden="true">☷</span><strong>Individuell gestalten</strong><span aria-hidden="true">›</span></button>
       </section>
       <button class="game-button primary" type="button" data-save-setup-rules>Übernehmen</button>
@@ -1428,7 +1428,7 @@ function renderCardPresetNameDialog() {
       <h3>Einstellung speichern</h3>
       <label>Name der Einstellung<input name="presetName" maxlength="24" value="${escapeHtml(selected?.name ?? '')}" placeholder="z. B. Freitagsparty" autocomplete="off"></label>
       ${cardPresetFormMessage ? `<p class="card-preset-form-message" role="alert">${escapeHtml(cardPresetFormMessage)}</p>` : ''}
-      <div><button type="button" data-cancel-card-save>Abbrechen</button>${editing ? `<button type="submit" name="saveMode" value="overwrite">Änderungen speichern</button><button type="submit" name="saveMode" value="new">Als neu speichern</button>` : `<button type="submit" name="saveMode" value="new">Speichern</button>`}</div>
+      <div class="card-dialog-actions${editing ? ' has-three-actions' : ''}">${editing ? `<button type="submit" name="saveMode" value="overwrite">Änderungen speichern</button><button type="submit" name="saveMode" value="new">Als neu speichern</button>` : `<button type="submit" name="saveMode" value="new">Speichern</button>`}<button type="button" class="card-dialog-cancel" data-cancel-card-save>Abbrechen</button></div>
     </form>
   </div>`
 }
@@ -1440,7 +1440,7 @@ function renderCardPresetDeleteDialog(presetId: string) {
     <div class="card-name-dialog card-delete-dialog" role="alertdialog" aria-modal="true" aria-labelledby="card-delete-title" aria-describedby="card-delete-copy">
       <h3 id="card-delete-title">Einstellung löschen?</h3>
       <p id="card-delete-copy">Möchtest du „${escapeHtml(preset.name)}“ wirklich löschen?</p>
-      <div><button type="button" data-cancel-card-delete>Zurück</button><button type="button" class="confirm-card-delete" data-confirm-card-delete="${preset.id}">Löschen</button></div>
+      <div class="card-dialog-actions card-delete-actions"><button type="button" data-cancel-card-delete>Zurück</button><button type="button" class="confirm-card-delete" data-confirm-card-delete="${preset.id}">Löschen</button></div>
     </div>
   </div>`
 }
