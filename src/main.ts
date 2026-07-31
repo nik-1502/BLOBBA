@@ -47,12 +47,15 @@ document.addEventListener('dragstart', (event) => {
 
 document.addEventListener('click', (event) => {
   const target = event.target instanceof Element ? event.target : null
-  const backButton = target?.closest<HTMLButtonElement>('[data-action="back"]')
-  if (!backButton?.closest('#busfahrer-game, #klatschen-game') || isPageTransitionRunning) return
+  const navButton = target?.closest<HTMLButtonElement>('[data-action="back"], [data-action="restart"], [data-klatschen-action="restart"], [data-klatschen-action="exit"]')
+  const game = navButton?.closest('#busfahrer-game, #klatschen-game')
+  if (!navButton || !game || isPageTransitionRunning) return
   event.preventDefault()
   event.stopImmediatePropagation()
   playSound('ui-back')
-  void navigateWithHorizontalSlide(`${activeGame}-menu`, 'back')
+  const isExit = navButton.dataset.action === 'back' || navButton.dataset.klatschenAction === 'exit'
+  const targetHash = isExit ? '' : activeGame === 'busfahrer' ? `${activeGame}-${setupMode}` : `${activeGame}-menu`
+  void navigateWithHorizontalSlide(targetHash, 'back')
 }, true)
 
 const PROFILE_STORAGE_KEY = 'blobba.profiles.v1'
@@ -1248,8 +1251,8 @@ function renderHome() {
   const homeLogo = app.querySelector<HTMLImageElement>('.hero-logo')!
   homeLogo.addEventListener('load', alignHomeHeaderButtons, { once: true })
   requestAnimationFrame(alignHomeHeaderButtons)
-  app.querySelector<HTMLButtonElement>('.home-user-button')!.addEventListener('click', () => { playSound('ui-click'); window.location.hash = 'profile' })
-  app.querySelector<HTMLButtonElement>('.home-settings-button')!.addEventListener('click', () => { playSound('ui-click'); window.location.hash = 'settings' })
+  app.querySelector<HTMLButtonElement>('.home-user-button')!.addEventListener('click', () => { playSound('ui-click'); void navigateWithHorizontalSlide('profile', 'forward') })
+  app.querySelector<HTMLButtonElement>('.home-settings-button')!.addEventListener('click', () => { playSound('ui-click'); void navigateWithHorizontalSlide('settings', 'forward') })
   bindHomeGameSlide(app.querySelector<HTMLButtonElement>('.blobfahrer-home-button')!, 'busfahrer', 'busfahrer-menu')
   bindHomeGameSlide(app.querySelector<HTMLButtonElement>('.klatschen-home-button')!, 'klatschen', 'klatschen-menu')
   app.querySelector<HTMLInputElement>('.game-search input')!.addEventListener('input', (event) => {
@@ -1440,7 +1443,7 @@ function setupShell(content: string, backTarget: string, title = 'BLOBB-FAHRER',
   app.querySelector<HTMLButtonElement>('[data-setup-back]')!.addEventListener('click', () => {
     if (isPageTransitionRunning) return
     playSound('ui-back')
-    if (pageClass.includes('player-selection-page') && !backTarget) void navigateWithHorizontalSlide('', 'back')
+    if ((pageClass.includes('player-selection-page') && !backTarget) || pageClass.includes('primary-profile-page') || pageClass.includes('settings-page')) void navigateWithHorizontalSlide(backTarget, 'back')
     else window.location.hash = backTarget
   })
 }

@@ -95,6 +95,8 @@ let gameRoot: HTMLElement | null = null
 let advanceTimer: number | undefined
 let onlineOptions: OnlineGameOptions = {}
 let suppressStatePublish = false
+let phaseTransitionRunning = false
+type PhaseTransitionDirection = 'down' | 'up' | 'forward'
 
 function shuffle<T>(items: T[]) {
   const result = [...items]
@@ -316,7 +318,8 @@ function answerQuestion(choice: string) {
 
 function nextQuestion() {
   if (!answered) return
-  if (questionIndex < 3) {
+  const entersPyramid = questionIndex >= 3
+  if (!entersPyramid) {
     questionIndex += 1; answered = false; feedback = { text: '', kind: 'info' }
   } else {
     phase = 'pyramid'
@@ -326,7 +329,7 @@ function nextQuestion() {
     pyramidDecision = null
     feedback = { text: '', kind: 'info' }
   }
-  renderGame()
+  entersPyramid ? renderGameWithSlide('up') : renderGame()
 }
 
 function renderPyramid() {
@@ -358,7 +361,7 @@ function revealPyramid() {
   feedback = match ? { text: `Treffer: ${card.label}`, kind: 'success' } : { text: 'Kein Treffer.', kind: 'info' }
   if (matchingCard) pyramidDecision = { cardId: matchingCard.id, label: matchingCard.label, drinks, step: 'offer' }
   pyramidProgress += 1
-  renderGame()
+  renderGameWithSlide('forward')
 }
 
 function usePyramidCard() {
@@ -371,7 +374,7 @@ function usePyramidCard() {
   }
   pyramidDecision.step = 'target'
   feedback = { text: '', kind: 'info' }
-  renderGame()
+  renderGameWithSlide('forward')
 }
 
 function keepPyramidCard() {
@@ -411,7 +414,7 @@ function finishPlayerPyramid() {
     phase = 'summary'
     feedback = { text: '', kind: 'info' }
   }
-  renderGame()
+  renderGameWithSlide('forward')
 }
 
 function startBus() {
@@ -419,7 +422,7 @@ function startBus() {
   deck = createDeck(1)
   phase = 'bus'; busCards = []; busProgress = 0; busFailed = false; busLost = false; busFeedbackPending = false; busfahrerUsedCards = []
   feedback = { text: '', kind: 'info' }
-  renderGame()
+  renderGameWithSlide('forward')
 }
 
 function playerStatsMarkup() {
@@ -545,6 +548,38 @@ function renderGame() {
   publishState()
 }
 
+function renderGameWithSlide(direction: PhaseTransitionDirection) {
+  if (!gameRoot || phaseTransitionRunning) {
+    renderGame()
+    return
+  }
+  phaseTransitionRunning = true
+  const outgoing = gameRoot.cloneNode(true) as HTMLElement
+  outgoing.classList.add('busfahrer-phase-transition-copy')
+  outgoing.setAttribute('aria-hidden', 'true')
+  document.body.append(outgoing)
+  renderGame()
+  gameRoot.classList.add('is-phase-transition-target')
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
+  const duration = reducedMotion ? 150 : 360
+  const axis = direction === 'forward' ? 'X' : 'Y'
+  const incomingStart = direction === 'down' ? '-100%' : '100%'
+  const outgoingEnd = direction === 'down' ? '100%' : '-100%'
+  const incomingFrames = reducedMotion
+    ? [{ opacity: 0 }, { opacity: 1 }]
+    : [{ transform: `translate${axis}(${incomingStart})` }, { transform: `translate${axis}(0)` }]
+  const outgoingFrames = reducedMotion
+    ? [{ opacity: 1 }, { opacity: 0 }]
+    : [{ transform: `translate${axis}(0)` }, { transform: `translate${axis}(${outgoingEnd})` }]
+  const options: KeyframeAnimationOptions = { duration, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', fill: 'forwards' }
+  const animations = [outgoing.animate(outgoingFrames, options), gameRoot.animate(incomingFrames, options)]
+  void Promise.all(animations.map((animation) => animation.finished.catch(() => undefined))).then(() => {
+    outgoing.remove()
+    gameRoot?.classList.remove('is-phase-transition-target')
+    phaseTransitionRunning = false
+  })
+}
+
 function applyOnlineControls() {
   if (!gameRoot || !onlineOptions.localPlayerId) return
   if (localCanControl()) return
@@ -575,7 +610,7 @@ function handleClick(event: Event) {
     playSound('player-change')
     phase = 'questions'
     feedback = { text: '', kind: 'info' }
-    renderGame()
+    renderGameWithSlide('down')
   }
   if (button.dataset.action === 'start-bus') startBus()
   if (button.dataset.action === 'show-final-summary') {

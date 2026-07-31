@@ -1863,3 +1863,29 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   .card-name-dialog .card-dialog-actions.has-three-actions { grid-template-columns: 1fr; }
   .card-name-dialog .card-dialog-actions.has-three-actions .card-dialog-cancel { grid-column: auto; }
 }
+.busfahrer-phase-transition-copy,
+#busfahrer-game.is-phase-transition-target {
+  position: fixed !important;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.busfahrer-phase-transition-copy {
+  z-index: 11000;
+}
+
+#busfahrer-game.is-phase-transition-target {
+  z-index: 10999;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .busfahrer-phase-transition-copy,
+  #busfahrer-game.is-phase-transition-target {
+    transform: none !important;
+    will-change: opacity;
+  }
+}
