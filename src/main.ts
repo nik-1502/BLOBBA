@@ -596,6 +596,13 @@ function updatePageScrollMode() {
     if (container.scrollTop !== 0) container.scrollTop = 0
     return
   }
+  if (container?.classList.contains('home-page')) {
+    container.classList.remove('is-app-scroll-locked')
+    container.classList.add('is-app-scrollable')
+    if (observedPageScrollContainer) pageScrollResizeObserver.disconnect()
+    observedPageScrollContainer = null
+    return
+  }
   if (container?.classList.contains('player-selection-page')) {
     container.classList.remove('is-app-scrollable', 'is-app-scroll-locked')
     if (observedPageScrollContainer) pageScrollResizeObserver.disconnect()
