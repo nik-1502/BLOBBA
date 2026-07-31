@@ -79,6 +79,11 @@
 .busfahrer-header > div { text-align: center; }
 .busfahrer-header p { margin: 0; color: #bdb4d2; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.15em; }
 .busfahrer-header h1 { margin: 2px 0 0; color: #fff; font-size: clamp(1.8rem, 5vw, 3rem); }
+
+/* Nur iPad-Webseite und iPad-PWA. */
+html.is-ipad-tablet .busfahrer-header p {
+  display: none;
+}
 .player-name-color { color: var(--player-name-color) !important; }
 .restart-button { justify-self: end; }
 
