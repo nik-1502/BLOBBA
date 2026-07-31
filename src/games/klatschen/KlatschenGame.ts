@@ -29,6 +29,7 @@ export type KlatschenGameState = {
 
 type KlatschenOptions = {
   cardCounts?: Record<string, number>
+  deferInitialDealUntilTransition?: boolean
   localPlayerId?: string
   initialState?: KlatschenGameState | null
   onStateChange?: (state: KlatschenGameState) => void
@@ -749,6 +750,14 @@ export function mountKlatschen(target: HTMLElement, players: KlatschenPlayerSetu
   root.addEventListener('click', handleClick)
   window.addEventListener('resize', updateMiddleLayout)
   render()
-  if (shouldStartImmediately) playDealSequence()
-  return () => { window.clearTimeout(revealTimer); window.clearTimeout(dealTimer); window.cancelAnimationFrame(layoutFrame ?? 0); dealAudio.pause(); dealAudio.currentTime = 0; dealAnimationActive = false; root?.removeEventListener('click', handleClick); window.removeEventListener('resize', updateMiddleLayout); root = null; options = {} }
+  const startInitialDeal = () => {
+    document.removeEventListener('blobba:page-transition-complete', handleTransitionComplete)
+    dealTimer = window.setTimeout(playDealSequence, 300)
+  }
+  const handleTransitionComplete = () => startInitialDeal()
+  if (shouldStartImmediately) {
+    if (gameOptions.deferInitialDealUntilTransition) document.addEventListener('blobba:page-transition-complete', handleTransitionComplete, { once: true })
+    else playDealSequence()
+  }
+  return () => { window.clearTimeout(revealTimer); window.clearTimeout(dealTimer); window.cancelAnimationFrame(layoutFrame ?? 0); document.removeEventListener('blobba:page-transition-complete', handleTransitionComplete); dealAudio.pause(); dealAudio.currentTime = 0; dealAnimationActive = false; root?.removeEventListener('click', handleClick); window.removeEventListener('resize', updateMiddleLayout); root = null; options = {} }
 }

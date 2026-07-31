@@ -1071,6 +1071,7 @@ async function navigateWithHorizontalSlide(targetHash: string, direction: PageTr
   viewport.remove()
   document.documentElement.classList.remove('is-page-transitioning')
   isPageTransitionRunning = false
+  document.dispatchEvent(new CustomEvent('blobba:page-transition-complete', { detail: { targetHash, direction } }))
 }
 
 function bindHomeGameSlide(button: HTMLButtonElement, game: GameKey, route: string) {
@@ -1137,6 +1138,7 @@ function renderPage() {
     }
     unmountCurrentPage = mountKlatschen(app.querySelector<HTMLElement>('#klatschen-game')!, snapshot.map(({ profileId, name, avatar, avatarColor }) => ({ id: profileId, name, avatar, avatarColor })), {
       cardCounts: gameCardCounts,
+      deferInitialDealUntilTransition: isPageTransitionRunning,
       ...(setupMode === 'online' && onlineGroup.groupId ? {
       localPlayerId: authSession?.user.id,
       initialState: onlineGroup.gameState && 'players' in onlineGroup.gameState ? onlineGroup.gameState : null,
