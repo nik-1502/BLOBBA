@@ -1666,6 +1666,7 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
   .busfahrer-game-title,
   .klatschen-shell > .busfahrer-header h1
 ) {
+  color: #E68931 !important;
   font-size: clamp(1.4rem, 5.4vw, 3rem) !important;
   text-align: center;
 }
