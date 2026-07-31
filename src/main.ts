@@ -40,6 +40,7 @@ const PREVIOUS_PROFILE_STORAGE_KEY = atob('Z2V0ZHJ1bmsucHJvZmlsZXMudjE=')
 const FAVORITE_GAMES_STORAGE_KEY = 'blobbaFavoriteGames'
 const THEME_STORAGE_KEY = 'blobba.theme.v1'
 const GAME_RULES_STORAGE_KEY = 'blobba.game-rules.v1'
+const CUSTOM_CARD_PRESETS_STORAGE_KEY = 'blobba.customCardPresets'
 const MAX_PLAYERS = 9
 const DEFAULT_AVATAR_ID = 'bier'
 const HOME_GAME_CATEGORIES = ['Kartenspiele', 'Schnell', 'Klassiker', 'Lustig', 'Denkspiele', 'Verteilspiele', 'Teamspiele', 'Wettkampf'] as const
@@ -75,6 +76,10 @@ type OnlineModal = 'create' | 'join' | 'invite' | null
 type AuthModal = 'login' | 'register' | null
 type SetupUtilityModal = 'info' | 'rules' | null
 type BusfahrerDifficulty = 'locker' | 'standard' | 'hart'
+type CardPresetId = 'relaxed' | 'classic' | 'party' | 'chaos'
+type CardPresetSelection = { type: 'fixed'; id: CardPresetId } | { type: 'custom'; id: string }
+type CustomCardPreset = { id: string; name: string; cardCounts: Record<string, number>; createdAt: number; updatedAt: number }
+type CardRulesView = 'presets' | 'customize'
 type SharedGameState = BusfahrerGameState | KlatschenGameState
 type OnlineGroupState = { joined: boolean; isHost: boolean; inviteCode: string; groupId: string | null; gameKey: GameKey; status: 'lobby' | 'playing' | 'finished'; players: SetupPlayer[]; members: OnlineMember[]; gameState: SharedGameState | null }
 
@@ -90,6 +95,13 @@ let activeGame: GameKey = 'busfahrer'
 let setupUtilityModal: SetupUtilityModal = null
 let busfahrerDifficulty: BusfahrerDifficulty = 'standard'
 let blobbenCardCounts = Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [title, cards.length]))
+let customCardPresets = loadCustomCardPresets()
+let selectedCardPreset: CardPresetSelection = { type: 'fixed', id: 'classic' }
+let cardRulesView: CardRulesView = 'presets'
+let cardRulesDraft = { ...blobbenCardCounts }
+let cardRulesDraftBaseline = { ...blobbenCardCounts }
+let cardPresetNameDialogOpen = false
+let cardPresetFormMessage = ''
 let setupRulesSnapshot: { difficulty: BusfahrerDifficulty; cardCounts: Record<string, number> } | null = null
 let activeOnlineModal: OnlineModal = null
 let onlineGroup: OnlineGroupState = { joined: false, isHost: false, inviteCode: 'BLOBBA-724', groupId: null, gameKey: 'busfahrer', status: 'lobby', players: [], members: [], gameState: null }
@@ -120,6 +132,63 @@ try {
 
 function saveGameRules() {
   localStorage.setItem(GAME_RULES_STORAGE_KEY, JSON.stringify({ busfahrerDifficulty, blobbenCardCounts }))
+}
+
+const CARD_PRESETS: Record<CardPresetId, Record<string, number>> = {
+  relaxed: Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [title, Math.max(1, Math.ceil(cards.length * .65))])),
+  classic: Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [title, cards.length])),
+  party: Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [title, Math.min(12, Math.max(1, Math.ceil(cards.length * 1.5)))])),
+  chaos: Object.fromEntries(klatschenCardGroups.map(({ title }, index) => [title, 1 + ((index * 3) % 5)])),
+}
+
+const matchingFixedPreset = (Object.keys(CARD_PRESETS) as CardPresetId[]).find((id) => cardCountsEqual(blobbenCardCounts, CARD_PRESETS[id]))
+const matchingCustomPreset = customCardPresets.find((preset) => cardCountsEqual(blobbenCardCounts, preset.cardCounts))
+selectedCardPreset = matchingFixedPreset
+  ? { type: 'fixed', id: matchingFixedPreset }
+  : matchingCustomPreset
+    ? { type: 'custom', id: matchingCustomPreset.id }
+    : { type: 'fixed', id: 'classic' }
+
+function validatedCardCounts(value: unknown) {
+  if (!value || typeof value !== 'object') return null
+  const counts = value as Record<string, unknown>
+  return Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [
+    title,
+    Math.max(0, Math.min(12, typeof counts[title] === 'number' && Number.isFinite(counts[title]) ? Math.round(counts[title]) : cards.length)),
+  ]))
+}
+
+function loadCustomCardPresets(): CustomCardPreset[] {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(CUSTOM_CARD_PRESETS_STORAGE_KEY) ?? '[]')
+    if (!Array.isArray(parsed)) return []
+    return parsed.flatMap((entry): CustomCardPreset[] => {
+      const counts = validatedCardCounts(entry?.cardCounts)
+      const name = typeof entry?.name === 'string' ? entry.name.trim().slice(0, 24) : ''
+      if (!counts || !name || typeof entry?.id !== 'string') return []
+      return [{ id: entry.id, name, cardCounts: counts, createdAt: Number(entry.createdAt) || Date.now(), updatedAt: Number(entry.updatedAt) || Date.now() }]
+    }).slice(0, 3)
+  } catch {
+    return []
+  }
+}
+
+function saveCustomCardPresets() {
+  localStorage.setItem(CUSTOM_CARD_PRESETS_STORAGE_KEY, JSON.stringify(customCardPresets))
+}
+
+function cardCountsEqual(left: Record<string, number>, right: Record<string, number>) {
+  return klatschenCardGroups.every(({ title }) => left[title] === right[title])
+}
+
+function selectedCardCounts() {
+  if (selectedCardPreset.type === 'fixed') return { ...CARD_PRESETS[selectedCardPreset.id] }
+  const custom = customCardPresets.find(({ id }) => id === selectedCardPreset.id)
+  return { ...(custom?.cardCounts ?? CARD_PRESETS.classic) }
+}
+
+function cardRulesDraftIsDirty() {
+  return !cardCountsEqual(cardRulesDraft, cardRulesDraftBaseline)
 }
 let pendingKeyboardPositionCleanup: (() => void) | undefined
 let maximumVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
@@ -940,8 +1009,12 @@ function renderPage() {
     activeGame = 'klatschen'
     const snapshot = gamePlayerSnapshot.length ? gamePlayerSnapshot : players
     app.innerHTML = '<main class="busfahrer-page" id="klatschen-game"></main>'
+    const gameCardCounts = {
+      ...blobbenCardCounts,
+      'Blobb-Partner': Math.max(0, snapshot.length - 2),
+    }
     unmountCurrentPage = mountKlatschen(app.querySelector<HTMLElement>('#klatschen-game')!, snapshot.map(({ profileId, name, avatar, avatarColor }) => ({ id: profileId, name, avatar, avatarColor })), {
-      cardCounts: blobbenCardCounts,
+      cardCounts: gameCardCounts,
       ...(setupMode === 'online' && onlineGroup.groupId ? {
       localPlayerId: authSession?.user.id,
       initialState: onlineGroup.gameState && 'players' in onlineGroup.gameState ? onlineGroup.gameState : null,
@@ -1312,14 +1385,49 @@ function renderSetupUtilityModal() {
       </article>
     </div>`
   }
+  if (cardRulesView === 'customize') {
+    return `<div class="setup-modal-backdrop setup-utility-backdrop" data-close-setup-utility>
+      <article class="setup-modal setup-utility-modal setup-card-rules-modal is-customizing" role="dialog" aria-modal="true" aria-labelledby="setup-utility-title">
+        <div class="card-customize-header">
+          <button type="button" class="card-header-action card-back-action" data-card-customize-back>← Zurück</button>
+          <h2 id="setup-utility-title">Individuell gestalten</h2>
+          <button type="button" class="card-header-action card-save-action" data-open-card-save>Speichern</button>
+        </div>
+        <div class="card-count-list">${klatschenCardGroups.map(({ title }) => `<div class="card-count-row"><span>${escapeHtml(title)}</span><div><button type="button" data-card-count-title="${escapeHtml(title)}" data-card-count-delta="-1" aria-label="${escapeHtml(title)} reduzieren">−</button><output>${cardRulesDraft[title] ?? 0}</output><button type="button" data-card-count-title="${escapeHtml(title)}" data-card-count-delta="1" aria-label="${escapeHtml(title)} erhöhen">+</button></div></div>`).join('')}</div>
+        ${cardPresetNameDialogOpen ? renderCardPresetNameDialog() : ''}
+      </article>
+    </div>`
+  }
+  const fixedPresets: Array<{ id: CardPresetId; label: string; copy: string }> = [
+    { id: 'relaxed', label: 'Locker', copy: 'Weniger Karten, entspannter Einstieg' },
+    { id: 'classic', label: 'Klassisch', copy: 'Die bewährte Standardverteilung' },
+    { id: 'party', label: 'Party', copy: 'Mehr Aktionen, längere Runde' },
+    { id: 'chaos', label: 'Chaos', copy: 'Unberechenbar und abwechslungsreich' },
+  ]
   return `<div class="setup-modal-backdrop setup-utility-backdrop" data-close-setup-utility>
     <article class="setup-modal setup-utility-modal setup-card-rules-modal" role="dialog" aria-modal="true" aria-labelledby="setup-utility-title">
       <button class="setup-utility-close" type="button" data-close-setup-utility aria-label="Schließen">×</button>
       <p class="eyebrow">${gameName}</p><h2 id="setup-utility-title">Kartenhäufigkeit</h2>
-      <div class="card-rule-presets"><button type="button" data-card-preset="classic">Klassisch</button><button type="button" data-card-preset="short">Kurz</button><button type="button" data-card-preset="chaos">Chaos</button></div>
-      <div class="card-count-list">${klatschenCardGroups.map(({ title }) => `<div class="card-count-row"><span>${escapeHtml(title)}</span><div><button type="button" data-card-count-title="${escapeHtml(title)}" data-card-count-delta="-1" aria-label="${escapeHtml(title)} reduzieren">−</button><output>${blobbenCardCounts[title] ?? 0}</output><button type="button" data-card-count-title="${escapeHtml(title)}" data-card-count-delta="1" aria-label="${escapeHtml(title)} erhöhen">+</button></div></div>`).join('')}</div>
+      <section class="card-preset-picker"><h3>Spielstil wählen</h3>
+        <div class="card-preset-grid">${fixedPresets.map(({ id, label, copy }) => `<button type="button" class="card-preset-option${selectedCardPreset.type === 'fixed' && selectedCardPreset.id === id ? ' is-selected' : ''}" data-card-preset="${id}" aria-pressed="${selectedCardPreset.type === 'fixed' && selectedCardPreset.id === id}"><strong>${label}</strong><span>${copy}</span></button>`).join('')}</div>
+        ${customCardPresets.length ? `<div class="custom-card-presets"><h3>Eigene Einstellungen</h3>${customCardPresets.map((preset) => `<div class="custom-card-preset${selectedCardPreset.type === 'custom' && selectedCardPreset.id === preset.id ? ' is-selected' : ''}"><button type="button" data-select-custom-preset="${preset.id}" aria-pressed="${selectedCardPreset.type === 'custom' && selectedCardPreset.id === preset.id}"><span aria-hidden="true">☷</span><strong>${escapeHtml(preset.name)}</strong></button><button type="button" class="delete-card-preset" data-delete-custom-preset="${preset.id}" aria-label="${escapeHtml(preset.name)} löschen">⌫</button></div>`).join('')}</div>` : ''}
+        <button type="button" class="customize-card-rules" data-customize-card-rules><span aria-hidden="true">☷</span><strong>Individuell gestalten</strong><span aria-hidden="true">›</span></button>
+      </section>
       <button class="game-button primary" type="button" data-save-setup-rules>Übernehmen</button>
     </article>
+  </div>`
+}
+
+function renderCardPresetNameDialog() {
+  const editing = selectedCardPreset.type === 'custom'
+  const selected = editing ? customCardPresets.find(({ id }) => id === selectedCardPreset.id) : null
+  return `<div class="card-name-dialog-backdrop">
+    <form class="card-name-dialog" data-card-preset-form>
+      <h3>Einstellung speichern</h3>
+      <label>Name der Einstellung<input name="presetName" maxlength="24" value="${escapeHtml(selected?.name ?? '')}" placeholder="z. B. Freitagsparty" autocomplete="off"></label>
+      ${cardPresetFormMessage ? `<p class="card-preset-form-message" role="alert">${escapeHtml(cardPresetFormMessage)}</p>` : ''}
+      <div><button type="button" data-cancel-card-save>Abbrechen</button>${editing ? `<button type="submit" name="saveMode" value="overwrite">Änderungen speichern</button><button type="submit" name="saveMode" value="new">Als neu speichern</button>` : `<button type="submit" name="saveMode" value="new">Speichern</button>`}</div>
+    </form>
   </div>`
 }
 
@@ -1332,11 +1440,15 @@ function bindSetupUtilityActions() {
   app.querySelector<HTMLButtonElement>('[data-setup-rules]')?.addEventListener('click', () => {
     playSound('ui-click')
     setupRulesSnapshot = { difficulty: busfahrerDifficulty, cardCounts: { ...blobbenCardCounts } }
+    cardRulesView = 'presets'
+    cardPresetNameDialogOpen = false
+    cardPresetFormMessage = ''
     setupUtilityModal = 'rules'
     renderModeMenu()
   })
   app.querySelectorAll<HTMLElement>('[data-close-setup-utility]').forEach((element) => element.addEventListener('click', (event) => {
     if (event.target !== element && element.classList.contains('setup-utility-backdrop')) return
+    if (activeGame === 'klatschen' && cardRulesView === 'customize' && cardRulesDraftIsDirty() && !window.confirm('Änderungen verwerfen?')) return
     if (setupRulesSnapshot) {
       busfahrerDifficulty = setupRulesSnapshot.difficulty
       blobbenCardCounts = setupRulesSnapshot.cardCounts
@@ -1351,19 +1463,90 @@ function bindSetupUtilityActions() {
   }))
   app.querySelectorAll<HTMLButtonElement>('[data-card-count-delta]').forEach((button) => button.addEventListener('click', () => {
     const title = button.dataset.cardCountTitle!
-    blobbenCardCounts[title] = Math.max(0, Math.min(12, (blobbenCardCounts[title] ?? 0) + Number(button.dataset.cardCountDelta)))
+    cardRulesDraft[title] = Math.max(0, Math.min(12, (cardRulesDraft[title] ?? 0) + Number(button.dataset.cardCountDelta)))
     renderModeMenu()
   }))
   app.querySelectorAll<HTMLButtonElement>('[data-card-preset]').forEach((button) => button.addEventListener('click', () => {
-    blobbenCardCounts = Object.fromEntries(klatschenCardGroups.map(({ title, cards }, index) => [
-      title,
-      button.dataset.cardPreset === 'short' ? Math.max(1, Math.ceil(cards.length * .55))
-        : button.dataset.cardPreset === 'chaos' ? 1 + ((index * 3) % 5)
-          : cards.length,
-    ]))
+    selectedCardPreset = { type: 'fixed', id: button.dataset.cardPreset as CardPresetId }
+    renderModeMenu()
+  }))
+  app.querySelectorAll<HTMLButtonElement>('[data-select-custom-preset]').forEach((button) => button.addEventListener('click', () => {
+    selectedCardPreset = { type: 'custom', id: button.dataset.selectCustomPreset! }
+    renderModeMenu()
+  }))
+  app.querySelector<HTMLButtonElement>('[data-customize-card-rules]')?.addEventListener('click', () => {
+    cardRulesDraft = selectedCardCounts()
+    cardRulesDraftBaseline = { ...cardRulesDraft }
+    cardRulesView = 'customize'
+    renderModeMenu()
+  })
+  app.querySelector<HTMLButtonElement>('[data-card-customize-back]')?.addEventListener('click', () => {
+    if (cardRulesDraftIsDirty() && !window.confirm('Änderungen verwerfen?')) return
+    cardRulesView = 'presets'
+    cardPresetNameDialogOpen = false
+    renderModeMenu()
+  })
+  app.querySelector<HTMLButtonElement>('[data-open-card-save]')?.addEventListener('click', () => {
+    cardPresetNameDialogOpen = true
+    cardPresetFormMessage = customCardPresets.length >= 3 && selectedCardPreset.type !== 'custom'
+      ? 'Du kannst maximal drei eigene Einstellungen speichern. Lösche zuerst eine bestehende Einstellung.'
+      : ''
+    renderModeMenu()
+    queueMicrotask(() => app.querySelector<HTMLInputElement>('[name="presetName"]')?.focus())
+  })
+  app.querySelector<HTMLButtonElement>('[data-cancel-card-save]')?.addEventListener('click', () => {
+    cardPresetNameDialogOpen = false
+    cardPresetFormMessage = ''
+    renderModeMenu()
+  })
+  app.querySelector<HTMLFormElement>('[data-card-preset-form]')?.addEventListener('submit', (event) => {
+    event.preventDefault()
+    const submitter = (event as SubmitEvent).submitter as HTMLButtonElement | null
+    const mode = submitter?.value ?? 'new'
+    const form = new FormData(event.currentTarget as HTMLFormElement)
+    const name = String(form.get('presetName') ?? '').trim().slice(0, 24)
+    if (!name) {
+      cardPresetFormMessage = 'Bitte gib einen Namen ein.'
+      renderModeMenu()
+      return
+    }
+    const editingId = selectedCardPreset.type === 'custom' ? selectedCardPreset.id : null
+    if (customCardPresets.some((preset) => preset.name.toLocaleLowerCase('de') === name.toLocaleLowerCase('de') && preset.id !== (mode === 'overwrite' ? editingId : null))) {
+      cardPresetFormMessage = 'Eine Einstellung mit diesem Namen existiert bereits.'
+      renderModeMenu()
+      return
+    }
+    if (mode === 'overwrite' && editingId) {
+      customCardPresets = customCardPresets.map((preset) => preset.id === editingId ? { ...preset, name, cardCounts: { ...cardRulesDraft }, updatedAt: Date.now() } : preset)
+    } else {
+      if (customCardPresets.length >= 3) {
+        cardPresetFormMessage = 'Du kannst maximal drei eigene Einstellungen speichern. Lösche zuerst eine bestehende Einstellung.'
+        renderModeMenu()
+        return
+      }
+      const id = crypto.randomUUID?.() ?? `card-preset-${Date.now()}`
+      customCardPresets = [...customCardPresets, { id, name, cardCounts: { ...cardRulesDraft }, createdAt: Date.now(), updatedAt: Date.now() }]
+      selectedCardPreset = { type: 'custom', id }
+    }
+    saveCustomCardPresets()
+    cardRulesDraftBaseline = { ...cardRulesDraft }
+    cardPresetNameDialogOpen = false
+    cardPresetFormMessage = ''
+    cardRulesView = 'presets'
+    playSound('ui-confirm')
+    renderModeMenu()
+  })
+  app.querySelectorAll<HTMLButtonElement>('[data-delete-custom-preset]').forEach((button) => button.addEventListener('click', () => {
+    const id = button.dataset.deleteCustomPreset!
+    const preset = customCardPresets.find((entry) => entry.id === id)
+    if (!preset || !window.confirm(`„${preset.name}“ löschen?`)) return
+    customCardPresets = customCardPresets.filter((entry) => entry.id !== id)
+    if (selectedCardPreset.type === 'custom' && selectedCardPreset.id === id) selectedCardPreset = { type: 'fixed', id: 'classic' }
+    saveCustomCardPresets()
     renderModeMenu()
   }))
   app.querySelector<HTMLButtonElement>('[data-save-setup-rules]')?.addEventListener('click', () => {
+    if (activeGame === 'klatschen') blobbenCardCounts = selectedCardCounts()
     if (activeGame === 'klatschen' && Object.values(blobbenCardCounts).every((count) => count === 0)) {
       const firstTitle = klatschenCardGroups[0]?.title
       if (firstTitle) blobbenCardCounts[firstTitle] = 1
