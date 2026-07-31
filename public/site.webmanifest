@@ -9,10 +9,22 @@
   "theme_color": "#120012",
   "icons": [
     {
-      "src": "blobba-neon-beer-app-icon.png",
-      "sizes": "1254x1254",
+      "src": "blobba-app-icon-neon-v3-192.png",
+      "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "blobba-app-icon-neon-v3-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "blobba-app-icon-neon-v3-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
