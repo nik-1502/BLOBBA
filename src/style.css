@@ -2162,3 +2162,38 @@ html[data-theme='neon'] .home-page .categories-filter-button.is-active svg {
   -webkit-user-drag: none;
   user-drag: none;
 }
+
+/* Filter and per-game favorite hearts share one selected color source. */
+.home-page :is(
+  .favorites-filter-button.is-active,
+  .favorite-heart-button.is-favorite
+) {
+  color: #ff3f9f;
+}
+
+.home-page :is(
+  .favorites-filter-button.is-active,
+  .favorite-heart-button.is-favorite
+) svg {
+  fill: #ff3f9f;
+  stroke: #ff3f9f;
+}
+
+/* Restore tactile press animation without any vertical movement. */
+.home-page .busfahrer-button:active {
+  transform: scale(.985) !important;
+}
+
+.home-page :is(
+  .home-profile-button,
+  .home-settings-button,
+  .home-user-button,
+  .categories-filter-button,
+  .favorites-filter-button
+):active {
+  transform: scale(.96) !important;
+}
+
+.home-page .favorite-heart-button:active {
+  transform: scale(.9) !important;
+}
