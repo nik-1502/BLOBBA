@@ -905,8 +905,7 @@ html.is-standalone #app > .setup-page > .player-selection-zoom-layer > .setup-sh
   contain: layout paint;
 }
 
-.page-transition-page,
-.page-transition-content {
+.page-transition-page {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -919,9 +918,9 @@ html.is-standalone #app > .setup-page > .player-selection-zoom-layer > .setup-sh
   backface-visibility: hidden;
 }
 
-.page-transition-content > :first-child {
-  width: 100%;
-  height: 100%;
+#app.page-transition-live-target {
+  will-change: transform;
+  pointer-events: none;
 }
 
 html.is-page-transitioning,

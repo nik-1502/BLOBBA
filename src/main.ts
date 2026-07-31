@@ -1034,29 +1034,24 @@ async function navigateWithHorizontalSlide(targetHash: string, direction: PageTr
   isPageTransitionRunning = true
   const currentHash = window.location.hash.replace(/^#/, '')
   routeScrollPositions.set(currentHash, activePageScrollTop())
-  const outgoingContent = app.cloneNode(true) as HTMLElement
-  outgoingContent.removeAttribute('id')
-  outgoingContent.classList.add('page-transition-content')
+  const outgoing = app.cloneNode(true) as HTMLElement
+  outgoing.classList.add('page-transition-page', 'is-outgoing')
+  outgoing.setAttribute('aria-hidden', 'true')
 
   skipNextHashRender = true
   window.location.hash = targetHash
   renderPage()
   restorePageScrollTop(routeScrollPositions.get(targetHash) ?? 0)
 
-  const incomingContent = document.createElement('div')
-  incomingContent.className = 'page-transition-content'
-  while (app.firstChild) incomingContent.append(app.firstChild)
   const viewport = document.createElement('div')
   viewport.className = 'page-transition-viewport'
-  const outgoing = document.createElement('div')
-  const incoming = document.createElement('div')
-  outgoing.className = 'page-transition-page is-outgoing'
-  incoming.className = 'page-transition-page is-incoming'
-  outgoing.append(...Array.from(outgoingContent.childNodes))
-  incoming.append(incomingContent)
-  viewport.append(outgoing, incoming)
+  viewport.append(outgoing)
   document.body.append(viewport)
   document.documentElement.classList.add('is-page-transitioning')
+  app.classList.add('page-transition-live-target')
+
+  // Give deferred layout work and image decoding a frame before either page moves.
+  await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())))
 
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
   const duration = reducedMotion ? 150 : PAGE_TRANSITION_DURATION
@@ -1069,10 +1064,10 @@ async function navigateWithHorizontalSlide(targetHash: string, direction: PageTr
     ? [{ opacity: 0 }, { opacity: 1 }]
     : [{ transform: `translate3d(${incomingStart}, 0, 0)` }, { transform: 'translate3d(0, 0, 0)' }]
   const options: KeyframeAnimationOptions = { duration, easing: PAGE_TRANSITION_EASING, fill: 'forwards' }
-  const animations = [outgoing.animate(outgoingFrames, options), incoming.animate(incomingFrames, options)]
+  const animations = [outgoing.animate(outgoingFrames, options), app.animate(incomingFrames, options)]
   await Promise.all(animations.map((animation) => animation.finished.catch(() => undefined)))
 
-  while (incomingContent.firstChild) app.append(incomingContent.firstChild)
+  app.classList.remove('page-transition-live-target')
   viewport.remove()
   document.documentElement.classList.remove('is-page-transitioning')
   isPageTransitionRunning = false
