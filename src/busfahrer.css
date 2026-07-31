@@ -793,13 +793,15 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
   overflow: hidden;
 }
 
-.primary-profile-page:not(.settings-page),
-.primary-profile-page:not(.settings-page) .setup-shell,
+.primary-profile-page:not(.settings-page) {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 .primary-profile-page:not(.settings-page) .setup-stage,
 .primary-profile-page:not(.settings-page) .setup-stack,
 .primary-profile-page:not(.settings-page) .primary-profile-frame {
-  overflow: hidden;
-  overscroll-behavior: none;
+  overflow: visible;
 }
 
 .primary-profile-page .primary-profile-editor-panel > .profile-auth-row {
