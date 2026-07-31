@@ -1760,13 +1760,17 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
 .card-preset-option.is-selected span { color: #fff; }
 .custom-card-presets { display: grid; gap: 8px; }
 .player-selection-page .custom-card-preset { grid-template-columns: 44px minmax(0, 1fr) 44px; }
-.custom-card-preset-icon { display: grid; width: 44px; height: 44px; border: 1px solid rgba(255, 255, 255, .3); border-radius: 12px; place-items: center; color: #cabfff; background: rgba(255, 255, 255, .05); font-size: 1.35rem; font-weight: 800; box-sizing: border-box; }
+.custom-card-preset-icon { display: grid; width: 44px; height: 44px; padding: 10px; border: 1px solid rgba(255, 255, 255, .3); border-radius: 12px; place-items: center; color: #cabfff; background: rgba(255, 255, 255, .05); font: inherit; cursor: pointer; box-sizing: border-box; }
+.custom-card-preset-icon svg,
+.customize-card-rules > svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .custom-card-preset-select { display: flex; min-width: 0; min-height: 44px; padding: 0 10px; border: 1px solid rgba(255, 255, 255, .2); border-radius: 11px; align-items: center; color: #fff; background: rgba(8, 9, 39, .58); font: inherit; text-align: left; cursor: pointer; }
 .custom-card-preset strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .custom-card-preset .delete-card-preset { align-self: center; justify-self: center; }
 .customize-card-rules { display: grid; min-height: 52px; padding: 0 15px; border: 1px solid rgba(255, 180, 92, .32); border-radius: 14px; color: #ffe2bd; background: rgba(20, 13, 32, .58); grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; font: inherit; text-align: left; cursor: pointer; }
+.customize-card-rules > svg { width: 22px; height: 22px; }
 .customize-card-rules > span:last-child { font-size: 1.7rem; font-weight: 400; }
 .setup-card-rules-modal.is-customizing { grid-template-rows: auto minmax(0, 1fr); }
+.card-customize-top { display: grid; gap: 0; }
 .card-customize-header { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
 .card-customize-header h2 { margin: 0; color: #fff; font-size: clamp(1rem, 4vw, 1.35rem); text-align: center; white-space: nowrap; }
 .card-header-action { min-height: 40px; padding: 0 10px; border: 1px solid rgba(255, 255, 255, .14); border-radius: 11px; color: #fff; background: rgba(255, 255, 255, .07); font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; }
@@ -1774,6 +1778,9 @@ html.is-standalone #app > .busfahrer-page.player-selection-page::after {
 .card-save-action { justify-self: end; border-color: rgba(112, 139, 255, .58); color: #e6eaff; background: linear-gradient(135deg, rgba(103, 55, 190, .58), rgba(38, 82, 177, .62)); box-shadow: 0 0 12px rgba(84, 91, 230, .2); }
 .card-save-action:hover,
 .card-save-action:active { border-color: rgba(151, 169, 255, .8); background: linear-gradient(135deg, rgba(121, 66, 212, .72), rgba(44, 97, 204, .76)); }
+.card-save-action:disabled { cursor: default; opacity: .68; box-shadow: none; }
+.card-draft-status { margin: 10px 0 0; padding: 9px 12px; border: 1px solid rgba(126, 139, 255, .28); border-radius: 11px; color: #d9dcff; background: rgba(58, 51, 139, .18); font-size: .8rem; line-height: 1.35; text-align: center; }
+.card-draft-status.is-duplicate { border-color: rgba(95, 190, 211, .38); color: #d5f7ff; background: rgba(31, 113, 145, .2); }
 .setup-card-rules-modal.is-customizing .card-count-list { margin: 12px 0 0; }
 .card-name-dialog-backdrop { position: absolute; z-index: 3; inset: 0; display: grid; padding: 18px; place-items: center; border-radius: inherit; background: rgba(12, 7, 21, .8); backdrop-filter: blur(5px); }
 .card-name-dialog { display: grid; width: min(420px, 100%); padding: 22px; border: 1px solid rgba(123, 130, 255, .42); border-radius: 18px; background: linear-gradient(155deg, #291947, #11183b); box-shadow: 0 20px 55px rgba(0, 0, 0, .48), 0 0 22px rgba(84, 69, 211, .16); gap: 16px; box-sizing: border-box; }

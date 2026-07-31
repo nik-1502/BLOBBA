@@ -103,6 +103,7 @@ let cardRulesDraftBaseline = { ...blobbenCardCounts }
 let cardPresetNameDialogOpen = false
 let cardPresetFormMessage = ''
 let cardPresetPendingDeleteId: string | null = null
+let editingCardPresetId: string | null = null
 let setupRulesSnapshot: { difficulty: BusfahrerDifficulty; cardCounts: Record<string, number> } | null = null
 let activeOnlineModal: OnlineModal = null
 let onlineGroup: OnlineGroupState = { joined: false, isHost: false, inviteCode: 'BLOBBA-724', groupId: null, gameKey: 'busfahrer', status: 'lobby', players: [], members: [], gameState: null }
@@ -190,6 +191,10 @@ function selectedCardCounts() {
 
 function cardRulesDraftIsDirty() {
   return !cardCountsEqual(cardRulesDraft, cardRulesDraftBaseline)
+}
+
+function matchingCustomCardPreset(counts: Record<string, number>, exceptId?: string | null) {
+  return customCardPresets.find((preset) => preset.id !== exceptId && cardCountsEqual(counts, preset.cardCounts))
 }
 let pendingKeyboardPositionCleanup: (() => void) | undefined
 let maximumVisualViewportHeight = window.visualViewport?.height ?? window.innerHeight
@@ -1387,12 +1392,17 @@ function renderSetupUtilityModal() {
     </div>`
   }
   if (cardRulesView === 'customize') {
+    const editingPreset = editingCardPresetId ? customCardPresets.find(({ id }) => id === editingCardPresetId) : null
+    const duplicatePreset = matchingCustomCardPreset(cardRulesDraft, editingCardPresetId)
     return `<div class="setup-modal-backdrop setup-utility-backdrop" data-close-setup-utility>
       <article class="setup-modal setup-utility-modal setup-card-rules-modal is-customizing" role="dialog" aria-modal="true" aria-labelledby="setup-utility-title">
-        <div class="card-customize-header">
-          <button type="button" class="card-header-action card-back-action" data-card-customize-back>← Zurück</button>
-          <h2 id="setup-utility-title">Individuell gestalten</h2>
-          <button type="button" class="card-header-action card-save-action" data-open-card-save>Speichern</button>
+        <div class="card-customize-top">
+          <div class="card-customize-header">
+            <button type="button" class="card-header-action card-back-action" data-card-customize-back>← Zurück</button>
+            <h2 id="setup-utility-title">Individuell gestalten</h2>
+            <button type="button" class="card-header-action card-save-action" data-open-card-save ${duplicatePreset && !editingPreset ? 'disabled' : ''}>${duplicatePreset && !editingPreset ? 'Gespeichert' : 'Speichern'}</button>
+          </div>
+          ${editingPreset ? `<p class="card-draft-status">Du bearbeitest „${escapeHtml(editingPreset.name)}“.</p>` : duplicatePreset ? `<p class="card-draft-status is-duplicate">Diese Kartenverteilung hast du bereits als „${escapeHtml(duplicatePreset.name)}“ gespeichert.</p>` : ''}
         </div>
         <div class="card-count-list">${klatschenCardGroups.map(({ title }) => `<div class="card-count-row"><span>${escapeHtml(title)}</span><div><button type="button" data-card-count-title="${escapeHtml(title)}" data-card-count-delta="-1" aria-label="${escapeHtml(title)} reduzieren">−</button><output>${cardRulesDraft[title] ?? 0}</output><button type="button" data-card-count-title="${escapeHtml(title)}" data-card-count-delta="1" aria-label="${escapeHtml(title)} erhöhen">+</button></div></div>`).join('')}</div>
         ${cardPresetNameDialogOpen ? renderCardPresetNameDialog() : ''}
@@ -1411,8 +1421,8 @@ function renderSetupUtilityModal() {
       <p class="eyebrow">${gameName}</p><h2 id="setup-utility-title">Kartenhäufigkeit</h2>
       <section class="card-preset-picker"><h3>Spielstil wählen</h3>
         <div class="card-preset-grid">${fixedPresets.map(({ id, label, copy }) => `<button type="button" class="card-preset-option${selectedCardPreset.type === 'fixed' && selectedCardPreset.id === id ? ' is-selected' : ''}" data-card-preset="${id}" aria-pressed="${selectedCardPreset.type === 'fixed' && selectedCardPreset.id === id}"><strong>${label}</strong><span>${copy}</span></button>`).join('')}</div>
-        ${customCardPresets.length ? `<div class="custom-card-presets"><h3>Eigene Einstellungen</h3>${customCardPresets.map((preset) => `<div class="custom-card-preset player-row${selectedCardPreset.type === 'custom' && selectedCardPreset.id === preset.id ? ' is-selected' : ''}"><span class="custom-card-preset-icon" aria-hidden="true">☷</span><button type="button" class="custom-card-preset-select" data-select-custom-preset="${preset.id}" aria-pressed="${selectedCardPreset.type === 'custom' && selectedCardPreset.id === preset.id}"><strong>${escapeHtml(preset.name)}</strong></button><button type="button" class="player-remove delete-card-preset" data-delete-custom-preset="${preset.id}" aria-label="${escapeHtml(preset.name)} löschen" title="${escapeHtml(preset.name)} löschen"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6"></path></svg></button></div>`).join('')}</div>` : ''}
-        <button type="button" class="customize-card-rules" data-customize-card-rules><span aria-hidden="true">☷</span><strong>Individuell gestalten</strong><span aria-hidden="true">›</span></button>
+        ${customCardPresets.length ? `<div class="custom-card-presets"><h3>Eigene Einstellungen</h3>${customCardPresets.map((preset) => `<div class="custom-card-preset player-row${selectedCardPreset.type === 'custom' && selectedCardPreset.id === preset.id ? ' is-selected' : ''}"><button type="button" class="custom-card-preset-icon" data-edit-custom-preset="${preset.id}" aria-label="${escapeHtml(preset.name)} bearbeiten" title="${escapeHtml(preset.name)} bearbeiten"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 20 4.3-1 10.4-10.4a2.1 2.1 0 0 0-3-3L5.3 16 4 20Zm10.2-12.9 2.7 2.7"></path></svg></button><button type="button" class="custom-card-preset-select" data-select-custom-preset="${preset.id}" aria-pressed="${selectedCardPreset.type === 'custom' && selectedCardPreset.id === preset.id}"><strong>${escapeHtml(preset.name)}</strong></button><button type="button" class="player-remove delete-card-preset" data-delete-custom-preset="${preset.id}" aria-label="${escapeHtml(preset.name)} löschen" title="${escapeHtml(preset.name)} löschen"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-1 14H7L6 7m4 4v6m4-6v6"></path></svg></button></div>`).join('')}</div>` : ''}
+        <button type="button" class="customize-card-rules" data-customize-card-rules><svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 20 4.3-1 10.4-10.4a2.1 2.1 0 0 0-3-3L5.3 16 4 20Zm10.2-12.9 2.7 2.7"></path></svg><strong>Individuell gestalten</strong><span aria-hidden="true">›</span></button>
       </section>
       <button class="game-button primary" type="button" data-save-setup-rules>Übernehmen</button>
       ${cardPresetPendingDeleteId ? renderCardPresetDeleteDialog(cardPresetPendingDeleteId) : ''}
@@ -1421,14 +1431,14 @@ function renderSetupUtilityModal() {
 }
 
 function renderCardPresetNameDialog() {
-  const editing = selectedCardPreset.type === 'custom'
-  const selected = editing ? customCardPresets.find(({ id }) => id === selectedCardPreset.id) : null
+  const editing = Boolean(editingCardPresetId)
+  const selected = editing ? customCardPresets.find(({ id }) => id === editingCardPresetId) : null
   return `<div class="card-name-dialog-backdrop">
     <form class="card-name-dialog" data-card-preset-form>
       <h3>Einstellung speichern</h3>
       <label>Name der Einstellung<input name="presetName" maxlength="24" value="${escapeHtml(selected?.name ?? '')}" placeholder="z. B. Freitagsparty" autocomplete="off"></label>
       ${cardPresetFormMessage ? `<p class="card-preset-form-message" role="alert">${escapeHtml(cardPresetFormMessage)}</p>` : ''}
-      <div class="card-dialog-actions${editing ? ' has-three-actions' : ''}">${editing ? `<button type="submit" name="saveMode" value="overwrite">Änderungen speichern</button><button type="submit" name="saveMode" value="new">Als neu speichern</button>` : `<button type="submit" name="saveMode" value="new">Speichern</button>`}<button type="button" class="card-dialog-cancel" data-cancel-card-save>Abbrechen</button></div>
+      <div class="card-dialog-actions"><button type="submit">Speichern</button><button type="button" class="card-dialog-cancel" data-cancel-card-save>Zurück</button></div>
     </form>
   </div>`
 }
@@ -1458,6 +1468,7 @@ function bindSetupUtilityActions() {
     cardPresetNameDialogOpen = false
     cardPresetFormMessage = ''
     cardPresetPendingDeleteId = null
+    editingCardPresetId = null
     setupUtilityModal = 'rules'
     renderModeMenu()
   })
@@ -1490,20 +1501,31 @@ function bindSetupUtilityActions() {
     renderModeMenu()
   }))
   app.querySelector<HTMLButtonElement>('[data-customize-card-rules]')?.addEventListener('click', () => {
-    cardRulesDraft = selectedCardCounts()
+    editingCardPresetId = null
+    cardRulesDraft = { ...CARD_PRESETS.classic }
     cardRulesDraftBaseline = { ...cardRulesDraft }
     cardRulesView = 'customize'
     renderModeMenu()
   })
+  app.querySelectorAll<HTMLButtonElement>('[data-edit-custom-preset]').forEach((button) => button.addEventListener('click', () => {
+    const preset = customCardPresets.find(({ id }) => id === button.dataset.editCustomPreset)
+    if (!preset) return
+    editingCardPresetId = preset.id
+    cardRulesDraft = { ...preset.cardCounts }
+    cardRulesDraftBaseline = { ...cardRulesDraft }
+    cardRulesView = 'customize'
+    renderModeMenu()
+  }))
   app.querySelector<HTMLButtonElement>('[data-card-customize-back]')?.addEventListener('click', () => {
     if (cardRulesDraftIsDirty() && !window.confirm('Änderungen verwerfen?')) return
     cardRulesView = 'presets'
     cardPresetNameDialogOpen = false
+    editingCardPresetId = null
     renderModeMenu()
   })
   app.querySelector<HTMLButtonElement>('[data-open-card-save]')?.addEventListener('click', () => {
     cardPresetNameDialogOpen = true
-    cardPresetFormMessage = customCardPresets.length >= 3 && selectedCardPreset.type !== 'custom'
+    cardPresetFormMessage = customCardPresets.length >= 3 && !editingCardPresetId
       ? 'Du kannst maximal drei eigene Einstellungen speichern. Lösche zuerst eine bestehende Einstellung.'
       : ''
     renderModeMenu()
@@ -1516,8 +1538,6 @@ function bindSetupUtilityActions() {
   })
   app.querySelector<HTMLFormElement>('[data-card-preset-form]')?.addEventListener('submit', (event) => {
     event.preventDefault()
-    const submitter = (event as SubmitEvent).submitter as HTMLButtonElement | null
-    const mode = submitter?.value ?? 'new'
     const form = new FormData(event.currentTarget as HTMLFormElement)
     const name = String(form.get('presetName') ?? '').trim().slice(0, 24)
     if (!name) {
@@ -1525,14 +1545,21 @@ function bindSetupUtilityActions() {
       renderModeMenu()
       return
     }
-    const editingId = selectedCardPreset.type === 'custom' ? selectedCardPreset.id : null
-    if (customCardPresets.some((preset) => preset.name.toLocaleLowerCase('de') === name.toLocaleLowerCase('de') && preset.id !== (mode === 'overwrite' ? editingId : null))) {
+    const editingId = editingCardPresetId
+    if (customCardPresets.some((preset) => preset.name.toLocaleLowerCase('de') === name.toLocaleLowerCase('de') && preset.id !== editingId)) {
       cardPresetFormMessage = 'Eine Einstellung mit diesem Namen existiert bereits.'
       renderModeMenu()
       return
     }
-    if (mode === 'overwrite' && editingId) {
+    const duplicatePreset = matchingCustomCardPreset(cardRulesDraft, editingId)
+    if (duplicatePreset) {
+      cardPresetFormMessage = `Diese Kartenverteilung hast du bereits als „${duplicatePreset.name}“ gespeichert.`
+      renderModeMenu()
+      return
+    }
+    if (editingId) {
       customCardPresets = customCardPresets.map((preset) => preset.id === editingId ? { ...preset, name, cardCounts: { ...cardRulesDraft }, updatedAt: Date.now() } : preset)
+      selectedCardPreset = { type: 'custom', id: editingId }
     } else {
       if (customCardPresets.length >= 3) {
         cardPresetFormMessage = 'Du kannst maximal drei eigene Einstellungen speichern. Lösche zuerst eine bestehende Einstellung.'
@@ -1548,6 +1575,7 @@ function bindSetupUtilityActions() {
     cardPresetNameDialogOpen = false
     cardPresetFormMessage = ''
     cardRulesView = 'presets'
+    editingCardPresetId = null
     playSound('ui-confirm')
     renderModeMenu()
   })
