@@ -361,7 +361,7 @@ function revealPyramid() {
   feedback = match ? { text: `Treffer: ${card.label}`, kind: 'success' } : { text: 'Kein Treffer.', kind: 'info' }
   if (matchingCard) pyramidDecision = { cardId: matchingCard.id, label: matchingCard.label, drinks, step: 'offer' }
   pyramidProgress += 1
-  renderGameWithSlide('forward')
+  renderGame()
 }
 
 function usePyramidCard() {
@@ -374,7 +374,7 @@ function usePyramidCard() {
   }
   pyramidDecision.step = 'target'
   feedback = { text: '', kind: 'info' }
-  renderGameWithSlide('forward')
+  renderGame()
 }
 
 function keepPyramidCard() {
@@ -422,7 +422,7 @@ function startBus() {
   deck = createDeck(1)
   phase = 'bus'; busCards = []; busProgress = 0; busFailed = false; busLost = false; busFeedbackPending = false; busfahrerUsedCards = []
   feedback = { text: '', kind: 'info' }
-  renderGameWithSlide('forward')
+  renderGameWithSlide('down')
 }
 
 function playerStatsMarkup() {
