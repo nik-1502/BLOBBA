@@ -1,7 +1,7 @@
 import './klatschen.css'
 import { defaultProfileIconMarkup } from '../../profiles.ts'
 import { getSoundSettings, playSound } from '../../audio/audioManager.ts'
-import { klatschenCardGroups, klatschenCardMap, type KlatschenCard } from './klatschenCards.ts'
+import { defaultKlatschenCardCount, klatschenCardGroups, klatschenCardMap, type KlatschenCard } from './klatschenCards.ts'
 import blobbenCardDealUrl from '../../assets/audio/blobben-card-deal.mp3'
 import thumbEffectIconUrl from '../../assets/smileys/processed/thumb.png'
 import noseEffectIconUrl from '../../assets/smileys/processed/nose.png'
@@ -94,9 +94,10 @@ function createState(setups: KlatschenPlayerSetup[]): KlatschenGameState {
   const players = setups.map((player, index) => ({ ...player, id: player.id ?? `${index}-${player.name}`, drinks: 0, heldCards: [], partnerIds: [] }))
   const partnerCardCount = Math.max(0, players.length - 2)
   const deck = klatschenCardGroups.flatMap(({ title, cards }) => {
-    const defaultCount = title === 'Blobb-Partner' ? partnerCardCount : cards.length
+    const defaultCount = title === 'Blobb-Partner' ? partnerCardCount : defaultKlatschenCardCount(title, cards.length)
     const count = Math.max(0, Math.min(12, options.cardCounts?.[title] ?? defaultCount))
-    return Array.from({ length: count }, (_, index) => cards[index % cards.length]!.id)
+    const randomizedCards = shuffle(cards)
+    return Array.from({ length: count }, (_, index) => randomizedCards[index % randomizedCards.length]!.id)
   })
   return {
     phase: 'turn',

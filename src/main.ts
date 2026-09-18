@@ -1,7 +1,7 @@
 import './style.css'
 import { applyBusfahrerState, getBusfahrerState, mountBusfahrer, type BusfahrerGameState } from './busfahrer.ts'
 import { applyKlatschenState, getKlatschenState, mountKlatschen, type KlatschenGameState } from './games/klatschen/KlatschenGame.ts'
-import { klatschenCardGroups } from './games/klatschen/klatschenCards.ts'
+import { defaultKlatschenCardCount, klatschenCardGroups } from './games/klatschen/klatschenCards.ts'
 import { avatarColor, avatarOptions, avatarSource, avatarVisualMarkup } from './profiles.ts'
 import { getSoundSettings, playActionSound, playSound, setSoundEffectsEnabled, setSoundEffectsVolume } from './audio/audioManager.ts'
 import {
@@ -124,7 +124,7 @@ let setupMode: SetupMode = 'offline'
 let activeGame: GameKey = 'busfahrer'
 let setupUtilityModal: SetupUtilityModal = null
 let busfahrerDifficulty: BusfahrerDifficulty = 'standard'
-let blobbenCardCounts = Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [title, cards.length]))
+let blobbenCardCounts = Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [title, defaultKlatschenCardCount(title, cards.length)]))
 let customCardPresets = loadCustomCardPresets()
 let selectedCardPreset: CardPresetSelection = { type: 'fixed', id: 'classic' }
 let cardRulesView: CardRulesView = 'presets'
@@ -156,7 +156,7 @@ try {
   if (storedRules.blobbenCardCounts) {
     blobbenCardCounts = Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [
       title,
-      Math.max(0, Math.min(12, storedRules.blobbenCardCounts?.[title] ?? cards.length)),
+      Math.max(0, Math.min(12, storedRules.blobbenCardCounts?.[title] ?? defaultKlatschenCardCount(title, cards.length))),
     ]))
   }
 } catch {
@@ -168,9 +168,9 @@ function saveGameRules() {
 }
 
 const CARD_PRESETS: Record<CardPresetId, Record<string, number>> = {
-  relaxed: Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [title, Math.max(1, Math.ceil(cards.length * .65))])),
-  classic: Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [title, cards.length])),
-  party: Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [title, Math.min(12, Math.max(1, Math.ceil(cards.length * 1.5)))])),
+  relaxed: Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [title, Math.max(1, Math.ceil(defaultKlatschenCardCount(title, cards.length) * .65))])),
+  classic: Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [title, defaultKlatschenCardCount(title, cards.length)])),
+  party: Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [title, Math.min(12, Math.max(1, Math.ceil(defaultKlatschenCardCount(title, cards.length) * 1.5)))])),
   chaos: Object.fromEntries(klatschenCardGroups.map(({ title }, index) => [title, 1 + ((index * 3) % 5)])),
 }
 
@@ -187,7 +187,7 @@ function validatedCardCounts(value: unknown) {
   const counts = value as Record<string, unknown>
   return Object.fromEntries(klatschenCardGroups.map(({ title, cards }) => [
     title,
-    Math.max(0, Math.min(12, typeof counts[title] === 'number' && Number.isFinite(counts[title]) ? Math.round(counts[title]) : cards.length)),
+    Math.max(0, Math.min(12, typeof counts[title] === 'number' && Number.isFinite(counts[title]) ? Math.round(counts[title]) : defaultKlatschenCardCount(title, cards.length))),
   ]))
 }
 

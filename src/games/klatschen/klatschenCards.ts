@@ -52,6 +52,32 @@ export const klatschenCards: KlatschenCard[] = [
   { id: 'vote-vanish', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten eine Woche verschwinden? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
   { id: 'vote-celebrity', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten einen Prominenten heiraten? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
   { id: 'vote-dance', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten einen peinlichen Tanz aufführen? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-lost-phone', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten das eigene Handy verlieren? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-reality-show', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten bei einer Realityshow mitmachen? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-tattoo', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten spontan ein Tattoo stechen lassen? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-famous', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten über Nacht berühmt werden? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-missed-flight', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten einen Flug verpassen? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-island', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten allein auf einer Insel überleben? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-viral', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten mit einem peinlichen Video viral gehen? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-party-last', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten als letzte Person eine Party verlassen? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-party-first', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten als erste Person auf einer Party einschlafen? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-secret', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten aus Versehen ein Geheimnis verraten? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-job', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten spontan den Job kündigen? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-world-trip', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten eine Weltreise ohne Plan beginnen? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-alarm', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten fünf Wecker überhören? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-wrong-train', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten in den falschen Zug steigen? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-million', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten eine Million Euro an einem Tag ausgeben? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-comedy', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten eine Karriere als Comedian starten? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-pet', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten zehn Haustiere adoptieren? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-ghost', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten an Geister glauben? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-message', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten eine Nachricht an die falsche Person schicken? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-karaoke', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten freiwillig Karaoke singen? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-laugh', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten in einer ernsten Situation lachen? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-food', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten das Essen aller anderen aufessen? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-wedding', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten spontan in Las Vegas heiraten? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-app', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten eine erfolgreiche App entwickeln? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-detective', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten einen Fall wie ein Detektiv lösen? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
+  { id: 'vote-meme', title: 'Abstimmung', symbol: '🗳️', description: 'Wer würde am ehesten selbst zu einem Meme werden? Die Person mit den meisten Stimmen blobbt.', type: 'vote', amount: 1 },
   { id: 'duel-rps', title: 'Duell', symbol: '✊', description: 'Wähle jemanden für Schnick, Schnack, Schnuck. Wer verliert, blobbt.', type: 'duel', amount: 1 },
   { id: 'duel-stare', title: 'Blickduell', symbol: '👀', description: 'Wähle jemanden zum Blickduell. Wer zuerst lacht, blobbt.', type: 'duel', amount: 1 },
   { id: 'duel-thumb', title: 'Daumencatchen', symbol: '👍', description: 'Wähle jemanden zum Daumencatchen. Wer verliert, blobbt.', type: 'duel', amount: 1 },
@@ -74,6 +100,14 @@ export const klatschenCards: KlatschenCard[] = [
 ]
 
 export const klatschenCardMap = new Map(klatschenCards.map((card) => [card.id, card]))
+
+const DEFAULT_CARD_COUNTS: Record<string, number> = {
+  Abstimmung: 4,
+}
+
+export function defaultKlatschenCardCount(title: string, availableCards: number) {
+  return DEFAULT_CARD_COUNTS[title] ?? availableCards
+}
 
 export const klatschenCardGroups = [...new Set(klatschenCards.map((card) => card.title))].map((title) => ({
   title,
