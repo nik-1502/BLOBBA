@@ -27,9 +27,8 @@ import {
 import type { Session } from '@supabase/supabase-js'
 import './subpage-theme.css'
 import busfahrerGameImage from './assets/spielbild icons/blobb-fahrer-cover-clean.png'
-import blobbenGameImage from './assets/spielbild icons/blobben-cover-light-orange-brown-contours-v51.png'
 import busfahrerGameImageNeon from './assets/spielbild icons/blobb-fahrer-cover-neon-chroma-v4.png'
-import blobbenGameImageNeon from './assets/spielbild icons/blobben-cover-neon-exclamation-v42.png'
+import blobbenGameImage from './assets/Blobben bild/88a9dca4-f0c2-48d3-9b93-fc2ad62fd818.png'
 import heroLogo from './assets/überschrift/blobba-logo-clean-outlined.png'
 import heroLogoNeon from './assets/überschrift/blobba-logo-neon-original.png'
 import heroLogoNeonMobile from './assets/überschrift/blobba-logo-neon-mobile.png'
@@ -1242,7 +1241,7 @@ function renderHome() {
             <i class="premium-game-frame-channel"></i>
             <i class="premium-game-frame-details"></i>
           </span>
-          <img class="busfahrer-button-image" src="${appTheme === 'neon' ? blobbenGameImageNeon : blobbenGameImage}" alt="">
+          <img class="busfahrer-button-image" src="${blobbenGameImage}" alt="">
           <span class="busfahrer-button-label">BLOBBEN</span>
         </button>
         ${favoriteHeartMarkup('blobben')}
