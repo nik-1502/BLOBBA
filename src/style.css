@@ -2278,6 +2278,10 @@ html[data-theme='neon'] .home-page .categories-filter-button.is-active svg {
 
 /* Shared image frame for every game tile. The existing tile geometry stays
    unchanged; game artwork and labels continue to render above this layer. */
+.home-page .game-list {
+  width: min(860px, 100%);
+}
+
 html[data-theme] .home-page .busfahrer-button {
   border-color: transparent;
   background: transparent;
