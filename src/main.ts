@@ -1190,7 +1190,9 @@ function renderHome() {
       <svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 21a7.5 7.5 0 0 1 15 0c-2.2 1.25-12.8 1.25-15 0Z"></path></svg>
     </button>
     <header class="hero-header">
-      <img class="hero-logo" src="${heroLogo}" alt="BLOBBA">
+      <picture class="hero-logo-picture">
+        <img class="hero-logo" src="${heroLogo}" alt="BLOBBA">
+      </picture>
     </header>
     <div class="home-games-area">
       <section class="game-filters" aria-label="Spiele filtern">
