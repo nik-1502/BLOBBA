@@ -2315,7 +2315,10 @@ html[data-theme] .home-page .busfahrer-button {
 
 html[data-theme] .home-page .premium-game-frame {
   display: block;
-  background: url('./assets/spielbildrahmen/608a90f0-c36e-4fd7-be74-b15b8a56cc95.png') center / 116% 100% no-repeat;
+  background:
+    linear-gradient(rgba(7, 10, 79, .26), rgba(7, 10, 79, .26)),
+    url('./assets/spielbildrahmen/608a90f0-c36e-4fd7-be74-b15b8a56cc95.png') center / 116% 100% no-repeat;
+  background-blend-mode: multiply;
   box-shadow: none;
 }
 
