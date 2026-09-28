@@ -2275,3 +2275,23 @@ html[data-theme='neon'] .home-page .categories-filter-button.is-active svg {
 .home-page .favorite-heart-button:active {
   transform: scale(.9) !important;
 }
+
+/* Shared image frame for every game tile. The existing tile geometry stays
+   unchanged; game artwork and labels continue to render above this layer. */
+html[data-theme] .home-page .busfahrer-button {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+html[data-theme] .home-page .premium-game-frame {
+  display: block;
+  background: url('./assets/spielbildrahmen/608a90f0-c36e-4fd7-be74-b15b8a56cc95.png') center / 100% 100% no-repeat;
+  box-shadow: none;
+}
+
+html[data-theme] .home-page .premium-game-frame::before,
+html[data-theme] .home-page .premium-game-frame::after,
+html[data-theme] .home-page .premium-game-frame > * {
+  display: none;
+}
