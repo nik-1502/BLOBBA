@@ -2234,8 +2234,7 @@ html[data-theme-variant='neon-new'] .home-page .busfahrer-button {
   --game-frame-glow-left: rgba(236, 28, 172, .42);
   --game-frame-glow-right: rgba(0, 154, 245, .42);
   background:
-    linear-gradient(90deg, rgba(236, 28, 172, .1) 0%, rgba(236, 28, 172, .025) 6%, transparent 12%, transparent 88%, rgba(0, 154, 245, .025) 94%, rgba(0, 154, 245, .1) 100%) padding-box,
-    #0a0d70 padding-box,
+    linear-gradient(90deg, #4b087c 0%, #310a79 10%, #1d0b75 20%, #0e0d71 32%, #0a0d70 50%, #091176 68%, #071f91 80%, #0649bd 91%, #087fcf 100%) padding-box,
     var(--game-frame-edge) border-box;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, .12),
@@ -2246,9 +2245,7 @@ html[data-theme-variant='neon-new'] .home-page .busfahrer-button {
 }
 
 html[data-theme-variant='neon-new'] .home-page .premium-game-frame {
-  background:
-    linear-gradient(90deg, rgba(236, 28, 172, .11) 0%, rgba(236, 28, 172, .025) 6%, transparent 12%, transparent 88%, rgba(0, 154, 245, .025) 94%, rgba(0, 154, 245, .11) 100%),
-    #0a0d70;
+  background: linear-gradient(90deg, #4b087c 0%, #310a79 10%, #1d0b75 20%, #0e0d71 32%, #0a0d70 50%, #091176 68%, #071f91 80%, #0649bd 91%, #087fcf 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, .16),
     inset 0 -16px 30px rgba(0, 0, 44, .24);
@@ -2268,9 +2265,7 @@ html[data-theme-variant='neon-new'] .home-page .premium-game-frame::after {
 }
 
 html[data-theme-variant='neon-new'] .home-page .premium-game-card-surface {
-  background:
-    linear-gradient(90deg, rgba(236, 28, 172, .07) 0%, rgba(236, 28, 172, .015) 5%, transparent 10%, transparent 90%, rgba(0, 154, 245, .015) 95%, rgba(0, 154, 245, .07) 100%),
-    #0a0d70;
+  background: linear-gradient(90deg, #300a78 0%, #220b75 10%, #150c72 21%, #0c0d70 33%, #0a0d70 50%, #091075 67%, #081985 79%, #0737a5 90%, #0758b9 100%);
   box-shadow: none;
 }
 
