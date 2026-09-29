@@ -30,6 +30,7 @@ import busfahrerGameImage from './assets/spielbild icons/blobb-fahrer-cover-clea
 import blobbenGameImage from './assets/spielbild icons/blobben-cover-light-orange-brown-contours-v51.png'
 import busfahrerGameImageNeon from './assets/spielbild icons/blobb-fahrer-cover-neon-chroma-v4.png'
 import blobbenGameImageNeon from './assets/spielbild icons/blobben-cover-neon-exclamation-v42.png'
+import blobbenGameImageNeonNew from './assets/blobben bild/b9a367d0-c236-478c-ac60-41af4937faca.png'
 import heroLogo from './assets/überschrift/blobba-logo-clean-outlined.png'
 import heroLogoNeon from './assets/überschrift/blobba-logo-neon-original.png'
 import heroLogoNeonMobile from './assets/überschrift/blobba-logo-neon-mobile.png'
@@ -1249,7 +1250,7 @@ function renderHome() {
             <i class="premium-game-frame-channel"></i>
             <i class="premium-game-frame-details"></i>
           </span>
-          <img class="busfahrer-button-image" src="${isDarkAppTheme() ? blobbenGameImageNeon : blobbenGameImage}" alt="">
+          <img class="busfahrer-button-image" src="${appTheme === 'neon-new' ? blobbenGameImageNeonNew : appTheme === 'neon' ? blobbenGameImageNeon : blobbenGameImage}" alt="">
           <span class="busfahrer-button-label">BLOBBEN</span>
         </button>
         ${favoriteHeartMarkup('blobben')}
