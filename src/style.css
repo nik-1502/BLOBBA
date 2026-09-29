@@ -2250,11 +2250,17 @@ html[data-theme-variant='neon-new'] .home-page .busfahrer-button {
 html[data-theme-variant='neon-new'] .home-page .busfahrer-button::before {
   content: '';
   position: absolute;
-  inset: 2.13cqw;
+  inset: 7px;
   z-index: 0;
-  border-radius: max(0px, calc(var(--game-tile-radius) - 2.13cqw));
+  border-radius: max(0px, calc(var(--game-tile-radius) - 7px));
   background: #0a0d70;
-  filter: blur(1.5cqw);
+  box-shadow:
+    0 0 0 1px rgba(10, 13, 112, .96),
+    0 0 0 2px rgba(10, 13, 112, .82),
+    0 0 0 3px rgba(10, 13, 112, .66),
+    0 0 0 4px rgba(10, 13, 112, .50),
+    0 0 0 5px rgba(10, 13, 112, .34),
+    0 0 0 6px rgba(10, 13, 112, .17);
   pointer-events: none;
 }
 
