@@ -2244,23 +2244,41 @@ html[data-theme-variant='neon-new'] .home-page .busfahrer-button {
     #087fcf 88%,
     #00c9f7 100%
   ) border-box;
-  box-shadow: 0 0 6px 1px rgba(0, 0, 24, .38);
+  box-shadow: none;
 }
 
 html[data-theme-variant='neon-new'] .home-page .busfahrer-button::before {
   content: '';
   position: absolute;
-  inset: 7px;
+  inset: 13px;
   z-index: 0;
-  border-radius: max(0px, calc(var(--game-tile-radius) - 7px));
+  border-radius: max(0px, calc(var(--game-tile-radius) - 13px));
   background: #0a0d70;
   box-shadow:
-    0 0 0 1px rgba(10, 13, 112, .96),
-    0 0 0 2px rgba(10, 13, 112, .82),
-    0 0 0 3px rgba(10, 13, 112, .66),
-    0 0 0 4px rgba(10, 13, 112, .50),
-    0 0 0 5px rgba(10, 13, 112, .34),
-    0 0 0 6px rgba(10, 13, 112, .17);
+    0 0 0 .5px rgba(10, 13, 112, .08),
+    0 0 0 1px rgba(10, 13, 112, .08),
+    0 0 0 1.5px rgba(10, 13, 112, .08),
+    0 0 0 2px rgba(10, 13, 112, .08),
+    0 0 0 2.5px rgba(10, 13, 112, .08),
+    0 0 0 3px rgba(10, 13, 112, .08),
+    0 0 0 3.5px rgba(10, 13, 112, .08),
+    0 0 0 4px rgba(10, 13, 112, .08),
+    0 0 0 4.5px rgba(10, 13, 112, .08),
+    0 0 0 5px rgba(10, 13, 112, .08),
+    0 0 0 5.5px rgba(10, 13, 112, .08),
+    0 0 0 6px rgba(10, 13, 112, .08),
+    0 0 0 6.5px rgba(10, 13, 112, .08),
+    0 0 0 7px rgba(10, 13, 112, .08),
+    0 0 0 7.5px rgba(10, 13, 112, .08),
+    0 0 0 8px rgba(10, 13, 112, .08),
+    0 0 0 8.5px rgba(10, 13, 112, .08),
+    0 0 0 9px rgba(10, 13, 112, .08),
+    0 0 0 9.5px rgba(10, 13, 112, .08),
+    0 0 0 10px rgba(10, 13, 112, .08),
+    0 0 0 10.5px rgba(10, 13, 112, .08),
+    0 0 0 11px rgba(10, 13, 112, .08),
+    0 0 0 11.5px rgba(10, 13, 112, .08),
+    0 0 0 12px rgba(10, 13, 112, .08);
   pointer-events: none;
 }
 
