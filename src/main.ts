@@ -365,6 +365,101 @@ function alignHomeHeaderButtons() {
 
 window.addEventListener('resize', () => requestAnimationFrame(alignHomeHeaderButtons))
 
+const newDarkFrameGradientCache = new Map<string, string>()
+const newDarkFrameEdgeStops = [
+  [0, [236, 28, 172]],
+  [.12, [213, 20, 176]],
+  [.24, [181, 27, 193]],
+  [.36, [146, 32, 211]],
+  [.5, [110, 36, 229]],
+  [.64, [73, 48, 235]],
+  [.76, [37, 63, 240]],
+  [.88, [8, 127, 207]],
+  [1, [0, 201, 247]],
+] as const
+const newDarkFrameCenterColor = [10, 13, 112] as const
+
+function sampleNewDarkFrameEdgeColor(position: number) {
+  for (let index = 1; index < newDarkFrameEdgeStops.length; index += 1) {
+    const previous = newDarkFrameEdgeStops[index - 1]
+    const next = newDarkFrameEdgeStops[index]
+    if (position > next[0]) continue
+    const amount = (position - previous[0]) / (next[0] - previous[0])
+    return previous[1].map((channel, channelIndex) => channel + ((next[1][channelIndex] - channel) * amount))
+  }
+  return [...newDarkFrameEdgeStops.at(-1)![1]]
+}
+
+function createNewDarkFrameGradient(width: number, height: number, radius: number) {
+  const scale = Math.min(window.devicePixelRatio || 1, 3)
+  const pixelWidth = Math.max(1, Math.round(width * scale))
+  const pixelHeight = Math.max(1, Math.round(height * scale))
+  const key = `${pixelWidth}x${pixelHeight}:${Math.round(radius * scale)}`
+  const cached = newDarkFrameGradientCache.get(key)
+  if (cached) return cached
+
+  const canvas = document.createElement('canvas')
+  canvas.width = pixelWidth
+  canvas.height = pixelHeight
+  const context = canvas.getContext('2d')!
+  const image = context.createImageData(pixelWidth, pixelHeight)
+  const halfWidth = width / 2
+  const halfHeight = height / 2
+  const safeRadius = Math.min(radius, halfWidth, halfHeight)
+  const innerHalfWidth = halfWidth - safeRadius
+  const innerHalfHeight = halfHeight - safeRadius
+  const pureColorWidth = 1
+  const transitionWidth = 12
+
+  for (let y = 0; y < pixelHeight; y += 1) {
+    const cssY = (y + .5) / scale
+    for (let x = 0; x < pixelWidth; x += 1) {
+      const cssX = (x + .5) / scale
+      const offsetX = Math.abs(cssX - halfWidth) - innerHalfWidth
+      const offsetY = Math.abs(cssY - halfHeight) - innerHalfHeight
+      const outsideX = Math.max(offsetX, 0)
+      const outsideY = Math.max(offsetY, 0)
+      const signedDistance = Math.hypot(outsideX, outsideY) + Math.min(Math.max(offsetX, offsetY), 0) - safeRadius
+      const targetIndex = ((y * pixelWidth) + x) * 4
+      if (signedDistance > 0) {
+        image.data[targetIndex + 3] = 0
+        continue
+      }
+
+      const distanceFromEdge = -signedDistance
+      const linearMix = Math.min(1, Math.max(0, (distanceFromEdge - pureColorWidth) / transitionWidth))
+      const smoothMix = linearMix * linearMix * linearMix * ((linearMix * ((linearMix * 6) - 15)) + 10)
+      const edgeColor = sampleNewDarkFrameEdgeColor(cssX / width)
+      for (let channel = 0; channel < 3; channel += 1) {
+        image.data[targetIndex + channel] = Math.round(edgeColor[channel] + ((newDarkFrameCenterColor[channel] - edgeColor[channel]) * smoothMix))
+      }
+      image.data[targetIndex + 3] = 255
+    }
+  }
+
+  context.putImageData(image, 0, 0)
+  const dataUrl = canvas.toDataURL('image/png')
+  newDarkFrameGradientCache.set(key, dataUrl)
+  return dataUrl
+}
+
+function applyNewDarkFrameGradients() {
+  if (appTheme !== 'neon-new') return
+  app.querySelectorAll<HTMLButtonElement>('.home-page .busfahrer-button').forEach((button) => {
+    const bounds = button.getBoundingClientRect()
+    if (bounds.width <= 0 || bounds.height <= 0) return
+    const radius = Number.parseFloat(getComputedStyle(button).borderTopLeftRadius) || 0
+    button.style.backgroundImage = `url("${createNewDarkFrameGradient(bounds.width, bounds.height, radius)}")`
+    button.style.backgroundSize = '100% 100%'
+  })
+}
+
+let newDarkFrameResizeFrame = 0
+window.addEventListener('resize', () => {
+  cancelAnimationFrame(newDarkFrameResizeFrame)
+  newDarkFrameResizeFrame = requestAnimationFrame(applyNewDarkFrameGradients)
+})
+
 function preventDesktopZoom() {
   const isDesktopPointer = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches
   window.addEventListener('wheel', (event) => {
@@ -1268,6 +1363,10 @@ function renderHome() {
   const homeLogo = app.querySelector<HTMLImageElement>('.hero-logo')!
   homeLogo.addEventListener('load', alignHomeHeaderButtons, { once: true })
   requestAnimationFrame(alignHomeHeaderButtons)
+  requestAnimationFrame(() => requestAnimationFrame(applyNewDarkFrameGradients))
+  app.querySelectorAll<HTMLImageElement>('.busfahrer-button-image').forEach((image) => {
+    if (!image.complete) image.addEventListener('load', applyNewDarkFrameGradients, { once: true })
+  })
   app.querySelector<HTMLButtonElement>('.home-user-button')!.addEventListener('click', () => { playSound('ui-click'); void navigateWithHorizontalSlide('profile', 'forward') })
   app.querySelector<HTMLButtonElement>('.home-settings-button')!.addEventListener('click', () => { playSound('ui-click'); void navigateWithHorizontalSlide('settings', 'forward') })
   bindHomeGameSlide(app.querySelector<HTMLButtonElement>('.blobfahrer-home-button')!, 'busfahrer', 'busfahrer-menu')
