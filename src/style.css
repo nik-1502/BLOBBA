@@ -2235,16 +2235,16 @@ html[data-theme-variant='neon-new'] .home-page .game-tile-wrap {
 html[data-theme-variant='neon-new'] .home-page .busfahrer-button {
   background: linear-gradient(90deg,
     #ec1cac 0%,
-    #c914a6 2.5%,
-    #941692 5%,
-    #61177f 7.5%,
-    #351374 10%,
-    #0a0d70 13%,
-    #0a0d70 87%,
-    #102887 90%,
-    #0757ad 92.5%,
-    #087fcf 95%,
-    #05a8e4 97.5%,
+    #c914a6 1.25%,
+    #941692 2.5%,
+    #61177f 3.75%,
+    #351374 5%,
+    #0a0d70 6.5%,
+    #0a0d70 93.5%,
+    #102887 95%,
+    #0757ad 96.25%,
+    #087fcf 97.5%,
+    #05a8e4 98.75%,
     #00c9f7 100%
   ) border-box;
   box-shadow: none;
@@ -2257,7 +2257,7 @@ html[data-theme-variant='neon-new'] .home-page .busfahrer-button::after {
   right: 0;
   left: 0;
   z-index: 0;
-  height: 13cqw;
+  height: 6.5cqw;
   background: linear-gradient(90deg, #ec1cac 0%, #d514b0 12%, #b51bc1 24%, #9220d3 36%, #6e24e5 50%, #4930eb 64%, #253ff0 76%, #087fcf 88%, #00c9f7 100%);
   pointer-events: none;
 }
