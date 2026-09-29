@@ -2230,46 +2230,40 @@ html[data-theme='neon'] .home-page .categories-filter-button.is-active svg {
 /* Dunkelmodus neu: glossy pink-to-blue game frames. The tile geometry stays
    untouched; only the existing frame layers receive the new finish. */
 html[data-theme-variant='neon-new'] .home-page .busfahrer-button {
-  --game-frame-edge: linear-gradient(90deg, #ec1cac 0%, #7b087f 12%, #28128e 28%, #101475 50%, #0b21b8 72%, #0879e8 88%, #00c9f7 100%);
-  --game-frame-glow-left: rgba(236, 28, 172, .42);
-  --game-frame-glow-right: rgba(0, 154, 245, .42);
-  background:
-    linear-gradient(90deg, #4b087c 0%, #310a79 10%, #1d0b75 20%, #0e0d71 32%, #0a0d70 50%, #091176 68%, #071f91 80%, #0649bd 91%, #087fcf 100%) padding-box,
-    var(--game-frame-edge) border-box;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .12),
-    inset 0 -14px 26px rgba(0, 0, 42, .22),
-    -5px 0 15px var(--game-frame-glow-left),
-    5px 0 15px var(--game-frame-glow-right),
-    0 14px 30px rgba(0, 0, 0, .46);
+  background: linear-gradient(90deg,
+    #ec1cac 0%,
+    #8b087f 3%,
+    #361078 7%,
+    #0a0d70 10%,
+    #0a0d70 90%,
+    #0737a5 94%,
+    #087fcf 97%,
+    #00c9f7 100%
+  ) border-box;
+  box-shadow: none;
 }
 
 html[data-theme-variant='neon-new'] .home-page .premium-game-frame {
-  background: linear-gradient(90deg, #4b087c 0%, #310a79 10%, #1d0b75 20%, #0e0d71 32%, #0a0d70 50%, #091176 68%, #071f91 80%, #0649bd 91%, #087fcf 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .16),
-    inset 0 -16px 30px rgba(0, 0, 44, .24);
-}
-
-html[data-theme-variant='neon-new'] .home-page .premium-game-frame::before {
-  padding: 3px;
-  filter:
-    drop-shadow(-2px 0 5px rgba(236, 28, 172, .42))
-    drop-shadow(2px 0 5px rgba(0, 154, 245, .42));
-}
-
-html[data-theme-variant='neon-new'] .home-page .premium-game-frame::after {
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, .28), rgba(255, 255, 255, .08) 12%, rgba(255, 255, 255, .05) 50%, rgba(255, 255, 255, .08) 88%, rgba(255, 255, 255, .28)) top / 100% 1px no-repeat;
+  background: linear-gradient(90deg,
+    #ec1cac 0%,
+    #8b087f 3%,
+    #361078 7%,
+    #0a0d70 10%,
+    #0a0d70 90%,
+    #0737a5 94%,
+    #087fcf 97%,
+    #00c9f7 100%
+  );
   box-shadow: none;
 }
 
-html[data-theme-variant='neon-new'] .home-page .premium-game-card-surface {
-  background: linear-gradient(90deg, #300a78 0%, #220b75 10%, #150c72 21%, #0c0d70 33%, #0a0d70 50%, #091075 67%, #081985 79%, #0737a5 90%, #0758b9 100%);
-  box-shadow: none;
-}
-
-html[data-theme-variant='neon-new'] .home-page :is(.premium-game-frame-channel, .premium-game-frame-details) {
+html[data-theme-variant='neon-new'] .home-page :is(
+  .premium-game-frame::before,
+  .premium-game-frame::after,
+  .premium-game-card-surface,
+  .premium-game-frame-channel,
+  .premium-game-frame-details
+) {
   display: none;
 }
 
