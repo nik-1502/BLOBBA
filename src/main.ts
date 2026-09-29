@@ -35,6 +35,7 @@ import busfahrerGameImageNeonNew from './assets/busfahrer bild/1209157b-42aa-42a
 import heroLogo from './assets/überschrift/blobba-logo-clean-outlined.png'
 import heroLogoNeon from './assets/überschrift/blobba-logo-neon-original.png'
 import heroLogoNeonMobile from './assets/überschrift/blobba-logo-neon-mobile.png'
+import heroLogoNeonNew from './assets/überschrift bild/2ebf5e57-5e17-4282-ab95-d4ab0df2624c.png'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 
@@ -1203,7 +1204,11 @@ function renderHome() {
       <svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 21a7.5 7.5 0 0 1 15 0c-2.2 1.25-12.8 1.25-15 0Z"></path></svg>
     </button>
     <header class="hero-header">
-      ${isDarkAppTheme()
+      ${appTheme === 'neon-new'
+        ? `<picture class="hero-logo-picture hero-logo-picture-new">
+            <img class="hero-logo" src="${heroLogoNeonNew}" alt="BLOBBA">
+          </picture>`
+        : appTheme === 'neon'
         ? `<picture class="hero-logo-picture">
             <source media="(max-width: 1024px)" srcset="${heroLogoNeonMobile}">
             <img class="hero-logo" src="${heroLogoNeon}" alt="BLOBBA">
