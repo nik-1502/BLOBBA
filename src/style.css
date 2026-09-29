@@ -2250,7 +2250,7 @@ html[data-theme-variant='neon-new'] .home-page .busfahrer-button::after {
   left: 0;
   z-index: 0;
   height: 18%;
-  background: linear-gradient(90deg, #ec1cac 0%, #6d087e 18%, #28128e 34%, #0a0d70 50%, #0b21b8 66%, #087fcf 82%, #00c9f7 100%);
+  background: linear-gradient(90deg, #ec1cac 0%, #cf0bbb 18%, #a416d2 34%, #6e24e5 50%, #3438ed 66%, #087fcf 82%, #00c9f7 100%);
   pointer-events: none;
 }
 
