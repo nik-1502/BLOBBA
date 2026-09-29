@@ -2228,15 +2228,23 @@ html[data-theme='neon'] .home-page .categories-filter-button.is-active svg {
 }
 
 /* Dunkelmodus neu: one flat, uninterrupted game-tile surface. */
+html[data-theme-variant='neon-new'] .home-page .game-tile-wrap {
+  container-type: inline-size;
+}
+
 html[data-theme-variant='neon-new'] .home-page .busfahrer-button {
   background: linear-gradient(90deg,
     #ec1cac 0%,
-    #8b087f 3%,
-    #361078 7%,
-    #0a0d70 10%,
-    #0a0d70 90%,
-    #0737a5 94%,
-    #087fcf 97%,
+    #c914a6 2.5%,
+    #941692 5%,
+    #61177f 7.5%,
+    #351374 10%,
+    #0a0d70 13%,
+    #0a0d70 87%,
+    #102887 90%,
+    #0757ad 92.5%,
+    #087fcf 95%,
+    #05a8e4 97.5%,
     #00c9f7 100%
   ) border-box;
   box-shadow: none;
@@ -2249,21 +2257,21 @@ html[data-theme-variant='neon-new'] .home-page .busfahrer-button::after {
   right: 0;
   left: 0;
   z-index: 0;
-  height: 10%;
-  background: linear-gradient(90deg, #ec1cac 0%, #cf0bbb 18%, #a416d2 34%, #6e24e5 50%, #3438ed 66%, #087fcf 82%, #00c9f7 100%);
+  height: 13cqw;
+  background: linear-gradient(90deg, #ec1cac 0%, #d514b0 12%, #b51bc1 24%, #9220d3 36%, #6e24e5 50%, #4930eb 64%, #253ff0 76%, #087fcf 88%, #00c9f7 100%);
   pointer-events: none;
 }
 
 html[data-theme-variant='neon-new'] .home-page .busfahrer-button::before {
   top: 0;
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 0%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, .82) 24%, rgba(0, 0, 0, .5) 52%, rgba(0, 0, 0, .18) 78%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, .82) 24%, rgba(0, 0, 0, .5) 52%, rgba(0, 0, 0, .18) 78%, transparent 100%);
 }
 
 html[data-theme-variant='neon-new'] .home-page .busfahrer-button::after {
   bottom: 0;
-  -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 100%);
-  mask-image: linear-gradient(to top, #000 0%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, .82) 24%, rgba(0, 0, 0, .5) 52%, rgba(0, 0, 0, .18) 78%, transparent 100%);
+  mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, .82) 24%, rgba(0, 0, 0, .5) 52%, rgba(0, 0, 0, .18) 78%, transparent 100%);
 }
 
 html[data-theme-variant='neon-new'] .home-page .premium-game-frame {
