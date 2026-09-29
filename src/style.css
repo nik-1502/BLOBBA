@@ -2233,45 +2233,34 @@ html[data-theme-variant='neon-new'] .home-page .game-tile-wrap {
 }
 
 html[data-theme-variant='neon-new'] .home-page .busfahrer-button {
-  background: linear-gradient(90deg,
-    #ec1cac 0%,
-    #c914a6 1.25%,
-    #941692 2.5%,
-    #61177f 3.75%,
-    #351374 5%,
-    #0a0d70 6.5%,
-    #0a0d70 93.5%,
-    #102887 95%,
-    #0757ad 96.25%,
-    #087fcf 97.5%,
-    #05a8e4 98.75%,
-    #00c9f7 100%
-  ) border-box;
+  background: #0a0d70;
   box-shadow: none;
 }
 
-html[data-theme-variant='neon-new'] .home-page .busfahrer-button::before,
-html[data-theme-variant='neon-new'] .home-page .busfahrer-button::after {
+html[data-theme-variant='neon-new'] .home-page .busfahrer-button::before {
   content: '';
   position: absolute;
-  right: 0;
-  left: 0;
+  inset: -3px;
   z-index: 0;
-  height: 6.5cqw;
+  box-sizing: border-box;
+  border: calc(6.5cqw + 3px) solid transparent;
+  border-radius: inherit;
   background: linear-gradient(90deg, #ec1cac 0%, #d514b0 12%, #b51bc1 24%, #9220d3 36%, #6e24e5 50%, #4930eb 64%, #253ff0 76%, #087fcf 88%, #00c9f7 100%);
+  background-clip: border-box;
+  -webkit-mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  filter: blur(3px);
   pointer-events: none;
 }
 
-html[data-theme-variant='neon-new'] .home-page .busfahrer-button::before {
-  top: 0;
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, .82) 24%, rgba(0, 0, 0, .5) 52%, rgba(0, 0, 0, .18) 78%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, .82) 24%, rgba(0, 0, 0, .5) 52%, rgba(0, 0, 0, .18) 78%, transparent 100%);
-}
-
 html[data-theme-variant='neon-new'] .home-page .busfahrer-button::after {
-  bottom: 0;
-  -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, .82) 24%, rgba(0, 0, 0, .5) 52%, rgba(0, 0, 0, .18) 78%, transparent 100%);
-  mask-image: linear-gradient(to top, #000 0%, rgba(0, 0, 0, .82) 24%, rgba(0, 0, 0, .5) 52%, rgba(0, 0, 0, .18) 78%, transparent 100%);
+  display: none;
 }
 
 html[data-theme-variant='neon-new'] .home-page .premium-game-frame {
