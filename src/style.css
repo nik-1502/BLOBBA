@@ -886,23 +886,7 @@ html.is-standalone #app > .setup-page > .player-selection-zoom-layer > .setup-sh
 }
 
 .hero-logo-picture {
-  display: grid;
-  width: min(
-    100%,
-    45vw,
-    450px,
-    calc(100vw - clamp(16px, 4vw, 40px) - clamp(16px, 4vw, 40px) - clamp(50px, 7vw, 58px) - clamp(50px, 7vw, 58px) - 24px)
-  );
-  aspect-ratio: 3 / 2;
-  grid-column: 1 / -1;
-  grid-row: 1;
-  justify-self: center;
-  place-items: center;
-}
-
-.hero-logo-picture .hero-logo {
-  width: 100%;
-  height: 100%;
+  display: contents;
 }
 
 .home-page {
@@ -2290,52 +2274,4 @@ html[data-theme='neon'] .home-page .categories-filter-button.is-active svg {
 
 .home-page .favorite-heart-button:active {
   transform: scale(.9) !important;
-}
-
-/* Shared image frame for every game tile. The existing tile geometry stays
-   unchanged; game artwork and labels continue to render above this layer. */
-.home-page {
-  --home-column-gap: 12px;
-}
-
-.home-page .game-toolbar,
-html[data-theme] .home-page .game-list {
-  gap: var(--home-column-gap);
-}
-
-html[data-theme] .home-page .game-list {
-  width: min(var(--home-content-width), 100%);
-}
-
-html[data-theme] .home-page .busfahrer-button {
-  border-color: transparent;
-  background: transparent;
-  box-shadow: none;
-}
-
-html[data-theme] .home-page .premium-game-frame {
-  display: block;
-  background:
-    linear-gradient(rgba(7, 10, 79, .26), rgba(7, 10, 79, .26)),
-    url('./assets/spielbildrahmen/608a90f0-c36e-4fd7-be74-b15b8a56cc95.png') center / 116% 100% no-repeat;
-  background-blend-mode: multiply;
-  box-shadow: none;
-}
-
-html[data-theme] .home-page .premium-game-frame::before,
-html[data-theme] .home-page .premium-game-frame::after,
-html[data-theme] .home-page .premium-game-frame > * {
-  display: none;
-}
-
-@media (min-width: 621px) {
-  .home-page .game-tile-wrap {
-    aspect-ratio: 1 / 1;
-  }
-}
-
-@media (max-width: 620px) {
-  .home-page {
-    --home-column-gap: 8px;
-  }
 }

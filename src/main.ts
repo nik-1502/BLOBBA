@@ -26,9 +26,13 @@ import {
 } from './online.ts'
 import type { Session } from '@supabase/supabase-js'
 import './subpage-theme.css'
-import busfahrerGameImage from './assets/busfahrer bild/d3ec2ac6-4ed8-4841-ad1b-9baf92af1e2f.png'
-import blobbenGameImage from './assets/Blobben bild/88a9dca4-f0c2-48d3-9b93-fc2ad62fd818.png'
-import heroLogo from './assets/überschrift bild/2ebf5e57-5e17-4282-ab95-d4ab0df2624c.png'
+import busfahrerGameImage from './assets/spielbild icons/blobb-fahrer-cover-clean.png'
+import blobbenGameImage from './assets/spielbild icons/blobben-cover-light-orange-brown-contours-v51.png'
+import busfahrerGameImageNeon from './assets/spielbild icons/blobb-fahrer-cover-neon-chroma-v4.png'
+import blobbenGameImageNeon from './assets/spielbild icons/blobben-cover-neon-exclamation-v42.png'
+import heroLogo from './assets/überschrift/blobba-logo-clean-outlined.png'
+import heroLogoNeon from './assets/überschrift/blobba-logo-neon-original.png'
+import heroLogoNeonMobile from './assets/überschrift/blobba-logo-neon-mobile.png'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 
@@ -1190,9 +1194,12 @@ function renderHome() {
       <svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 21a7.5 7.5 0 0 1 15 0c-2.2 1.25-12.8 1.25-15 0Z"></path></svg>
     </button>
     <header class="hero-header">
-      <picture class="hero-logo-picture">
-        <img class="hero-logo" src="${heroLogo}" alt="BLOBBA">
-      </picture>
+      ${appTheme === 'neon'
+        ? `<picture class="hero-logo-picture">
+            <source media="(max-width: 1024px)" srcset="${heroLogoNeonMobile}">
+            <img class="hero-logo" src="${heroLogoNeon}" alt="BLOBBA">
+          </picture>`
+        : `<img class="hero-logo" src="${heroLogo}" alt="BLOBBA">`}
     </header>
     <div class="home-games-area">
       <section class="game-filters" aria-label="Spiele filtern">
@@ -1223,7 +1230,7 @@ function renderHome() {
             <i class="premium-game-frame-channel"></i>
             <i class="premium-game-frame-details"></i>
           </span>
-          <img class="busfahrer-button-image" src="${busfahrerGameImage}" alt="">
+          <img class="busfahrer-button-image" src="${appTheme === 'neon' ? busfahrerGameImageNeon : busfahrerGameImage}" alt="">
           <span class="busfahrer-button-label">BLOBB-FAHRER</span>
         </button>
         ${favoriteHeartMarkup('blobfahrer')}
@@ -1235,7 +1242,7 @@ function renderHome() {
             <i class="premium-game-frame-channel"></i>
             <i class="premium-game-frame-details"></i>
           </span>
-          <img class="busfahrer-button-image" src="${blobbenGameImage}" alt="">
+          <img class="busfahrer-button-image" src="${appTheme === 'neon' ? blobbenGameImageNeon : blobbenGameImage}" alt="">
           <span class="busfahrer-button-label">BLOBBEN</span>
         </button>
         ${favoriteHeartMarkup('blobben')}
