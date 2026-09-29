@@ -2227,8 +2227,7 @@ html[data-theme='neon'] .home-page .categories-filter-button.is-active svg {
     drop-shadow(1px 0 4px rgba(65, 154, 255, .58));
 }
 
-/* Dunkelmodus neu: glossy pink-to-blue game frames. The tile geometry stays
-   untouched; only the existing frame layers receive the new finish. */
+/* Dunkelmodus neu: one flat, uninterrupted game-tile surface. */
 html[data-theme-variant='neon-new'] .home-page .busfahrer-button {
   background: linear-gradient(90deg,
     #ec1cac 0%,
@@ -2244,26 +2243,6 @@ html[data-theme-variant='neon-new'] .home-page .busfahrer-button {
 }
 
 html[data-theme-variant='neon-new'] .home-page .premium-game-frame {
-  background: linear-gradient(90deg,
-    #ec1cac 0%,
-    #8b087f 3%,
-    #361078 7%,
-    #0a0d70 10%,
-    #0a0d70 90%,
-    #0737a5 94%,
-    #087fcf 97%,
-    #00c9f7 100%
-  );
-  box-shadow: none;
-}
-
-html[data-theme-variant='neon-new'] .home-page :is(
-  .premium-game-frame::before,
-  .premium-game-frame::after,
-  .premium-game-card-surface,
-  .premium-game-frame-channel,
-  .premium-game-frame-details
-) {
   display: none;
 }
 
