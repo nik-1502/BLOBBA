@@ -472,6 +472,21 @@ html.is-ipad-standalone .busfahrer-page :is(.end-actions, .klatschen-summary-act
   background: rgba(55, 48, 46, .86);
 }
 
+.busfahrer-page .theme-settings-option {
+  border-color: rgba(255, 255, 255, .16);
+  background: rgba(55, 47, 45, .74);
+}
+
+.busfahrer-page .theme-settings-option:has(input:checked) {
+  border-color: var(--blobba-water-light);
+  background: rgba(18, 154, 221, .2);
+  box-shadow: 0 0 0 2px rgba(18, 154, 221, .14);
+}
+
+.busfahrer-page .theme-settings-option input {
+  accent-color: var(--blobba-water-main);
+}
+
 .busfahrer-page .sound-toggle input:checked + span {
   border-color: var(--blobba-water-light);
   background: linear-gradient(90deg, var(--blobba-water-dark), var(--blobba-water-light));

@@ -68,7 +68,7 @@ const MAX_PLAYERS = 9
 const DEFAULT_AVATAR_ID = 'bier'
 const HOME_GAME_CATEGORIES = ['Kartenspiele', 'Schnell', 'Klassiker', 'Lustig', 'Denkspiele', 'Verteilspiele', 'Teamspiele', 'Wettkampf'] as const
 type HomeGameCategory = 'Alle' | typeof HOME_GAME_CATEGORIES[number]
-type AppTheme = 'light' | 'neon'
+type AppTheme = 'light' | 'neon' | 'neon-new'
 
 const HOME_GAMES = [
   {
@@ -287,17 +287,24 @@ let appTheme = loadAppTheme()
 function loadAppTheme(): AppTheme {
   try {
     const storedTheme = localStorage.getItem(THEME_STORAGE_KEY)
-    return storedTheme === 'light' || storedTheme === 'neon' ? storedTheme : 'neon'
+    return storedTheme === 'light' || storedTheme === 'neon' || storedTheme === 'neon-new' ? storedTheme : 'neon'
   } catch {
     return 'neon'
   }
 }
 
+function isDarkAppTheme(theme: AppTheme = appTheme) {
+  return theme === 'neon' || theme === 'neon-new'
+}
+
 function applyAppTheme(theme: AppTheme) {
   appTheme = theme
-  document.documentElement.dataset.theme = theme
+  // "Dunkelmodus neu" starts as an exact visual duplicate of the existing
+  // dark theme. Its own variant marker allows future changes to target only it.
+  document.documentElement.dataset.theme = isDarkAppTheme(theme) ? 'neon' : 'light'
+  document.documentElement.dataset.themeVariant = theme
   const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
-  if (themeColor) themeColor.content = theme === 'neon' ? '#120012' : '#f75b04'
+  if (themeColor) themeColor.content = isDarkAppTheme(theme) ? '#120012' : '#f75b04'
   try {
     localStorage.setItem(THEME_STORAGE_KEY, theme)
   } catch {
@@ -346,7 +353,7 @@ function alignHomeHeaderButtons() {
   const buttons = app.querySelectorAll<HTMLButtonElement>('.home-page .home-profile-button')
   if (!logo || buttons.length === 0 || logo.getBoundingClientRect().height === 0) return
   const logoRect = logo.getBoundingClientRect()
-  const visibleLogoCenterRatio = appTheme === 'neon' ? 0.438 : 0.517
+  const visibleLogoCenterRatio = isDarkAppTheme() ? 0.438 : 0.517
   const centerY = logoRect.top + (logoRect.height * visibleLogoCenterRatio)
   buttons.forEach((button) => {
     button.style.top = `${centerY - (button.offsetHeight / 2)}px`
@@ -1194,7 +1201,7 @@ function renderHome() {
       <svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 21a7.5 7.5 0 0 1 15 0c-2.2 1.25-12.8 1.25-15 0Z"></path></svg>
     </button>
     <header class="hero-header">
-      ${appTheme === 'neon'
+      ${isDarkAppTheme()
         ? `<picture class="hero-logo-picture">
             <source media="(max-width: 1024px)" srcset="${heroLogoNeonMobile}">
             <img class="hero-logo" src="${heroLogoNeon}" alt="BLOBBA">
@@ -1230,7 +1237,7 @@ function renderHome() {
             <i class="premium-game-frame-channel"></i>
             <i class="premium-game-frame-details"></i>
           </span>
-          <img class="busfahrer-button-image" src="${appTheme === 'neon' ? busfahrerGameImageNeon : busfahrerGameImage}" alt="">
+          <img class="busfahrer-button-image" src="${isDarkAppTheme() ? busfahrerGameImageNeon : busfahrerGameImage}" alt="">
           <span class="busfahrer-button-label">BLOBB-FAHRER</span>
         </button>
         ${favoriteHeartMarkup('blobfahrer')}
@@ -1242,7 +1249,7 @@ function renderHome() {
             <i class="premium-game-frame-channel"></i>
             <i class="premium-game-frame-details"></i>
           </span>
-          <img class="busfahrer-button-image" src="${appTheme === 'neon' ? blobbenGameImageNeon : blobbenGameImage}" alt="">
+          <img class="busfahrer-button-image" src="${isDarkAppTheme() ? blobbenGameImageNeon : blobbenGameImage}" alt="">
           <span class="busfahrer-button-label">BLOBBEN</span>
         </button>
         ${favoriteHeartMarkup('blobben')}
@@ -1303,7 +1310,12 @@ function renderHome() {
 function renderSettingsPlaceholder() {
   const sound = getSoundSettings()
   setupShell(`<div class="primary-profile-frame"><div class="setup-panel sound-settings-panel shared-main-panel">
-    <div class="settings-control-row"><strong>Dunkelmodus</strong><label class="sound-toggle"><input type="checkbox" data-dark-mode ${appTheme === 'neon' ? 'checked' : ''}><span aria-hidden="true"></span></label></div>
+    <fieldset class="theme-settings-group">
+      <legend>Design</legend>
+      <label class="theme-settings-option"><input type="radio" name="app-theme" value="light" ${appTheme === 'light' ? 'checked' : ''}><span>Hellmodus</span></label>
+      <label class="theme-settings-option"><input type="radio" name="app-theme" value="neon" ${appTheme === 'neon' ? 'checked' : ''}><span>Dunkelmodus</span></label>
+      <label class="theme-settings-option"><input type="radio" name="app-theme" value="neon-new" ${appTheme === 'neon-new' ? 'checked' : ''}><span>Dunkelmodus neu</span></label>
+    </fieldset>
     <div class="settings-divider" aria-hidden="true"></div>
     <section class="settings-audio-section" aria-labelledby="settings-audio-title">
       <h2 id="settings-audio-title">Audio</h2>
@@ -1314,14 +1326,15 @@ function renderSettingsPlaceholder() {
       </label>
     </section>
   </div></div>`, '', 'Einstellungen', 'BLOBBA', 'profile-page primary-profile-page shared-main-layout settings-page', false)
-  const darkMode = app.querySelector<HTMLInputElement>('[data-dark-mode]')!
+  const themeOptions = app.querySelectorAll<HTMLInputElement>('input[name="app-theme"]')
   const enabled = app.querySelector<HTMLInputElement>('[data-sound-enabled]')!
   const volume = app.querySelector<HTMLInputElement>('[data-sound-volume]')!
   const output = app.querySelector<HTMLOutputElement>('[data-sound-volume-output]')!
-  darkMode.addEventListener('change', () => {
-    applyAppTheme(darkMode.checked ? 'neon' : 'light')
+  themeOptions.forEach((option) => option.addEventListener('change', () => {
+    if (!option.checked) return
+    applyAppTheme(option.value as AppTheme)
     playSound('ui-confirm')
-  })
+  }))
   enabled.addEventListener('change', () => {
     if (!enabled.checked) playSound('ui-click')
     setSoundEffectsEnabled(enabled.checked)

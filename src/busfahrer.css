@@ -882,6 +882,13 @@ html.is-ipad-standalone .game-button.primary.ipad-pwa-end-button {
 .avatar-choice-visual .default-profile-icon, .profile-preview .default-profile-icon, .profile-card-avatar .default-profile-icon { width: 66%; height: 66%; }
 .profile-save-button { width: 100%; }
 .sound-settings-panel { display: flex; overflow: hidden; flex-direction: column; gap: 24px; }
+.theme-settings-group { display: flex; min-width: 0; margin: 0; padding: 0; border: 0; flex-direction: column; gap: 10px; }
+.theme-settings-group legend { width: 100%; margin: 0 0 2px; padding: 0; color: #fff; font-size: 1.05rem; font-weight: 700; }
+.theme-settings-option { display: flex; width: 100%; min-height: 44px; padding: 9px 12px; border: 1px solid rgba(255, 255, 255, .14); border-radius: 14px; align-items: center; gap: 12px; color: #fff; background: rgba(255, 255, 255, .05); cursor: pointer; transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease; }
+.theme-settings-option input { width: 19px; height: 19px; margin: 0; flex: 0 0 auto; accent-color: #8b70ff; }
+.theme-settings-option span { font-size: 1rem; font-weight: 700; }
+.theme-settings-option:has(input:checked) { border-color: rgba(120, 174, 255, .8); background: rgba(93, 84, 220, .2); box-shadow: 0 0 0 2px rgba(120, 174, 255, .1); }
+.theme-settings-option:has(input:focus-visible) { outline: 3px solid rgba(157, 115, 255, .45); outline-offset: 2px; }
 .primary-profile-page .busfahrer-header > div {
   display: flex;
   grid-column: 3;
