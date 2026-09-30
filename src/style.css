@@ -2233,27 +2233,23 @@ html[data-theme-variant='neon-new'] .home-page .game-tile-wrap {
 }
 
 html[data-theme-variant='neon-new'] .home-page .busfahrer-button {
-  background: transparent;
+  border-color: transparent;
+  background: url('./assets/rahmen starseite/4650c758-7b5c-4275-8f00-a08b1c67bed2.png') center / 100% 100% no-repeat;
   box-shadow: none;
 }
 
 html[data-theme-variant='neon-new'] .home-page .busfahrer-button::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  display: block;
-  border: 20px solid transparent;
-  border-image: url('./assets/rahmen starseite/4650c758-7b5c-4275-8f00-a08b1c67bed2-cropped.png') 150 fill / 20px / 0 stretch;
-  pointer-events: none;
+  content: none;
+  display: none;
 }
 
 html[data-theme-variant='neon-new'] .home-page .busfahrer-button::after {
+  content: none;
   display: none;
 }
 
 html[data-theme-variant='neon-new'] .home-page .premium-game-frame {
-  display: none;
+  display: none !important;
 }
 
 /* Home controls must never change their screen position on mouse or touch.
