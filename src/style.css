@@ -2233,7 +2233,7 @@ html[data-theme-variant='neon-new'] .home-page .game-tile-wrap {
 }
 
 html[data-theme-variant='neon-new'] .home-page .busfahrer-button {
-  background: url('./assets/rahmen starseite/4650c758-7b5c-4275-8f00-a08b1c67bed2.png') center / 100% 100% no-repeat;
+  background: #69c8f5 url('./assets/rahmen starseite/4650c758-7b5c-4275-8f00-a08b1c67bed2.png') center / cover no-repeat;
   box-shadow: none;
 }
 
