@@ -2267,21 +2267,9 @@ html[data-theme-variant='neon-new'] .home-page .game-search input::placeholder {
 }
 
 html[data-theme-variant='neon-new'] .home-page .home-header-icon {
-  stroke: #fff;
+  fill: #fff;
+  stroke: none;
   filter: none;
-}
-
-html[data-theme-variant='neon-new'] .home-page .home-user-button .home-header-icon {
-  fill: #fff;
-}
-
-html[data-theme-variant='neon-new'] .home-page .home-settings-button .home-header-icon path {
-  fill: #fff;
-}
-
-html[data-theme-variant='neon-new'] .home-page .home-settings-button .home-header-icon circle {
-  fill: #1599ed;
-  stroke: #1599ed;
 }
 
 html[data-theme-variant='neon-new'] .home-page .game-tile-wrap {
