@@ -2272,6 +2272,16 @@ html[data-theme-variant='neon-new'] .home-page .home-header-icon {
   filter: none;
 }
 
+html[data-theme-variant='neon-new'] .home-page .home-profile-button > .home-header-icon:not(.home-header-icon-symmetric) {
+  display: none;
+}
+
+html[data-theme-variant='neon-new'] .home-page .home-header-icon-symmetric {
+  display: block;
+  justify-self: center;
+  align-self: center;
+}
+
 html[data-theme-variant='neon-new'] .home-page .game-tile-wrap {
   container-type: inline-size;
 }
