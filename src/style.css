@@ -2238,6 +2238,10 @@ html.home-active[data-theme-variant='neon-new'] .app-neon-background::after {
   display: none;
 }
 
+html.home-active[data-theme-variant='neon-new'].is-standalone #app > .home-page {
+  background: transparent;
+}
+
 /* Dunkelmodus neu: one flat, uninterrupted game-tile surface. */
 html[data-theme-variant='neon-new'] .home-page :is(.game-search, .categories-filter-button, .favorites-filter-button) {
   background: url('./assets/button-rahmen/Glänzende blaue Glas-Pillenschaltfläche.png') center / 165% 145% no-repeat;
