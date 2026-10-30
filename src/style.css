@@ -2228,13 +2228,13 @@ html[data-theme='neon'] .home-page .categories-filter-button.is-active svg {
 }
 
 /* Dunkelmodus neu: eigenes Startseitenbild für Browser und installierte App. */
-html[data-theme-variant='neon-new'] #app > .home-page,
-html[data-theme-variant='neon-new'].is-standalone #app > .home-page {
+html.home-active[data-theme-variant='neon-new'] .app-neon-background,
+html.home-active[data-theme-variant='neon-new'].is-standalone .app-neon-background {
   background: #031149 url('./assets/background/Abstrakte blaue Flüssigformen-Wallpaper.png') center top / cover no-repeat;
 }
 
-html[data-theme-variant='neon-new'] #app > .home-page::before,
-html[data-theme-variant='neon-new'] #app > .home-page::after {
+html.home-active[data-theme-variant='neon-new'] .app-neon-background::before,
+html.home-active[data-theme-variant='neon-new'] .app-neon-background::after {
   display: none;
 }
 
