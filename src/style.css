@@ -2227,6 +2227,17 @@ html[data-theme='neon'] .home-page .categories-filter-button.is-active svg {
     drop-shadow(1px 0 4px rgba(65, 154, 255, .58));
 }
 
+/* Dunkelmodus neu: eigenes Startseitenbild für Browser und installierte App. */
+html[data-theme-variant='neon-new'] #app > .home-page,
+html[data-theme-variant='neon-new'].is-standalone #app > .home-page {
+  background: #031149 url('./assets/background/Abstrakte blaue Flüssigformen-Wallpaper.png') center top / cover no-repeat;
+}
+
+html[data-theme-variant='neon-new'] #app > .home-page::before,
+html[data-theme-variant='neon-new'] #app > .home-page::after {
+  display: none;
+}
+
 /* Dunkelmodus neu: one flat, uninterrupted game-tile surface. */
 html[data-theme-variant='neon-new'] .home-page :is(.game-search, .categories-filter-button, .favorites-filter-button) {
   background: url('./assets/button-rahmen/Glänzende blaue Glas-Pillenschaltfläche.png') center / 165% 145% no-repeat;
