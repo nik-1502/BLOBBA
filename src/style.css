@@ -2228,6 +2228,29 @@ html[data-theme='neon'] .home-page .categories-filter-button.is-active svg {
 }
 
 /* Dunkelmodus neu: one flat, uninterrupted game-tile surface. */
+html[data-theme-variant='neon-new'] .home-page :is(.game-search, .categories-filter-button, .favorites-filter-button) {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+html[data-theme-variant='neon-new'] .home-page :is(.game-search, .categories-filter-button, .favorites-filter-button)::before {
+  inset: -5px;
+  border: 31px solid transparent;
+  border-image: url('./assets/home-button-blue.png') 300 360 300 360 fill / 31px stretch;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+html[data-theme-variant='neon-new'] .home-page :is(.categories-filter-button, .favorites-filter-button).is-active {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
 html[data-theme-variant='neon-new'] .home-page .game-tile-wrap {
   container-type: inline-size;
 }
