@@ -2237,12 +2237,10 @@ html[data-theme-variant='neon-new'] .home-page :is(.game-search, .categories-fil
 }
 
 html[data-theme-variant='neon-new'] .home-page :is(.game-search, .categories-filter-button, .favorites-filter-button)::before {
-  inset: -6px;
-  border: solid transparent;
-  border-width: 19.5px 31px;
-  border-image: url('./assets/button-rahmen/Glänzende blaue Glas-Pillenschaltfläche.png') 230 366 fill / 19.5px 31px repeat stretch;
-  border-radius: 0;
-  background: none;
+  inset: 0;
+  border: 0;
+  border-radius: inherit;
+  background: url('./assets/button-rahmen/Glänzende blaue Glas-Pillenschaltfläche.png') center / 112% 145% no-repeat;
   box-shadow: none;
 }
 
