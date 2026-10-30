@@ -2229,7 +2229,7 @@ html[data-theme='neon'] .home-page .categories-filter-button.is-active svg {
 
 /* Dunkelmodus neu: one flat, uninterrupted game-tile surface. */
 html[data-theme-variant='neon-new'] .home-page :is(.game-search, .categories-filter-button, .favorites-filter-button) {
-  background: transparent;
+  background: url('./assets/button-rahmen/Glänzende blaue Glas-Pillenschaltfläche.png') center / 112% 145% no-repeat;
   border-color: transparent;
   box-shadow: none;
   backdrop-filter: none;
@@ -2237,21 +2237,37 @@ html[data-theme-variant='neon-new'] .home-page :is(.game-search, .categories-fil
 }
 
 html[data-theme-variant='neon-new'] .home-page :is(.game-search, .categories-filter-button, .favorites-filter-button)::before {
-  inset: 0;
+  inset: 0 auto 0 0;
+  width: 48px;
   border: 0;
   border-radius: inherit;
-  background: url('./assets/button-rahmen/Glänzende blaue Glas-Pillenschaltfläche.png') center / 112% 145% no-repeat;
+  background: url('./assets/button-rahmen/Glänzende blaue Glas-Pillenschaltfläche.png') left -10px center / auto 145% no-repeat;
   box-shadow: none;
+  -webkit-mask-image: linear-gradient(to right, #000 55%, transparent 100%);
+  mask-image: linear-gradient(to right, #000 55%, transparent 100%);
+}
+
+html[data-theme-variant='neon-new'] .home-page :is(.game-search, .categories-filter-button, .favorites-filter-button)::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: -1;
+  width: 48px;
+  border-radius: inherit;
+  background: url('./assets/button-rahmen/Glänzende blaue Glas-Pillenschaltfläche.png') right -10px center / auto 145% no-repeat;
+  -webkit-mask-image: linear-gradient(to left, #000 55%, transparent 100%);
+  mask-image: linear-gradient(to left, #000 55%, transparent 100%);
+  pointer-events: none;
 }
 
 html[data-theme-variant='neon-new'] .home-page :is(.game-search, .categories-filter-button, .favorites-filter-button):is(:hover, :active, .is-active) {
-  background: transparent;
+  background: url('./assets/button-rahmen/Glänzende blaue Glas-Pillenschaltfläche.png') center / 112% 145% no-repeat;
   border-color: transparent;
   box-shadow: none;
 }
 
 html[data-theme-variant='neon-new'] .home-page :is(.categories-filter-button, .favorites-filter-button).is-active {
-  background: transparent;
+  background: url('./assets/button-rahmen/Glänzende blaue Glas-Pillenschaltfläche.png') center / 112% 145% no-repeat;
   border-color: transparent;
   box-shadow: none;
 }
