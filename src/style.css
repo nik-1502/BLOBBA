@@ -2230,7 +2230,7 @@ html[data-theme='neon'] .home-page .categories-filter-button.is-active svg {
 /* Dunkelmodus neu: eigenes Startseitenbild für Browser und installierte App. */
 html.home-active[data-theme-variant='neon-new'] .app-neon-background,
 html.home-active[data-theme-variant='neon-new'].is-standalone .app-neon-background {
-  background: #031149 url('./assets/background/Abstraktes Marineblaues Rautenmuster (1).png') center top / cover no-repeat;
+  background: #031149 url('./assets/background/Dunkelblaues geometrisches Rautenmuster (1).png') center top / cover no-repeat;
 }
 
 html.home-active[data-theme-variant='neon-new'] .app-neon-background::before,
