@@ -649,7 +649,8 @@ function updatePageScrollMode() {
   pageScrollModeFrame = 0
   if (playerPinchController.active) return
   const container = getPageScrollContainer()
-  if (container?.closest('.primary-profile-page:not(.settings-page)')) {
+  const greenLandscapeProfile = appTheme === 'green' && window.matchMedia('(orientation: landscape)').matches
+  if (container?.closest('.primary-profile-page:not(.settings-page)') && !greenLandscapeProfile) {
     container.classList.remove('is-app-scrollable', 'is-app-scroll-locked')
     if (container.scrollTop !== 0) container.scrollTop = 0
     return

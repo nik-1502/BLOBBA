@@ -387,6 +387,48 @@ html[data-theme-choice='green'] #klatschen-game .klatschen-drawn-card:not(.is-ef
 
 /* Querformat ist ein eigenes Layout; Hochformat bleibt unverändert. */
 @media (orientation: landscape) {
+  html[data-theme-choice='green'] .primary-profile-page {
+    --profile-landscape-header-top: clamp(8px, 2vh, 20px);
+  }
+
+  html[data-theme-choice='green'].is-standalone .primary-profile-page {
+    --profile-landscape-header-top: calc(env(safe-area-inset-top, 0px) + clamp(8px, 2vh, 20px));
+  }
+
+  html[data-theme-choice='green'] .primary-profile-page .setup-title {
+    position: fixed;
+    top: calc(var(--profile-landscape-header-top) + 24px);
+    z-index: 2;
+    min-height: 0;
+    transform: translateY(-50%);
+  }
+
+  html[data-theme-choice='green'] .primary-profile-page .setup-stage {
+    overflow-x: hidden;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  html[data-theme-choice='green'] .primary-profile-page .setup-stack {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  html[data-theme-choice='green'] .primary-profile-page .shared-main-panel {
+    position: relative;
+    top: auto;
+    right: auto;
+    left: auto;
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    margin: 8px 0 20px;
+    overflow: visible;
+  }
+
   html[data-theme-choice='green'] #klatschen-game :is(.klatschen-play-screen, .klatschen-card-screen) {
     --circle-radius: clamp(60px, 19dvh, 190px);
     --circle-card-width: clamp(19px, 5dvh, 38px);
