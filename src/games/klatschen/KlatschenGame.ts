@@ -10,7 +10,9 @@ import partnerEffectIconUrl from '../../assets/smileys/processed/partner.png'
 import questionMasterEffectIconUrl from '../../assets/smileys/processed/question-master.png'
 import greenCardIconSheetUrl from '../../assets/karten smileys/Glänzende blaue Cartoon-Icon-Sammlung.png'
 import greenQuestionMasterIconUrl from '../../assets/karten smileys/1b32411b-e9c9-474c-9b45-3f31f2e4c803.png'
+import greenNoseIconUrl from '../../assets/karten smileys/d87ba526-e5d3-4d6b-819f-99fd374e7578.png'
 import { greenCardIconShapes } from './greenCardIconShapes'
+import { greenEffectIconShapes } from './greenEffectIconShapes'
 
 export type KlatschenPlayerSetup = { id?: string; name: string; avatar: string; avatarColor: string }
 export type KlatschenPlayer = KlatschenPlayerSetup & { id: string; drinks: number; heldCards: string[]; partnerIds: string[] }
@@ -181,10 +183,20 @@ function effectIconName(cardId: string): EffectIconName | null {
   return null
 }
 
-function effectIconMarkup(cardId: string, extraClass = '') {
+function effectIconMarkup(cardId: string, extraClass = '', isSlot = false) {
   const name = effectIconName(cardId)
   if (!name) return ''
   if (document.documentElement.dataset.themeChoice === 'green') {
+    const className = `klatschen-effect-icon${extraClass ? ` ${extraClass}` : ''}`
+    if (name === 'nose') {
+      return `<img class="${className}" src="${greenNoseIconUrl}" alt="" aria-hidden="true" draggable="false">`
+    }
+    if (isSlot && (name === 'partner' || name === 'question-master')) {
+      const shape = name === 'partner' ? greenEffectIconShapes.partner : greenEffectIconShapes.questionMaster
+      const source = name === 'partner' ? greenCardIconSheetUrl : greenQuestionMasterIconUrl
+      const maskId = `green-effect-symbol-${greenSpriteInstanceId++}`
+      return `<svg class="${className}" viewBox="${shape.viewBox}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><defs><clipPath id="${maskId}"><path d="${shape.path}" /></clipPath></defs><image href="${source}" width="${shape.width}" height="${shape.height}" clip-path="url(#${maskId})" /></svg>`
+    }
     if (name === 'question-master') {
       return `<img class="klatschen-effect-icon${extraClass ? ` ${extraClass}` : ''}" src="${greenQuestionMasterIconUrl}" alt="" aria-hidden="true" draggable="false">`
     }
@@ -218,6 +230,9 @@ function greenCardSpriteMarkup(cell: readonly [number, number], className: strin
 }
 
 function drawnCardSymbolMarkup(card: KlatschenCard) {
+  if (document.documentElement.dataset.themeChoice === 'green' && card.id.startsWith('nose-clapper')) {
+    return `<img class="klatschen-effect-icon" src="${greenNoseIconUrl}" alt="" aria-hidden="true" draggable="false">`
+  }
   if (document.documentElement.dataset.themeChoice === 'green' && card.id.startsWith('question-rule')) {
     return `<img class="klatschen-effect-icon" src="${greenQuestionMasterIconUrl}" alt="" aria-hidden="true" draggable="false">`
   }
@@ -252,7 +267,7 @@ function heldCardsMarkup() {
     }, [])
     stacks.forEach(({ card, count }) => {
       const slot = effectCardPriority(card.id)
-      if (slot < cards.length) cards[slot] = `<button type="button" class="klatschen-held-preview" data-klatschen-held="${escapeHtml(card.id)}" data-klatschen-owner="${escapeHtml(player.id)}" aria-label="${escapeHtml(heldCardLabel(card))}${count > 1 ? `, ${count} Karten` : ''}">${count > 1 ? `<b class="klatschen-held-count" aria-hidden="true">${count}</b>` : ''}${effectIconMarkup(card.id)}</button>`
+      if (slot < cards.length) cards[slot] = `<button type="button" class="klatschen-held-preview" data-klatschen-held="${escapeHtml(card.id)}" data-klatschen-owner="${escapeHtml(player.id)}" aria-label="${escapeHtml(heldCardLabel(card))}${count > 1 ? `, ${count} Karten` : ''}">${count > 1 ? `<b class="klatschen-held-count" aria-hidden="true">${count}</b>` : ''}${effectIconMarkup(card.id, '', true)}</button>`
     })
   })
   const renderedPairs = new Set<string>()
@@ -263,11 +278,11 @@ function heldCardsMarkup() {
     if (renderedPairs.has(groupKey)) return
     renderedPairs.add(groupKey)
     const partnerNames = partners.map((partner) => partner.name).join(', ')
-    cards[effectCardPriority('partner-status')] = `<button type="button" class="klatschen-held-preview" data-klatschen-held="partner-status" data-klatschen-owner="${escapeHtml(player.id)}" aria-label="Blobb-Partner: ${escapeHtml(partnerNames)}"><b class="klatschen-held-count" aria-hidden="true">${partners.length}</b>${effectIconMarkup('clap-partner')}</button>`
+    cards[effectCardPriority('partner-status')] = `<button type="button" class="klatschen-held-preview" data-klatschen-held="partner-status" data-klatschen-owner="${escapeHtml(player.id)}" aria-label="Blobb-Partner: ${escapeHtml(partnerNames)}"><b class="klatschen-held-count" aria-hidden="true">${partners.length}</b>${effectIconMarkup('clap-partner', '', true)}</button>`
   })
   const slotCardIds = ['nose-clapper-1', 'thumb-clapper-1', 'double-clap', 'clap-partner', 'question-rule']
   const slotNames: EffectIconName[] = ['nose', 'thumb', 'double', 'partner', 'question-master']
-  const content = cards.map((card, index) => `<div class="klatschen-effect-slot effect-${slotNames[index]}${card ? ' is-filled' : ''}">${card ?? `<span class="klatschen-effect-placeholder" aria-hidden="true">${effectIconMarkup(slotCardIds[index]!)}</span>`}</div>`).join('')
+  const content = cards.map((card, index) => `<div class="klatschen-effect-slot effect-${slotNames[index]}${card ? ' is-filled' : ''}">${card ?? `<span class="klatschen-effect-placeholder" aria-hidden="true">${effectIconMarkup(slotCardIds[index]!, '', true)}</span>`}</div>`).join('')
   return `<section class="klatschen-held-cards" aria-label="Aktive Blobb-Karten und Zustände"><div>${content}</div></section>`
 }
 
