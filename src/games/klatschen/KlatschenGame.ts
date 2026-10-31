@@ -288,7 +288,7 @@ function heldCardsMarkup() {
   const slotCardIds = ['nose-clapper-1', 'thumb-clapper-1', 'double-clap', 'clap-partner', 'question-rule']
   const slotNames: EffectIconName[] = ['nose', 'thumb', 'double', 'partner', 'question-master']
   const content = cards.map((card, index) => `<div class="klatschen-effect-slot effect-${slotNames[index]}${card ? ' is-filled' : ''}">${card ?? `<span class="klatschen-effect-placeholder" aria-hidden="true">${effectIconMarkup(slotCardIds[index]!, '', true)}</span>`}</div>`).join('')
-  return `<section class="klatschen-held-cards" aria-label="Aktive Blobb-Karten und Zustände"><div>${content}</div></section>`
+  return `<section class="klatschen-held-cards" aria-label="Aktive Blobb-Karten und Zustände"><svg width="0" height="0" aria-hidden="true" style="position:absolute"><defs><filter id="green-effect-flat" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncR type="discrete" tableValues=".286 .286 .286 .502 .502 .502 .502 .502"/><feFuncG type="discrete" tableValues=".204 .204 .204 .345 .345 .345 .345 .345"/><feFuncB type="discrete" tableValues=".373 .373 .373 .678 .678 .678 .678 .678"/></feComponentTransfer></filter></defs></svg><div>${content}</div></section>`
 }
 
 function heldCardDialogMarkup() {
