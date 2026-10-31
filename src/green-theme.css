@@ -332,6 +332,10 @@ html[data-theme-choice='green'] :is(#busfahrer-game .busfahrer-game-title, #klat
   translate: -50% -50%;
 }
 
+html[data-theme-choice='green'] #busfahrer-game .busfahrer-game-title {
+  top: calc(50% + 4px);
+}
+
 html[data-theme-choice='green'] #busfahrer-game .busfahrer-game-title > span {
   visibility: hidden;
 }
