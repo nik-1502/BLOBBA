@@ -211,6 +211,16 @@ html[data-theme-choice='green'] .klatschen-effect-slot:not(.is-filled) {
   background: linear-gradient(145deg, #315f5d, #214947);
 }
 
+html[data-theme-choice='green'] #klatschen-game .klatschen-held-cards .klatschen-effect-slot:not(.is-filled) {
+  border-color: #9875b5;
+  background: linear-gradient(145deg, #63477d, #49345f);
+}
+
+html[data-theme-choice='green'] #klatschen-game .klatschen-held-cards .klatschen-effect-slot:not(.is-filled) .klatschen-effect-icon {
+  filter: grayscale(1) brightness(0) invert(78%) sepia(15%) saturate(1104%) hue-rotate(223deg) brightness(99%);
+  opacity: .85;
+}
+
 html[data-theme-choice='green'] .busfahrer-page .hand-cards p {
   color: rgba(223, 250, 245, .72);
 }
