@@ -385,6 +385,61 @@ html[data-theme-choice='green'] #klatschen-game .klatschen-drawn-card:not(.is-ef
   border-color: #eebc38;
 }
 
+/* Gemeinsame lila Akzente im grünen Design; Spielfarben Rot/Blau bleiben unterscheidbar. */
+html[data-theme-choice='green'] {
+  --green-violet: linear-gradient(180deg, #8864b7, #7650a5);
+  --green-violet-border: #c3a6df;
+}
+
+html[data-theme-choice='green'] .home-page :is(.category-chip.is-selected, .categories-filter-button.is-active),
+html[data-theme-choice='green'] .home-page .categories-filter-button.is-active:is(:hover, :active) {
+  color: #fff;
+  border-color: var(--green-violet-border);
+  background: var(--green-violet);
+}
+
+html[data-theme-choice='green'] .home-page :is(.favorites-filter-button.is-active, .favorite-heart-button.is-favorite),
+html[data-theme-choice='green'] .home-page :is(.favorites-filter-button.is-active, .favorite-heart-button.is-favorite) svg {
+  color: #ba91e7;
+  fill: #ba91e7;
+  stroke: #ba91e7;
+}
+
+html[data-theme-choice='green'] :is(.primary-profile-page, .player-selection-busfahrer, #busfahrer-game) {
+  --green-primary: var(--green-violet);
+  --setup-orange-top: #8864b7;
+  --setup-orange: #8058ad;
+  --setup-orange-bottom: #7650a5;
+}
+
+html[data-theme-choice='green'] :is(.primary-profile-page, .player-selection-busfahrer, #busfahrer-game) :is(.game-button.primary, .difficulty-option.is-selected, .setup-mode-switch .is-active):not(.choice-red):not(.choice-blue):not(.choice-heart):not(.choice-diamond):not(.choice-star):not(.choice-moon):not(.choice-higher):not(.choice-lower):not(.choice-inside):not(.choice-outside):not(.choice-equal) {
+  border-color: var(--green-violet-border) !important;
+  background: var(--green-violet) !important;
+}
+
+html[data-theme-choice='green'] .primary-profile-page :is(.avatar-choice.is-selected, .theme-settings-option:has(input:checked)) {
+  border-color: var(--green-violet-border);
+  background: rgba(128, 88, 173, .65);
+  box-shadow: 0 0 0 2px rgba(195, 166, 223, .18);
+}
+
+html[data-theme-choice='green'] .primary-profile-page :is(input[type='radio'], input[type='range']) {
+  accent-color: #a87bd1;
+}
+
+html[data-theme-choice='green'] .settings-page .sound-toggle input:checked + span {
+  border-color: var(--green-violet-border);
+  background: var(--green-violet);
+}
+
+html[data-theme-choice='green'] #busfahrer-game .progress-track i {
+  background: linear-gradient(90deg, #7650a5, #c3a6df);
+}
+
+html[data-theme-choice='green'] #busfahrer-game .card-back {
+  background: repeating-linear-gradient(45deg, #7650a5 0 var(--card-back-stripe), #a47acb var(--card-back-stripe) calc(var(--card-back-stripe) + var(--card-back-stripe)));
+}
+
 /* Querformat ist ein eigenes Layout; Hochformat bleibt unverändert. */
 @media (orientation: landscape) {
   html[data-theme-choice='green'] .primary-profile-page {
