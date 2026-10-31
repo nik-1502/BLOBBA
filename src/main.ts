@@ -375,11 +375,19 @@ window.addEventListener('resize', () => requestAnimationFrame(alignHomeHeaderBut
 const homeLandscape = window.matchMedia('(orientation: landscape)')
 homeLandscape.addEventListener('change', () => {
   if (appTheme !== 'green') return
-  requestAnimationFrame(() => {
+  requestAnimationFrame(() => requestAnimationFrame(() => {
     const home = app.querySelector<HTMLElement>('.home-page')
-    if (home) home.scrollTop = 0
+    if (!home) return
+    if (!homeLandscape.matches) {
+      // Recreate the portrait tiles so a browser cannot retain landscape
+      // container-query dimensions after rotation.
+      renderHome()
+      schedulePageScrollModeUpdate()
+    } else {
+      home.scrollTop = 0
+    }
     alignHomeHeaderButtons()
-  })
+  }))
 })
 
 function preventDesktopZoom() {
