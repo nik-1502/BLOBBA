@@ -184,20 +184,6 @@ function effectIconName(cardId: string): EffectIconName | null {
   return null
 }
 
-// Clean, flat outlines for empty green-mode slots; filled slots keep the artwork.
-function emptyGreenEffectIconMarkup(cardId: string) {
-  const name = effectIconName(cardId)
-  if (!name) return ''
-  const shapes: Record<EffectIconName, string> = {
-    nose: '<path d="M40 10c-3 15-7 25-14 35-5 7-4 16 1 20 4 4 10 3 13 0 3 8 17 8 20 0 4 3 10 4 14 0 5-5 5-13 0-20C67 35 63 25 60 10Z"/><path d="M31 57c3-3 7-2 9 1m20 0c2-3 6-4 9-1"/>',
-    thumb: '<path d="M29 48c6-3 11-8 14-15l6-18c2-6 9-7 12-2 3 4 1 12-2 22h18c6 0 9 5 6 10 3 4 1 9-2 11 2 5 0 9-4 11 1 5-2 9-7 9H43c-6 0-10-3-14-5Z"/><path d="M14 46h15v29H14zM58 45h20M57 56h23M55 67h20"/>',
-    double: '<path d="M39 44 28 17c-2-5 0-9 4-10 4-1 7 1 9 5l10 22 9-22c2-4 5-6 9-5s6 5 4 10L62 46l8-5c4-3 8-2 10 2s1 7-3 10L65 64c-2 2-3 5-3 8v8H34v-9c0-4-1-7-4-10l-8-9c-3-4-2-8 1-10 4-3 7-2 10 1l7 7Z"/><path d="M40 50l7 7m4-23-1 9"/>',
-    partner: '<path d="M8 38 23 25l13 7 11-4 10 6 11-3 23 17-12 16-7-3-4 5-6-2-4 5-6-2-4 4-19-12-7 3Z"/><path d="m36 32-9 10c-3 4 1 9 5 7l14-8 27 20M18 33l11 17m53-12L70 53M47 57l12 9m-19-3 10 7m5-20 13 11"/>',
-    'question-master': '<path d="M61 47 69 28l8 2-5 20M17 75c-4-6-3-13 3-16 4-2 8 0 11 3 4-13 16-22 30-21 16 1 27 14 27 29 0 15-12 23-28 23H35c-8 0-15-5-18-12Z"/><path d="M30 65c3-4 7-4 10 0m22-1c3-4 7-4 10 0M40 74c4 10 18 10 22 0Z"/><rect x="63" y="8" width="31" height="27" rx="5"/><path d="M73 17c1-4 9-4 10 0 1 3-2 4-4 6v2m0 4h0"/>',
-  }
-  return `<svg class="klatschen-effect-icon" viewBox="0 0 100 100" aria-hidden="true" fill="#8864b7" stroke="#49345f" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">${shapes[name]}</svg>`
-}
-
 function effectIconMarkup(cardId: string, extraClass = '', isSlot = false) {
   const name = effectIconName(cardId)
   if (!name) return ''
@@ -301,7 +287,7 @@ function heldCardsMarkup() {
   })
   const slotCardIds = ['nose-clapper-1', 'thumb-clapper-1', 'double-clap', 'clap-partner', 'question-rule']
   const slotNames: EffectIconName[] = ['nose', 'thumb', 'double', 'partner', 'question-master']
-  const content = cards.map((card, index) => `<div class="klatschen-effect-slot effect-${slotNames[index]}${card ? ' is-filled' : ''}">${card ?? `<span class="klatschen-effect-placeholder" aria-hidden="true">${document.documentElement.dataset.themeChoice === 'green' ? emptyGreenEffectIconMarkup(slotCardIds[index]!) : effectIconMarkup(slotCardIds[index]!, '', true)}</span>`}</div>`).join('')
+  const content = cards.map((card, index) => `<div class="klatschen-effect-slot effect-${slotNames[index]}${card ? ' is-filled' : ''}">${card ?? `<span class="klatschen-effect-placeholder" aria-hidden="true">${effectIconMarkup(slotCardIds[index]!, '', true)}</span>`}</div>`).join('')
   return `<section class="klatschen-held-cards" aria-label="Aktive Blobb-Karten und Zustände"><div>${content}</div></section>`
 }
 
