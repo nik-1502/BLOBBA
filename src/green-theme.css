@@ -217,7 +217,7 @@ html[data-theme-choice='green'] #klatschen-game .klatschen-held-cards .klatschen
 }
 
 html[data-theme-choice='green'] #klatschen-game .klatschen-held-cards .klatschen-effect-slot:not(.is-filled) .klatschen-effect-icon {
-  filter: grayscale(1) brightness(0) invert(78%) sepia(15%) saturate(1104%) hue-rotate(223deg) brightness(99%);
+  filter: grayscale(1) sepia(1) saturate(1.5) hue-rotate(225deg) brightness(1.2);
   opacity: .85;
 }
 
