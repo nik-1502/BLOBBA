@@ -277,8 +277,13 @@ html[data-theme-choice='green'] #klatschen-game .klatschen-held-cards .klatschen
 }
 
 html[data-theme-choice='green'] #klatschen-game .klatschen-held-cards .klatschen-effect-slot:not(.is-filled) .klatschen-effect-icon {
-  filter: url('#green-effect-flat');
+  filter: none;
   opacity: 1;
+}
+
+html[data-theme-choice='green'] #klatschen-game .klatschen-effect-slot:not(.effect-question-master) .klatschen-effect-placeholder svg path:not(:first-child),
+html[data-theme-choice='green'] #klatschen-game .effect-question-master .klatschen-effect-placeholder svg path:nth-of-type(n+3) {
+  fill: none;
 }
 
 html[data-theme-choice='green'] #klatschen-game .klatschen-held-cards :is(.klatschen-effect-placeholder, .klatschen-held-preview) {
