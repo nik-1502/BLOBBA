@@ -440,6 +440,19 @@ html[data-theme-choice='green'] #busfahrer-game .card-back {
   background: repeating-linear-gradient(45deg, #7650a5 0 var(--card-back-stripe), #a47acb var(--card-back-stripe) calc(var(--card-back-stripe) + var(--card-back-stripe)));
 }
 
+html[data-theme-choice='green'] #busfahrer-game .game-stage:has(.player-turn-wrap) > .current-player-footer {
+  display: none;
+}
+
+html[data-theme-choice='green'] :is(#busfahrer-game, #klatschen-game) .busfahrer-header {
+  position: relative;
+  z-index: 10;
+}
+
+html[data-theme-choice='green'] :is(#busfahrer-game, #klatschen-game) .busfahrer-header h1 {
+  pointer-events: none;
+}
+
 /* Querformat ist ein eigenes Layout; Hochformat bleibt unverändert. */
 @media (orientation: landscape) {
   html[data-theme-choice='green'] .primary-profile-page {
@@ -595,14 +608,22 @@ html[data-theme-choice='green'] #busfahrer-game .card-back {
   }
 
   html[data-theme-choice='green'] #busfahrer-game .player-turn-wrap {
-    --turn-avatar-size: clamp(70px, 32dvh, 180px);
+    --turn-avatar-size: clamp(100px, 40dvh, 220px);
     --turn-avatar-gap: clamp(2px, 1dvh, 8px);
     --turn-frame-bottom-gap: 4px;
     align-content: center;
   }
 
   html[data-theme-choice='green'] #busfahrer-game .turn-player-name {
-    font-size: clamp(1.4rem, 7dvh, 3rem);
+    font-size: clamp(1.5rem, 8dvh, 3.4rem);
+  }
+
+  html[data-theme-choice='green'] #busfahrer-game .game-stage:has(.player-turn-wrap) {
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  html[data-theme-choice='green'] #busfahrer-game .game-stage:has(.player-turn-wrap) .player-turn-wrap {
+    grid-row: 1;
   }
 
   html[data-theme-choice='green'] #busfahrer-game .game-stage:has(:is(.question-panel, .pyramid-panel, .bus-panel)) {
