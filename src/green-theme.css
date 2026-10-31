@@ -293,8 +293,17 @@ html[data-theme-choice='green'] #klatschen-game .klatschen-held-cards .klatschen
   max-height: 100%;
 }
 
-html[data-theme-choice='green'] #klatschen-game .klatschen-held-cards :is(.effect-nose, .effect-thumb, .effect-double) .klatschen-effect-icon {
-  scale: .88;
+/* The source images have different amounts of transparent padding. */
+html[data-theme-choice='green'] #klatschen-game .klatschen-held-cards .effect-thumb .klatschen-effect-icon {
+  scale: .80;
+}
+
+html[data-theme-choice='green'] #klatschen-game .klatschen-held-cards .effect-double .klatschen-effect-icon {
+  scale: .96;
+}
+
+html[data-theme-choice='green'] #klatschen-game .klatschen-held-cards .effect-nose .klatschen-effect-icon {
+  scale: .95;
 }
 
 html[data-theme-choice='green'] .busfahrer-page .hand-cards p {
