@@ -184,6 +184,15 @@ function effectIconName(cardId: string): EffectIconName | null {
 function effectIconMarkup(cardId: string, extraClass = '') {
   const name = effectIconName(cardId)
   if (!name) return ''
+  if (document.documentElement.dataset.themeChoice === 'green') {
+    if (name === 'question-master') {
+      return `<img class="klatschen-effect-icon${extraClass ? ` ${extraClass}` : ''}" src="${greenQuestionMasterIconUrl}" alt="" aria-hidden="true" draggable="false">`
+    }
+    const symbolByEffect: Record<Exclude<EffectIconName, 'question-master'>, string> = {
+      thumb: '👍', nose: '👃', double: '✌️', partner: '🤝',
+    }
+    return greenCardSpriteMarkup(greenCardIcons[symbolByEffect[name]]!, `klatschen-effect-icon${extraClass ? ` ${extraClass}` : ''}`)
+  }
   return `<img class="klatschen-effect-icon${extraClass ? ` ${extraClass}` : ''}" src="${effectIcons[name]}" alt="" aria-hidden="true" draggable="false">`
 }
 
@@ -199,6 +208,15 @@ const greenCardIcons: Record<string, readonly [number, number]> = {
   '🥂': [0, 3], '👍': [1, 3], '👃': [2, 3], '✌️': [3, 3], '🤝': [4, 3], '🤐': [5, 3],
 }
 
+let greenSpriteInstanceId = 0
+
+function greenCardSpriteMarkup(cell: readonly [number, number], className: string) {
+  const [column, row] = cell
+  const shape = greenCardIconShapes[row * 6 + column]!
+  const maskId = `green-card-symbol-${row}-${column}-${greenSpriteInstanceId++}`
+  return `<svg class="${className}" viewBox="${shape.viewBox}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><defs><clipPath id="${maskId}"><path d="${shape.path}" /></clipPath></defs><image href="${greenCardIconSheetUrl}" x="0" y="0" width="1536" height="1024" clip-path="url(#${maskId})" /></svg>`
+}
+
 function drawnCardSymbolMarkup(card: KlatschenCard) {
   if (document.documentElement.dataset.themeChoice === 'green' && card.id.startsWith('question-rule')) {
     return `<img class="klatschen-effect-icon" src="${greenQuestionMasterIconUrl}" alt="" aria-hidden="true" draggable="false">`
@@ -208,10 +226,7 @@ function drawnCardSymbolMarkup(card: KlatschenCard) {
       : card.symbol
   const cell = document.documentElement.dataset.themeChoice === 'green' ? greenCardIcons[greenSymbol] : undefined
   if (!cell) return cardSymbolMarkup(card)
-  const [column, row] = cell
-  const shape = greenCardIconShapes[row * 6 + column]!
-  const maskId = `green-card-symbol-${row}-${column}`
-  return `<svg class="klatschen-card-sprite" viewBox="${shape.viewBox}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><defs><clipPath id="${maskId}"><path d="${shape.path}" /></clipPath></defs><image href="${greenCardIconSheetUrl}" x="0" y="0" width="1536" height="1024" clip-path="url(#${maskId})" /></svg>`
+  return greenCardSpriteMarkup(cell, 'klatschen-card-sprite')
 }
 
 function effectCardPriority(cardId: string) {
