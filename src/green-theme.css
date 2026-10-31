@@ -83,6 +83,16 @@ html[data-theme-choice='green'] .busfahrer-page.player-selection-page .setup-gam
   box-shadow: var(--blobba-shadow-panel), inset 0 1px rgba(255, 255, 255, .08);
 }
 
+/* Move only the complete selection frame; keep its dimensions and contents. */
+html[data-theme-choice='green'] .player-selection-busfahrer .setup-game-panel {
+  position: relative;
+  top: clamp(8px, 1.5dvh, 14px);
+}
+
+html[data-theme-choice='green'] .player-selection-blobben .setup-game-panel {
+  top: calc(var(--shared-main-frame-top) + clamp(8px, 1.5dvh, 14px));
+}
+
 html[data-theme-choice='green'] .busfahrer-page .eyebrow {
   color: #8de5d8;
 }
