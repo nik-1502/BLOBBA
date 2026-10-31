@@ -1,4 +1,5 @@
 import './style.css'
+import { appLanguage, setAppLanguage, startLocalization } from './localization.ts'
 import { applyBusfahrerState, getBusfahrerState, mountBusfahrer, type BusfahrerGameState } from './busfahrer.ts'
 import { applyKlatschenState, getKlatschenState, mountKlatschen, type KlatschenGameState } from './games/klatschen/KlatschenGame.ts'
 import { defaultKlatschenCardCount, klatschenCardGroups } from './games/klatschen/klatschenCards.ts'
@@ -41,6 +42,7 @@ import heroLogoNeonNew from './assets/überschrift bild/2ebf5e57-5e17-4282-ab95-
 import heroLogoGreen from './assets/überschrift bild/Glänzendes BLOBBA-Bubble-Logo.png'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
+startLocalization()
 
 document.addEventListener('contextmenu', (event) => {
   const target = event.target instanceof Element ? event.target : null
@@ -930,7 +932,7 @@ function createLocalPlayer(index: number): SetupPlayer {
 }
 
 function defaultPlayerName(index: number) {
-  return `Spieler ${index}`
+  return `${appLanguage === 'en' ? 'Player' : 'Spieler'} ${index}`
 }
 
 function suggestedPlayers() {
@@ -1383,6 +1385,7 @@ function renderHome() {
 function renderSettingsPlaceholder() {
   const sound = getSoundSettings()
   setupShell(`<div class="primary-profile-frame"><div class="setup-panel sound-settings-panel shared-main-panel">
+    <label class="settings-control-row settings-language"><strong>Sprache</strong><select name="app-language" aria-label="Sprache"><option value="de" ${appLanguage === 'de' ? 'selected' : ''}>Deutsch</option><option value="en" ${appLanguage === 'en' ? 'selected' : ''}>Englisch</option></select></label>
     <fieldset class="theme-settings-group">
       <legend>Design</legend>
       <label class="theme-settings-option"><input type="radio" name="app-theme" value="light" ${appTheme === 'light' ? 'checked' : ''}><span>Hellmodus</span></label>
@@ -1401,6 +1404,9 @@ function renderSettingsPlaceholder() {
     </section>
   </div></div>`, '', 'Einstellungen', 'BLOBBA', 'profile-page primary-profile-page shared-main-layout settings-page', false)
   const themeOptions = app.querySelectorAll<HTMLInputElement>('input[name="app-theme"]')
+  app.querySelector<HTMLSelectElement>('select[name="app-language"]')?.addEventListener('change', (event) => {
+    setAppLanguage((event.currentTarget as HTMLSelectElement).value === 'en' ? 'en' : 'de')
+  })
   const enabled = app.querySelector<HTMLInputElement>('[data-sound-enabled]')!
   const volume = app.querySelector<HTMLInputElement>('[data-sound-volume]')!
   const output = app.querySelector<HTMLOutputElement>('[data-sound-volume-output]')!
