@@ -265,6 +265,11 @@ html[data-theme-choice='green'] :is(.player-selection-blobben .setup-title, #kla
   -webkit-text-fill-color: #ffda70;
 }
 
+html[data-theme-choice='green'] #klatschen-game .busfahrer-header h1 {
+  color: #ff9700 !important;
+  -webkit-text-fill-color: #ff9700;
+}
+
 html[data-theme-choice='green'] #klatschen-game :is(.klatschen-play-screen, .klatschen-card-screen, .klatschen-rule-screen, .klatschen-summary, .klatschen-partner-target-screen) {
   border-color: rgba(74, 204, 220, .48);
   background: linear-gradient(155deg, #005a60, #003e55);
@@ -277,7 +282,7 @@ html[data-theme-choice='green'] #klatschen-game .game-button.primary:not([data-k
 }
 
 html[data-theme-choice='green'] #klatschen-game :is(.klatschen-card-back, .klatschen-drawn-back) {
-  background: repeating-linear-gradient(45deg, #07579b 0 6px, #078fc6 6px 12px);
+  background: #087fc2;
 }
 
 html[data-theme-choice='green'] #klatschen-game .klatschen-drawn-card:not(.is-effect-card):not(.is-rule-card) .klatschen-drawn-front {

@@ -286,7 +286,8 @@ function drawnCardMarkup(card: KlatschenCard) {
   const activeEffect = card.id === 'duel-thumb' ? null : effectIconName(card.id)
   const effectClass = activeEffect ? ` is-effect-card effect-${activeEffect}` : ''
   const ruleClass = card.type === 'temporary-rule' ? ' is-rule-card' : ''
-  return `<article class="klatschen-drawn-card${effectClass}${ruleClass}" style="--draw-angle:${angle}deg;--draw-counter-angle:${-angle}deg"><div class="klatschen-drawn-inner${settled ? ' is-settled' : ''}"><div class="klatschen-drawn-back" aria-hidden="true"></div><div class="klatschen-drawn-front"><h2>${escapeHtml(card.title)}</h2><span class="klatschen-card-symbol" aria-hidden="true">${cardSymbolMarkup(card)}</span><p>${escapeHtml(card.description)}</p>${card.suggestedRule ? `<small>Vorschlag: ${escapeHtml(card.suggestedRule)}</small>` : ''}</div></div></article>`
+  const backSymbol = document.documentElement.dataset.themeChoice === 'green' ? '<span><i>B</i>B</span>' : ''
+  return `<article class="klatschen-drawn-card${effectClass}${ruleClass}" style="--draw-angle:${angle}deg;--draw-counter-angle:${-angle}deg"><div class="klatschen-drawn-inner${settled ? ' is-settled' : ''}"><div class="klatschen-drawn-back" aria-hidden="true">${backSymbol}</div><div class="klatschen-drawn-front"><h2>${escapeHtml(card.title)}</h2><span class="klatschen-card-symbol" aria-hidden="true">${cardSymbolMarkup(card)}</span><p>${escapeHtml(card.description)}</p>${card.suggestedRule ? `<small>Vorschlag: ${escapeHtml(card.suggestedRule)}</small>` : ''}</div></div></article>`
 }
 
 function needsTarget(card: KlatschenCard) {
@@ -316,7 +317,8 @@ function renderCard() {
   const nextButton = needsTarget(card)
     ? '<button class="game-button primary klatschen-next-button klatschen-partner-select-button" data-klatschen-action="choose-partner">Partner wählen</button>'
     : '<button class="game-button primary klatschen-next-button" data-klatschen-action="next">Weiter</button>'
-  return `<section class="klatschen-card-screen">${circleMarkup()}${drawnCardMarkup(card)}${playersButtonMarkup()}${heldCardsMarkup()}${heldCardDialogMarkup()}${playersDialogMarkup()}<div class="klatschen-card-actions">${targetMarkup(card)}</div>${nextButton}</section>`
+  const playerBehindCard = document.documentElement.dataset.themeChoice === 'green' ? `<div class="klatschen-center-controls">${playerTurnMarkup()}</div>` : ''
+  return `<section class="klatschen-card-screen">${circleMarkup()}${playerBehindCard}${drawnCardMarkup(card)}${playersButtonMarkup()}${heldCardsMarkup()}${heldCardDialogMarkup()}${playersDialogMarkup()}<div class="klatschen-card-actions">${targetMarkup(card)}</div>${nextButton}</section>`
 }
 
 function renderFinished() {
@@ -616,12 +618,12 @@ function positionGameSequence(
 }
 
 function positionMiddleLayout() {
-  const screen = root?.querySelector<HTMLElement>('.klatschen-play-screen')
+  const screen = root?.querySelector<HTMLElement>('.klatschen-play-screen, .klatschen-card-screen')
   const circle = screen?.querySelector<HTMLElement>('.klatschen-card-circle')
   const turn = screen?.querySelector<HTMLElement>('.klatschen-turn')
   const avatar = turn?.querySelector<HTMLElement>(':scope > .klatschen-avatar')
   const name = turn?.querySelector<HTMLElement>(':scope > strong')
-  const drawButton = screen?.querySelector<HTMLElement>('.klatschen-draw-button')
+  const drawButton = screen?.querySelector<HTMLElement>('.klatschen-draw-button, .klatschen-next-button')
   const heldCards = screen?.querySelector<HTMLElement>('.klatschen-held-cards')
   const slots = screen?.querySelectorAll<HTMLElement>('.klatschen-circle-slot')
   if (!screen || !circle || !turn || !avatar || !name || !drawButton || !heldCards || !slots?.length) return
@@ -685,7 +687,9 @@ function render() {
     root.innerHTML = `<div class="busfahrer-shell setup-shell klatschen-shell is-finished"><section class="setup-stage"><div class="setup-stack"><h1 class="setup-title">BLOBBEN</h1>${content}</div></section></div>`
   } else {
     const header = '<header class="busfahrer-header"><button class="back-button bus-back blobba-nav-action ipad-pwa-header-button" type="button" data-action="back">Beenden</button><div><p>BLOBBA präsentiert</p><h1>BLOBBEN</h1></div><button class="restart-button blobba-nav-action ipad-pwa-header-button" type="button" data-klatschen-action="restart">Neu starten</button></header>'
-    const globalRule = '<div class="klatschen-global-rule">Sag nicht „Alkohol“ – sag „blobben“.</div>'
+    const globalRule = document.documentElement.dataset.themeChoice === 'green'
+      ? '<div class="klatschen-global-rule">Sag nicht „Trinken“ – sag „blobben“.</div>'
+      : '<div class="klatschen-global-rule">Sag nicht „Alkohol“ – sag „blobben“.</div>'
     root.innerHTML = `<div class="busfahrer-shell klatschen-shell">${header}${globalRule}<div class="klatschen-stage">${content}</div></div>`
   }
   updateMiddleLayout()
