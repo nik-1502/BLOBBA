@@ -281,20 +281,25 @@ html[data-theme-choice='green'] #busfahrer-game .busfahrer-game-title {
   text-shadow: none;
 }
 
-html[data-theme-choice='green'] .player-selection-busfahrer .setup-title {
+html[data-theme-choice='green'] :is(.player-selection-busfahrer, .player-selection-blobben) .setup-title {
   background: none;
 }
 
-html[data-theme-choice='green'] .player-selection-busfahrer .setup-title::after {
+html[data-theme-choice='green'] :is(.player-selection-busfahrer, .player-selection-blobben) .setup-title::after {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
   width: 100%;
-  height: clamp(58px, 17vw, 84px);
+  height: clamp(50px, 13vw, 64px);
   transform: translate(-50%, -50%);
   background: url('./assets/busfahrer bild/Glänzendes BLOBB-FAHRER Logo.png') center / contain no-repeat;
   pointer-events: none;
+}
+
+html[data-theme-choice='green'] .player-selection-blobben .setup-title::after {
+  height: clamp(60px, 17vw, 80px);
+  background-image: url('./assets/blobben bild/Glossy 3D-Bubble-Schriftzug BLOBBEN.png');
 }
 
 html[data-theme-choice='green'] :is(#busfahrer-game, #klatschen-game) .busfahrer-header {
