@@ -272,6 +272,38 @@ html[data-theme-choice='green'] #klatschen-game .busfahrer-header h1 {
   text-shadow: none;
 }
 
+/* The original text remains available to assistive technology. */
+html[data-theme-choice='green'] .player-selection-busfahrer .setup-title,
+html[data-theme-choice='green'] #busfahrer-game .busfahrer-game-title {
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
+  background: url('./assets/busfahrer bild/Glänzendes BLOBB-FAHRER Logo.png') center / contain no-repeat;
+  text-shadow: none;
+}
+
+html[data-theme-choice='green'] #busfahrer-game .busfahrer-header {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+html[data-theme-choice='green'] #busfahrer-game .busfahrer-header > div {
+  position: relative;
+  min-width: 0;
+}
+
+html[data-theme-choice='green'] #busfahrer-game .busfahrer-game-title {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: clamp(28px, 7vw, 48px);
+  margin: 0;
+  translate: -50% -50%;
+}
+
+html[data-theme-choice='green'] #busfahrer-game .busfahrer-game-title > span {
+  visibility: hidden;
+}
+
 html[data-theme-choice='green'] #klatschen-game :is(.klatschen-play-screen, .klatschen-card-screen, .klatschen-rule-screen, .klatschen-summary, .klatschen-partner-target-screen) {
   border-color: rgba(74, 204, 220, .48);
   background: linear-gradient(155deg, #005a60, #003e55);
