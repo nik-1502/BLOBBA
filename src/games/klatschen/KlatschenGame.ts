@@ -9,6 +9,7 @@ import doubleEffectIconUrl from '../../assets/smileys/processed/double.png'
 import partnerEffectIconUrl from '../../assets/smileys/processed/partner.png'
 import questionMasterEffectIconUrl from '../../assets/smileys/processed/question-master.png'
 import greenCardIconSheetUrl from '../../assets/karten smileys/Glänzende blaue Cartoon-Icon-Sammlung.png'
+import { greenCardIconShapes } from './greenCardIconShapes'
 
 export type KlatschenPlayerSetup = { id?: string; name: string; avatar: string; avatarColor: string }
 export type KlatschenPlayer = KlatschenPlayerSetup & { id: string; drinks: number; heldCards: string[]; partnerIds: string[] }
@@ -189,10 +190,7 @@ function cardSymbolMarkup(card: KlatschenCard, extraClass = '') {
   return effectIconName(card.id) ? effectIconMarkup(card.id, extraClass) : escapeHtml(card.symbol)
 }
 
-// Die Grenzen liegen zwischen den Motiven, damit auch die kleinen Spritzer
-// zum jeweiligen Bild gehören. Das Originalbild bleibt dabei unverändert.
-const greenCardIconColumns = [0, 285, 535, 755, 1060, 1278, 1536]
-const greenCardIconRows = [0, 285, 532, 768, 1024]
+// Die Masken folgen den Originalkonturen und enthalten die zugehörigen Spritzer.
 const greenCardIcons: Record<string, readonly [number, number]> = {
   '👏': [0, 0], '🎁': [1, 0], '👉': [2, 0], '🙌': [3, 0], '✨': [4, 0], '⬅️': [5, 0],
   '➡️': [0, 1], '💭': [1, 1], '🎤': [2, 1], '📜': [3, 1], '👥': [4, 1], '👕': [5, 1],
@@ -204,11 +202,9 @@ function drawnCardSymbolMarkup(card: KlatschenCard) {
   const cell = document.documentElement.dataset.themeChoice === 'green' ? greenCardIcons[card.symbol] : undefined
   if (!cell) return cardSymbolMarkup(card)
   const [column, row] = cell
-  const x = greenCardIconColumns[column]!
-  const y = greenCardIconRows[row]!
-  const width = greenCardIconColumns[column + 1]! - x
-  const height = greenCardIconRows[row + 1]! - y
-  return `<svg class="klatschen-card-sprite" viewBox="${x} ${y} ${width} ${height}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><image href="${greenCardIconSheetUrl}" x="0" y="0" width="1536" height="1024" /></svg>`
+  const shape = greenCardIconShapes[row * 6 + column]!
+  const maskId = `green-card-symbol-${row}-${column}`
+  return `<svg class="klatschen-card-sprite" viewBox="${shape.viewBox}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><defs><clipPath id="${maskId}"><path d="${shape.path}" /></clipPath></defs><image href="${greenCardIconSheetUrl}" x="0" y="0" width="1536" height="1024" clip-path="url(#${maskId})" /></svg>`
 }
 
 function effectCardPriority(cardId: string) {
