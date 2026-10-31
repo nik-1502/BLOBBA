@@ -1653,8 +1653,30 @@ function bindSetupUtilityActions() {
   }))
   app.querySelectorAll<HTMLButtonElement>('[data-card-count-delta]').forEach((button) => button.addEventListener('click', () => {
     const title = button.dataset.cardCountTitle!
+    if (appTheme !== 'green') {
+      cardRulesDraft[title] = Math.max(0, Math.min(12, (cardRulesDraft[title] ?? 0) + Number(button.dataset.cardCountDelta)))
+      renderModeMenu()
+      return
+    }
+    const delta = button.dataset.cardCountDelta!
+    const list = button.closest<HTMLElement>('.card-count-list')
+    const modal = button.closest<HTMLElement>('.setup-card-rules-modal')
+    const listScrollTop = list?.scrollTop ?? 0
+    const modalScrollTop = modal?.scrollTop ?? 0
+    const buttonTop = button.getBoundingClientRect().top
+    const restoreFocus = document.activeElement === button
     cardRulesDraft[title] = Math.max(0, Math.min(12, (cardRulesDraft[title] ?? 0) + Number(button.dataset.cardCountDelta)))
     renderModeMenu()
+    const newModal = app.querySelector<HTMLElement>('.setup-card-rules-modal.is-customizing')
+    const newList = newModal?.querySelector<HTMLElement>('.card-count-list')
+    const newButton = Array.from(newList?.querySelectorAll<HTMLButtonElement>('[data-card-count-delta]') ?? [])
+      .find((candidate) => candidate.dataset.cardCountTitle === title && candidate.dataset.cardCountDelta === delta)
+    if (newModal) newModal.scrollTop = modalScrollTop
+    if (newList) {
+      newList.scrollTop = listScrollTop
+      if (newButton) newList.scrollTop += newButton.getBoundingClientRect().top - buttonTop
+    }
+    if (restoreFocus) newButton?.focus({ preventScroll: true })
   }))
   app.querySelectorAll<HTMLButtonElement>('[data-card-preset]').forEach((button) => button.addEventListener('click', () => {
     selectedCardPreset = { type: 'fixed', id: button.dataset.cardPreset as CardPresetId }
