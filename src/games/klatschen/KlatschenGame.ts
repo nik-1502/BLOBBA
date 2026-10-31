@@ -11,6 +11,7 @@ import questionMasterEffectIconUrl from '../../assets/smileys/processed/question
 import greenCardIconSheetUrl from '../../assets/karten smileys/Glänzende blaue Cartoon-Icon-Sammlung.png'
 import greenQuestionMasterIconUrl from '../../assets/karten smileys/1b32411b-e9c9-474c-9b45-3f31f2e4c803.png'
 import greenNoseIconUrl from '../../assets/karten smileys/d87ba526-e5d3-4d6b-819f-99fd374e7578.png'
+import greenDoubleIconUrl from '../../assets/karten smileys/1dfa741b-d56e-42ca-8162-9669130528f3.png'
 import { greenCardIconShapes } from './greenCardIconShapes'
 import { greenEffectIconShapes } from './greenEffectIconShapes'
 
@@ -188,8 +189,9 @@ function effectIconMarkup(cardId: string, extraClass = '', isSlot = false) {
   if (!name) return ''
   if (document.documentElement.dataset.themeChoice === 'green') {
     const className = `klatschen-effect-icon${extraClass ? ` ${extraClass}` : ''}`
-    if (name === 'nose') {
-      return `<img class="${className}" src="${greenNoseIconUrl}" alt="" aria-hidden="true" draggable="false">`
+    if (name === 'nose' || name === 'double') {
+      const source = name === 'nose' ? greenNoseIconUrl : greenDoubleIconUrl
+      return `<img class="${className}" src="${source}" alt="" aria-hidden="true" draggable="false">`
     }
     if (isSlot && (name === 'partner' || name === 'question-master')) {
       const shape = name === 'partner' ? greenEffectIconShapes.partner : greenEffectIconShapes.questionMaster
@@ -230,6 +232,9 @@ function greenCardSpriteMarkup(cell: readonly [number, number], className: strin
 }
 
 function drawnCardSymbolMarkup(card: KlatschenCard) {
+  if (document.documentElement.dataset.themeChoice === 'green' && card.id.startsWith('double-clap')) {
+    return `<img class="klatschen-effect-icon" src="${greenDoubleIconUrl}" alt="" aria-hidden="true" draggable="false">`
+  }
   if (document.documentElement.dataset.themeChoice === 'green' && card.id.startsWith('nose-clapper')) {
     return `<img class="klatschen-effect-icon" src="${greenNoseIconUrl}" alt="" aria-hidden="true" draggable="false">`
   }
