@@ -199,7 +199,10 @@ const greenCardIcons: Record<string, readonly [number, number]> = {
 }
 
 function drawnCardSymbolMarkup(card: KlatschenCard) {
-  const cell = document.documentElement.dataset.themeChoice === 'green' ? greenCardIcons[card.symbol] : undefined
+  const greenSymbol = card.type === 'drink-self' ? '👉'
+    : card.type === 'choose-player' || card.type === 'distribute' ? '🎁'
+      : card.symbol
+  const cell = document.documentElement.dataset.themeChoice === 'green' ? greenCardIcons[greenSymbol] : undefined
   if (!cell) return cardSymbolMarkup(card)
   const [column, row] = cell
   const shape = greenCardIconShapes[row * 6 + column]!
