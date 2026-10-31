@@ -265,10 +265,10 @@ html[data-theme-choice='green'] :is(.player-selection-blobben .setup-title, #kla
   -webkit-text-fill-color: #ffda70;
 }
 
-html[data-theme-choice='green'] #klatschen-game .busfahrer-header h1 {
+html[data-theme-choice='green'] :is(.player-selection-blobben .setup-title, #klatschen-game .busfahrer-header h1) {
   color: transparent !important;
-  background: url('./assets/blobben bild/55904053-a820-4d06-a35d-66dce05ebcc3.png') center / contain no-repeat;
-  -webkit-text-fill-color: transparent;
+  background: url('./assets/blobben bild/Glossy 3D-Bubble-Schriftzug BLOBBEN.png') center / contain no-repeat;
+  -webkit-text-fill-color: transparent !important;
   text-shadow: none;
 }
 
@@ -297,17 +297,17 @@ html[data-theme-choice='green'] .player-selection-busfahrer .setup-title::after 
   pointer-events: none;
 }
 
-html[data-theme-choice='green'] #busfahrer-game .busfahrer-header {
+html[data-theme-choice='green'] :is(#busfahrer-game, #klatschen-game) .busfahrer-header {
   grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
-html[data-theme-choice='green'] #busfahrer-game .busfahrer-header > div {
+html[data-theme-choice='green'] :is(#busfahrer-game, #klatschen-game) .busfahrer-header > div {
   position: relative;
   min-width: 0;
   align-self: stretch;
 }
 
-html[data-theme-choice='green'] #busfahrer-game .busfahrer-game-title {
+html[data-theme-choice='green'] :is(#busfahrer-game .busfahrer-game-title, #klatschen-game .busfahrer-header h1) {
   position: absolute;
   top: 50%;
   left: 50%;
