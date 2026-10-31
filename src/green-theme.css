@@ -516,7 +516,8 @@ html[data-theme-choice='green'] #busfahrer-game .card-back {
     top: 46%;
     left: 75%;
     width: 42%;
-    transform: translate(-50%, -50%);
+    justify-content: center;
+    transform: translateX(-50%);
   }
 
   html[data-theme-choice='green'] #klatschen-game .klatschen-turn .klatschen-avatar {

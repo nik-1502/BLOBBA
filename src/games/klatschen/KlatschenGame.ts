@@ -681,10 +681,22 @@ function updateMiddleLayout() {
     if (turn && controls && button && effectSlots?.length) {
       const slotsBottom = Math.max(...Array.from(effectSlots, (slot) => slot.getBoundingClientRect().bottom))
       const buttonTop = button.getBoundingClientRect().top
-      turn.style.top = `${(slotsBottom + buttonTop) / 2 - controls.getBoundingClientRect().top}px`
+      const controlsRect = controls.getBoundingClientRect()
+      turn.style.top = `${slotsBottom - controlsRect.top}px`
+      turn.style.bottom = `${controlsRect.bottom - buttonTop}px`
+      const avatar = turn.querySelector<HTMLElement>(':scope > .klatschen-avatar')
+      const name = turn.querySelector<HTMLElement>(':scope > strong')
+      if (avatar && name) {
+        const gap = Number.parseFloat(getComputedStyle(turn).rowGap) || 0
+        const availableAvatarHeight = Math.max(0, buttonTop - slotsBottom - name.getBoundingClientRect().height - gap)
+        const avatarSize = Math.min(avatar.getBoundingClientRect().width, availableAvatarHeight)
+        avatar.style.width = `${avatarSize}px`
+        avatar.style.height = `${avatarSize}px`
+      }
     }
     return
   }
+  root?.querySelector<HTMLElement>('.klatschen-turn')?.style.removeProperty('bottom')
   fitCurrentPlayerDisplay()
   positionMiddleLayout()
   positionNextButton()
