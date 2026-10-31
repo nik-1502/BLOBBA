@@ -370,6 +370,18 @@ function alignHomeHeaderButtons() {
 
 window.addEventListener('resize', () => requestAnimationFrame(alignHomeHeaderButtons))
 
+// The landscape home can be taller than the display; don't leave portrait
+// scrolled down to that former position after the device is rotated.
+const homeLandscape = window.matchMedia('(orientation: landscape)')
+homeLandscape.addEventListener('change', () => {
+  if (appTheme !== 'green') return
+  requestAnimationFrame(() => {
+    const home = app.querySelector<HTMLElement>('.home-page')
+    if (home) home.scrollTop = 0
+    alignHomeHeaderButtons()
+  })
+})
+
 function preventDesktopZoom() {
   const isDesktopPointer = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches
   window.addEventListener('wheel', (event) => {

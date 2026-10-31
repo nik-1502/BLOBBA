@@ -551,7 +551,7 @@ html[data-theme-choice='green'] #klatschen-game .klatschen-drawn-card:not(.is-ef
   html[data-theme-choice='green'] .home-page .home-games-area {
     display: grid;
     width: min(820px, 100%);
-    margin: 8px auto 0;
+    margin: 16px auto 0;
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto auto auto;
     align-items: start;
@@ -602,4 +602,30 @@ html[data-theme-choice='green'] #klatschen-game .klatschen-drawn-card:not(.is-ef
     aspect-ratio: 3 / 4;
   }
 
+  html[data-theme-choice='green'] .home-page .game-list .busfahrer-button {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 2cqw;
+    padding: 9cqw 5cqw 5cqw;
+  }
+
+  html[data-theme-choice='green'] .home-page .game-list .busfahrer-button-image {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    object-fit: contain;
+  }
+
+  html[data-theme-choice='green'] .home-page .game-list .busfahrer-button-label {
+    font-size: clamp(.8rem, 8cqw, 2.4rem);
+    line-height: 1;
+  }
+
+  html[data-theme-choice='green'] .home-page .favorite-heart-button {
+    top: 5cqw;
+    right: 5cqw;
+    width: clamp(38px, 22cqw, 78px);
+    height: clamp(38px, 22cqw, 78px);
+    padding: 5cqw;
+  }
 }
