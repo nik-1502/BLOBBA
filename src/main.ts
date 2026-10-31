@@ -71,7 +71,7 @@ const MAX_PLAYERS = 9
 const DEFAULT_AVATAR_ID = 'bier'
 const HOME_GAME_CATEGORIES = ['Kartenspiele', 'Schnell', 'Klassiker', 'Lustig', 'Denkspiele', 'Verteilspiele', 'Teamspiele', 'Wettkampf'] as const
 type HomeGameCategory = 'Alle' | typeof HOME_GAME_CATEGORIES[number]
-type AppTheme = 'light' | 'neon' | 'neon-new'
+type AppTheme = 'light' | 'neon' | 'neon-new' | 'green'
 
 const HOME_GAMES = [
   {
@@ -290,22 +290,25 @@ let appTheme = loadAppTheme()
 function loadAppTheme(): AppTheme {
   try {
     const storedTheme = localStorage.getItem(THEME_STORAGE_KEY)
-    return storedTheme === 'light' || storedTheme === 'neon' || storedTheme === 'neon-new' ? storedTheme : 'neon'
+    return storedTheme === 'light' || storedTheme === 'neon' || storedTheme === 'neon-new' || storedTheme === 'green' ? storedTheme : 'neon'
   } catch {
     return 'neon'
   }
 }
 
 function isDarkAppTheme(theme: AppTheme = appTheme) {
-  return theme === 'neon' || theme === 'neon-new'
+  return theme === 'neon' || theme === 'neon-new' || theme === 'green'
+}
+
+function usesNewDarkStyle(theme: AppTheme = appTheme) {
+  return theme === 'neon-new' || theme === 'green'
 }
 
 function applyAppTheme(theme: AppTheme) {
   appTheme = theme
-  // "Dunkelmodus neu" starts as an exact visual duplicate of the existing
-  // dark theme. Its own variant marker allows future changes to target only it.
   document.documentElement.dataset.theme = isDarkAppTheme(theme) ? 'neon' : 'light'
-  document.documentElement.dataset.themeVariant = theme
+  document.documentElement.dataset.themeVariant = usesNewDarkStyle(theme) ? 'neon-new' : theme
+  document.documentElement.dataset.themeChoice = theme
   const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
   if (themeColor) themeColor.content = isDarkAppTheme(theme) ? '#120012' : '#f75b04'
   try {
@@ -1198,15 +1201,15 @@ function renderHome() {
   document.documentElement.classList.add('home-active')
   app.innerHTML = `<main class="home-page">
     <button class="home-profile-button home-settings-button" type="button" aria-label="Einstellungen öffnen" title="Einstellungen öffnen">
-      ${appTheme === 'neon-new' ? `<svg class="home-header-icon home-header-icon-symmetric" aria-hidden="true" viewBox="0 0 24 24"><defs><mask id="home-gear-center"><rect width="24" height="24" fill="white"></rect><circle cx="12" cy="12" r="3.2" fill="black"></circle></mask></defs><g mask="url(#home-gear-center)"><circle cx="12" cy="12" r="7.4"></circle><rect x="10.2" y="1" width="3.6" height="22" rx="1.1"></rect><rect x="10.2" y="1" width="3.6" height="22" rx="1.1" transform="rotate(45 12 12)"></rect><rect x="10.2" y="1" width="3.6" height="22" rx="1.1" transform="rotate(90 12 12)"></rect><rect x="10.2" y="1" width="3.6" height="22" rx="1.1" transform="rotate(135 12 12)"></rect></g></svg>` : ''}
-      ${appTheme === 'neon-new' ? `<svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M10 2h4l.6 2.5c.6.2 1.1.4 1.6.7l2.2-1.3 2.8 2.8-1.3 2.2c.3.5.5 1 .7 1.6l2.4.5v4l-2.4.6c-.2.6-.4 1.1-.7 1.6l1.3 2.2-2.8 2.8-2.2-1.3c-.5.3-1 .5-1.6.7L14 24h-4l-.6-2.4c-.6-.2-1.1-.4-1.6-.7l-2.2 1.3-2.8-2.8 1.3-2.2c-.3-.5-.5-1-.7-1.6L1 15v-4l2.4-.5c.2-.6.4-1.1.7-1.6L2.8 6.7l2.8-2.8 2.2 1.3c.5-.3 1-.5 1.6-.7L10 2Zm2 6.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"></path></svg>` : `<svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.09A1.7 1.7 0 0 0 9 19.36a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.63 15a1.7 1.7 0 0 0-1.55-1H3v-4h.09A1.7 1.7 0 0 0 4.64 9a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.63a1.7 1.7 0 0 0 1-1.55V3h4v.09A1.7 1.7 0 0 0 15 4.64a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.37 9a1.7 1.7 0 0 0 1.55 1H21v4h-.09A1.7 1.7 0 0 0 19.4 15Z"></path></svg>`}
+      ${usesNewDarkStyle() ? `<svg class="home-header-icon home-header-icon-symmetric" aria-hidden="true" viewBox="0 0 24 24"><defs><mask id="home-gear-center"><rect width="24" height="24" fill="white"></rect><circle cx="12" cy="12" r="3.2" fill="black"></circle></mask></defs><g mask="url(#home-gear-center)"><circle cx="12" cy="12" r="7.4"></circle><rect x="10.2" y="1" width="3.6" height="22" rx="1.1"></rect><rect x="10.2" y="1" width="3.6" height="22" rx="1.1" transform="rotate(45 12 12)"></rect><rect x="10.2" y="1" width="3.6" height="22" rx="1.1" transform="rotate(90 12 12)"></rect><rect x="10.2" y="1" width="3.6" height="22" rx="1.1" transform="rotate(135 12 12)"></rect></g></svg>` : ''}
+      ${usesNewDarkStyle() ? `<svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M10 2h4l.6 2.5c.6.2 1.1.4 1.6.7l2.2-1.3 2.8 2.8-1.3 2.2c.3.5.5 1 .7 1.6l2.4.5v4l-2.4.6c-.2.6-.4 1.1-.7 1.6l1.3 2.2-2.8 2.8-2.2-1.3c-.5.3-1 .5-1.6.7L14 24h-4l-.6-2.4c-.6-.2-1.1-.4-1.6-.7l-2.2 1.3-2.8-2.8 1.3-2.2c-.3-.5-.5-1-.7-1.6L1 15v-4l2.4-.5c.2-.6.4-1.1.7-1.6L2.8 6.7l2.8-2.8 2.2 1.3c.5-.3 1-.5 1.6-.7L10 2Zm2 6.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z"></path></svg>` : `<svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.09A1.7 1.7 0 0 0 9 19.36a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.63 15a1.7 1.7 0 0 0-1.55-1H3v-4h.09A1.7 1.7 0 0 0 4.64 9a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.63a1.7 1.7 0 0 0 1-1.55V3h4v.09A1.7 1.7 0 0 0 15 4.64a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.37 9a1.7 1.7 0 0 0 1.55 1H21v4h-.09A1.7 1.7 0 0 0 19.4 15Z"></path></svg>`}
     </button>
     <button class="home-profile-button home-user-button" type="button" aria-label="Profil öffnen" title="Profil öffnen">
-      ${appTheme === 'neon-new' ? `<svg class="home-header-icon home-header-icon-symmetric" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="7.5" r="4.5"></circle><path d="M4 20C4 16 7.6 13.5 12 13.5S20 16 20 20Q20 21.5 18.5 21.5H5.5Q4 21.5 4 20Z"></path></svg>` : ''}
-      ${appTheme === 'neon-new' ? `<svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="7.5" r="4.5"></circle><path d="M4 20c0-3.9 3.6-6.5 8-6.5s8 2.6 8 6.5c0 .8-.6 1.5-1.5 1.5h-13C4.6 21.5 4 20.8 4 20Z"></path></svg>` : `<svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 21a7.5 7.5 0 0 1 15 0c-2.2 1.25-12.8 1.25-15 0Z"></path></svg>`}
+      ${usesNewDarkStyle() ? `<svg class="home-header-icon home-header-icon-symmetric" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="7.5" r="4.5"></circle><path d="M4 20C4 16 7.6 13.5 12 13.5S20 16 20 20Q20 21.5 18.5 21.5H5.5Q4 21.5 4 20Z"></path></svg>` : ''}
+      ${usesNewDarkStyle() ? `<svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="7.5" r="4.5"></circle><path d="M4 20c0-3.9 3.6-6.5 8-6.5s8 2.6 8 6.5c0 .8-.6 1.5-1.5 1.5h-13C4.6 21.5 4 20.8 4 20Z"></path></svg>` : `<svg class="home-header-icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4.5 21a7.5 7.5 0 0 1 15 0c-2.2 1.25-12.8 1.25-15 0Z"></path></svg>`}
     </button>
     <header class="hero-header">
-      ${appTheme === 'neon-new'
+      ${usesNewDarkStyle()
         ? `<picture class="hero-logo-picture hero-logo-picture-new">
             <img class="hero-logo" src="${heroLogoNeonNew}" alt="BLOBBA">
           </picture>`
@@ -1246,7 +1249,7 @@ function renderHome() {
             <i class="premium-game-frame-channel"></i>
             <i class="premium-game-frame-details"></i>
           </span>
-          <img class="busfahrer-button-image" src="${appTheme === 'neon-new' ? busfahrerGameImageNeonNew : appTheme === 'neon' ? busfahrerGameImageNeon : busfahrerGameImage}" alt="">
+          <img class="busfahrer-button-image" src="${usesNewDarkStyle() ? busfahrerGameImageNeonNew : appTheme === 'neon' ? busfahrerGameImageNeon : busfahrerGameImage}" alt="">
           <span class="busfahrer-button-label">BLOBB-FAHRER</span>
         </button>
         ${favoriteHeartMarkup('blobfahrer')}
@@ -1258,7 +1261,7 @@ function renderHome() {
             <i class="premium-game-frame-channel"></i>
             <i class="premium-game-frame-details"></i>
           </span>
-          <img class="busfahrer-button-image" src="${appTheme === 'neon-new' ? blobbenGameImageNeonNew : appTheme === 'neon' ? blobbenGameImageNeon : blobbenGameImage}" alt="">
+          <img class="busfahrer-button-image" src="${usesNewDarkStyle() ? blobbenGameImageNeonNew : appTheme === 'neon' ? blobbenGameImageNeon : blobbenGameImage}" alt="">
           <span class="busfahrer-button-label">BLOBBEN</span>
         </button>
         ${favoriteHeartMarkup('blobben')}
@@ -1324,6 +1327,7 @@ function renderSettingsPlaceholder() {
       <label class="theme-settings-option"><input type="radio" name="app-theme" value="light" ${appTheme === 'light' ? 'checked' : ''}><span>Hellmodus</span></label>
       <label class="theme-settings-option"><input type="radio" name="app-theme" value="neon" ${appTheme === 'neon' ? 'checked' : ''}><span>Dunkelmodus</span></label>
       <label class="theme-settings-option"><input type="radio" name="app-theme" value="neon-new" ${appTheme === 'neon-new' ? 'checked' : ''}><span>Dunkelmodus neu</span></label>
+      <label class="theme-settings-option"><input type="radio" name="app-theme" value="green" ${appTheme === 'green' ? 'checked' : ''}><span>Grüner Modus</span></label>
     </fieldset>
     <div class="settings-divider" aria-hidden="true"></div>
     <section class="settings-audio-section" aria-labelledby="settings-audio-title">
