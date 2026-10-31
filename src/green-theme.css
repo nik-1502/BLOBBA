@@ -1,0 +1,221 @@
+/* Green mode only: paint overrides, with layout and interaction unchanged. */
+html[data-theme-choice='green'] {
+  --green-page: radial-gradient(ellipse at 50% 35%, #007e80 0%, #007375 58%, #006e70 100%);
+  --green-panel: linear-gradient(155deg, rgba(0, 79, 82, .96), rgba(0, 50, 55, .97));
+  --green-surface: rgba(0, 58, 62, .78);
+  --green-button: linear-gradient(180deg, #00565a, #00383e);
+  --green-primary: linear-gradient(180deg, #00b8ad, #009b93);
+  --green-border: rgba(14, 207, 194, .55);
+  --green-shadow: 0 8px 20px rgba(0, 37, 39, .28);
+}
+
+/* The home filter uses the same petrol surfaces as its controls. */
+html[data-theme-choice='green'] .home-page .category-menu {
+  border-color: var(--green-border);
+  background: var(--green-panel);
+  box-shadow: var(--green-shadow);
+}
+
+html[data-theme-choice='green'] .home-page .category-chip {
+  color: #f4fffd;
+  border-color: rgba(91, 218, 206, .3);
+  background: var(--green-button);
+  box-shadow: inset 0 1px rgba(255, 255, 255, .06);
+}
+
+html[data-theme-choice='green'] .home-page .category-chip.is-selected {
+  color: #fff;
+  border-color: #3be0cf;
+  background: var(--green-primary);
+  box-shadow: 0 5px 12px rgba(0, 44, 42, .22);
+}
+
+/* Shared page surfaces cover profile, settings and both games. */
+html[data-theme-choice='green'] .busfahrer-page,
+html[data-theme-choice='green'] .busfahrer-page.profile-page,
+html[data-theme-choice='green'].is-standalone #app > .busfahrer-page,
+html[data-theme-choice='green'].is-standalone #app > .busfahrer-page.profile-page {
+  --blobba-water-light: #4de3d3;
+  --blobba-water-main: #00b8ad;
+  --blobba-water-dark: #00877f;
+  --blobba-water-outline: #00a99f;
+  --blobba-panel-bg: rgba(0, 50, 55, .97);
+  --blobba-panel-bg-soft: rgba(0, 73, 75, .86);
+  --blobba-panel-border: rgba(71, 219, 202, .38);
+  --blobba-text-muted: rgba(223, 250, 245, .78);
+  --blobba-shadow-soft: var(--green-shadow);
+  --blobba-shadow-panel: 0 20px 45px rgba(0, 35, 36, .32);
+  --blobba-shadow-button: 0 7px 16px rgba(0, 44, 42, .25);
+  background: var(--green-page);
+}
+
+html[data-theme-choice='green'] .busfahrer-page::before,
+html[data-theme-choice='green'] .busfahrer-page::after,
+html[data-theme-choice='green'] .player-selection-background::before,
+html[data-theme-choice='green'] .player-selection-background::after {
+  background: none;
+  opacity: 0;
+}
+
+html[data-theme-choice='green'] .player-selection-background {
+  background: var(--green-page);
+}
+
+html[data-theme-choice='green'] .busfahrer-page.player-selection-page {
+  --setup-orange-top: #00bdb0;
+  --setup-orange: #00a79e;
+  --setup-orange-bottom: #008c85;
+  --setup-ink: rgba(0, 50, 55, .97);
+  --setup-ink-soft: rgba(0, 73, 75, .86);
+  --setup-line: rgba(71, 219, 202, .38);
+  --setup-text-muted: rgba(223, 250, 245, .78);
+}
+
+html[data-theme-choice='green'] .busfahrer-page:not(.player-selection-page) :is(
+  .setup-panel, .question-panel, .pyramid-panel, .bus-panel,
+  .pyramid-target-screen, .game-summary-panel, .player-turn-screen,
+  .klatschen-rule-screen, .klatschen-summary, .klatschen-play-screen,
+  .klatschen-card-screen, .klatschen-partner-target-screen
+),
+html[data-theme-choice='green'] .busfahrer-page.player-selection-page .setup-game-panel {
+  border-color: var(--blobba-panel-border);
+  background: var(--green-panel);
+  box-shadow: var(--blobba-shadow-panel), inset 0 1px rgba(255, 255, 255, .08);
+}
+
+html[data-theme-choice='green'] .busfahrer-page .eyebrow {
+  color: #8de5d8;
+}
+
+html[data-theme-choice='green'] .busfahrer-page :is(.player-hand, .used-cards, .game-stats-table, .klatschen-player-card-row, .klatschen-global-rule, .pyramid-offer-question) {
+  border-color: rgba(114, 224, 211, .25);
+  background: var(--green-surface);
+  box-shadow: inset 0 1px rgba(255, 255, 255, .06);
+}
+
+html[data-theme-choice='green'] .busfahrer-page :is(.back-button, .restart-button),
+html[data-theme-choice='green'] .busfahrer-page.player-selection-page :is(.setup-mode-switch .game-button, .online-actions .game-button, .online-group-tools .game-button, .online-invite-link .game-button, .setup-add-player, .setup-modal .game-button),
+html[data-theme-choice='green'] .busfahrer-page:not(.player-selection-page) .game-button:not(.primary):not(.choice-red):not(.choice-blue):not(.choice-heart):not(.choice-diamond):not(.choice-star):not(.choice-moon):not(.choice-higher):not(.choice-lower):not(.choice-inside):not(.choice-outside):not(.choice-equal):not(.klatschen-cancel-remove) {
+  border-color: var(--green-border);
+  background: var(--green-button);
+  box-shadow: var(--green-shadow);
+}
+
+html[data-theme-choice='green'] .busfahrer-page.player-selection-page :is(.setup-mode-switch .is-active, .game-button.primary),
+html[data-theme-choice='green'] .busfahrer-page:not(.player-selection-page) .game-button.primary:not(.choice-red):not(.choice-blue):not(.choice-heart):not(.choice-diamond):not(.choice-star):not(.choice-moon):not(.choice-higher):not(.choice-lower):not(.choice-inside):not(.choice-outside):not(.choice-equal):not([data-action='back']):not([data-klatschen-action='exit']) {
+  border-color: #13cfc0;
+  background: var(--green-primary);
+  box-shadow: var(--blobba-shadow-button), inset 0 1px rgba(255, 255, 255, .15);
+}
+
+html[data-theme-choice='green'] .busfahrer-page.player-selection-page .player-row,
+html[data-theme-choice='green'] .busfahrer-page.player-selection-page .player-row:hover,
+html[data-theme-choice='green'] .busfahrer-page.player-selection-page .player-row:last-child {
+  border-color: rgba(43, 203, 188, .45);
+  background: rgba(0, 117, 111, .35);
+  box-shadow: inset 0 1px rgba(255, 255, 255, .06);
+}
+
+html[data-theme-choice='green'] .busfahrer-page :is(.player-entry-input, .setup-text-input, .profile-name-input, .player-entry-trigger, .custom-card-preset-select) {
+  border-color: rgba(96, 217, 205, .35);
+  color: #fff;
+  background: rgba(0, 43, 47, .8);
+}
+
+html[data-theme-choice='green'] .busfahrer-page :is(.avatar-choice, .saved-profile-card, .theme-settings-option, .theme-option, .card-preset-option, .custom-card-preset-icon, .customize-card-rules, .sound-toggle span) {
+  border-color: rgba(96, 217, 205, .3);
+  background: rgba(0, 67, 69, .8);
+}
+
+html[data-theme-choice='green'] .busfahrer-page :is(.selection-utility-button, .setup-utility-close, .difficulty-option, .card-count-row button, .card-header-action, .card-name-dialog button:not(.confirm-card-delete)) {
+  color: #f4fffd;
+  border-color: rgba(71, 219, 202, .38);
+  background: var(--green-button);
+  box-shadow: var(--green-shadow);
+}
+
+html[data-theme-choice='green'] .busfahrer-page :is(.selection-utility-button, .card-save-action):is(:hover, :active),
+html[data-theme-choice='green'] .busfahrer-page :is(.difficulty-option.is-selected, .card-save-action, .card-name-dialog button[type='submit']) {
+  color: #fff;
+  border-color: #35d7c7;
+  background: var(--green-primary);
+  box-shadow: var(--blobba-shadow-button);
+}
+
+html[data-theme-choice='green'] .busfahrer-page :is(.card-draft-status, .custom-card-presets-heading > span, .setup-info-copy p) {
+  color: #daf8f3;
+  border-color: rgba(71, 219, 202, .32);
+  background: rgba(0, 104, 99, .35);
+}
+
+html[data-theme-choice='green'] .busfahrer-page :is(.card-count-row output, .custom-card-preset-icon, .customize-card-rules) {
+  color: #c9faf1;
+}
+
+html[data-theme-choice='green'] .busfahrer-page .card-name-dialog input {
+  color: #fff;
+  border-color: rgba(96, 217, 205, .4);
+  background: rgba(0, 43, 47, .8);
+}
+
+html[data-theme-choice='green'] .busfahrer-page :is(.avatar-choice.is-selected, .saved-profile-card.is-selected, .theme-option.is-selected, .theme-settings-option:has(input:checked), .card-preset-option.is-selected, .custom-card-preset.is-selected) {
+  border-color: #35d7c7;
+  background: rgba(0, 159, 146, .5);
+  box-shadow: 0 0 0 2px rgba(53, 215, 199, .14);
+}
+
+html[data-theme-choice='green'] .busfahrer-page :is(input[type='radio'], input[type='range']) {
+  accent-color: #00b8ad;
+}
+
+html[data-theme-choice='green'] .busfahrer-page .sound-toggle input:checked + span {
+  border-color: #35d7c7;
+  background: var(--green-primary);
+}
+
+html[data-theme-choice='green'] .busfahrer-page :is(.setup-modal-backdrop, .klatschen-held-dialog-backdrop, .klatschen-players-backdrop) {
+  background: rgba(0, 29, 32, .65);
+}
+
+html[data-theme-choice='green'] .busfahrer-page :is(.setup-modal, .klatschen-held-dialog, .klatschen-players-dialog, .card-name-dialog, .card-delete-dialog) {
+  border-color: var(--green-border);
+  background: linear-gradient(155deg, #00575a, #003237);
+  box-shadow: 0 24px 55px rgba(0, 25, 28, .45);
+}
+
+/* Keep card types and red/blue game choices distinguishable. */
+html[data-theme-choice='green'] .klatschen-shell {
+  --blobba-yellow: #20caba;
+}
+
+html[data-theme-choice='green'] .klatschen-shell :is(.klatschen-card-back, .klatschen-drawn-back) {
+  background: repeating-linear-gradient(45deg, #006d69 0 6px, #009c91 6px 12px);
+}
+
+html[data-theme-choice='green'] .busfahrer-page .card-back {
+  background: repeating-linear-gradient(45deg, #006d69 0 var(--card-back-stripe), #009c91 var(--card-back-stripe) calc(var(--card-back-stripe) + var(--card-back-stripe)));
+}
+
+html[data-theme-choice='green'] .klatschen-effect-slot:not(.is-filled) {
+  border-color: #397c78;
+  background: linear-gradient(145deg, #315f5d, #214947);
+}
+
+html[data-theme-choice='green'] .busfahrer-page .hand-cards p {
+  color: rgba(223, 250, 245, .72);
+}
+
+html[data-theme-choice='green'] .klatschen-drawn-card:not(.is-effect-card):not(.is-rule-card) .klatschen-drawn-front {
+  color: #073b3b;
+  background: linear-gradient(145deg, #fff, #e3f7f2);
+}
+
+html[data-theme-choice='green'] .klatschen-drawn-front :is(h2, small) {
+  color: #006d68;
+}
+
+html[data-theme-choice='green'] .busfahrer-page :is(.setup-title, .setup-shell .busfahrer-header h1, .busfahrer-game-title > span, .klatschen-shell > .busfahrer-header h1) {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 38, 38, .42);
+}
