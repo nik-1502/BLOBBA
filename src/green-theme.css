@@ -219,3 +219,67 @@ html[data-theme-choice='green'] .busfahrer-page :is(.setup-title, .setup-shell .
   -webkit-text-fill-color: #fff;
   text-shadow: 0 2px 8px rgba(0, 38, 38, .42);
 }
+
+/* Blobben: blue depth and warm yellow accents within the green design. */
+html[data-theme-choice='green'] .busfahrer-page.player-selection-blobben {
+  --blobben-blue: #087ec2;
+  --blobben-blue-light: #33bfea;
+  --blobben-yellow: #ffd05a;
+  --setup-orange-top: #21a8df;
+  --setup-orange: #087ec2;
+  --setup-orange-bottom: #075f9b;
+}
+
+html[data-theme-choice='green'] .busfahrer-page.player-selection-blobben .setup-game-panel {
+  border-color: rgba(74, 204, 220, .48);
+  background: linear-gradient(155deg, #005a60, #003e55);
+}
+
+html[data-theme-choice='green'] .busfahrer-page.player-selection-blobben :is(.setup-mode-switch .is-active, .game-button.primary) {
+  border-color: #45c9ed;
+  background: linear-gradient(180deg, #21a8df, #0875b9);
+  box-shadow: 0 7px 16px rgba(0, 43, 61, .28), inset 0 1px rgba(255, 255, 255, .18);
+}
+
+html[data-theme-choice='green'] .busfahrer-page.player-selection-blobben :is(.selection-utility-button, .setup-utility-close) {
+  border-color: rgba(97, 202, 230, .55);
+  background: linear-gradient(180deg, #075f79, #00465c);
+}
+
+html[data-theme-choice='green'] .busfahrer-page.player-selection-blobben :is(.card-preset-option.is-selected, .custom-card-preset.is-selected) {
+  border-color: #5ed2ed;
+  background: rgba(0, 118, 165, .68);
+  box-shadow: 0 0 0 2px rgba(94, 210, 237, .14);
+}
+
+html[data-theme-choice='green'] .busfahrer-page.player-selection-blobben :is(.setup-utility-modal > .eyebrow, .card-count-row output) {
+  color: #ffd05a;
+}
+
+html[data-theme-choice='green'] #klatschen-game .klatschen-shell {
+  --blobba-yellow: #ffd05a;
+}
+
+html[data-theme-choice='green'] :is(.player-selection-blobben .setup-title, #klatschen-game .busfahrer-header h1) {
+  color: #ffda70 !important;
+  -webkit-text-fill-color: #ffda70;
+}
+
+html[data-theme-choice='green'] #klatschen-game :is(.klatschen-play-screen, .klatschen-card-screen, .klatschen-rule-screen, .klatschen-summary, .klatschen-partner-target-screen) {
+  border-color: rgba(74, 204, 220, .48);
+  background: linear-gradient(155deg, #005a60, #003e55);
+}
+
+html[data-theme-choice='green'] #klatschen-game .game-button.primary:not([data-klatschen-action='exit']) {
+  border-color: #45c9ed;
+  background: linear-gradient(180deg, #21a8df, #0875b9);
+  box-shadow: 0 7px 16px rgba(0, 43, 61, .28), inset 0 1px rgba(255, 255, 255, .18);
+}
+
+html[data-theme-choice='green'] #klatschen-game :is(.klatschen-card-back, .klatschen-drawn-back) {
+  background: repeating-linear-gradient(45deg, #07579b 0 6px, #078fc6 6px 12px);
+}
+
+html[data-theme-choice='green'] #klatschen-game .klatschen-drawn-card:not(.is-effect-card):not(.is-rule-card) .klatschen-drawn-front {
+  border-color: #eebc38;
+}
