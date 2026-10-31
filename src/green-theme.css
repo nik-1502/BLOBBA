@@ -266,44 +266,9 @@ html[data-theme-choice='green'] :is(.player-selection-blobben .setup-title, #kla
 }
 
 html[data-theme-choice='green'] #klatschen-game .busfahrer-header h1 {
-  position: relative;
-  z-index: 1;
-  color: #ffba39 !important;
-  background: linear-gradient(180deg, #ffe28b 5%, #ffc44c 48%, #ff9f18 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 2px 0 #885009) drop-shadow(0 3px 3px rgba(0, 32, 40, .65));
-}
-
-html[data-theme-choice='green'] #klatschen-game .busfahrer-header > div {
-  position: relative;
-  isolation: isolate;
-}
-
-html[data-theme-choice='green'] #klatschen-game .busfahrer-header > div::before,
-html[data-theme-choice='green'] #klatschen-game .busfahrer-header > div::after {
-  content: '';
-  position: absolute;
-  z-index: 0;
-  width: 8px;
-  height: 12px;
-  border-radius: 70% 70% 65% 65%;
-  background: linear-gradient(145deg, #a7fff3, #13bfbd 70%, #008b91);
-  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, .65), 0 2px 3px rgba(0, 34, 40, .35);
-  pointer-events: none;
-}
-
-html[data-theme-choice='green'] #klatschen-game .busfahrer-header > div::before {
-  left: 2%;
-  top: 8%;
-  transform: rotate(-38deg);
-}
-
-html[data-theme-choice='green'] #klatschen-game .busfahrer-header > div::after {
-  right: 2%;
-  bottom: 7%;
-  transform: rotate(40deg) scale(.8);
+  color: #ffb12e !important;
+  -webkit-text-fill-color: #ffb12e;
+  text-shadow: 0 2px 4px rgba(0, 28, 32, .85);
 }
 
 html[data-theme-choice='green'] #klatschen-game :is(.klatschen-play-screen, .klatschen-card-screen, .klatschen-rule-screen, .klatschen-summary, .klatschen-partner-target-screen) {
