@@ -260,6 +260,12 @@ function currentPlayerFooterMarkup() {
   return `<div class="current-player-footer">${playerTargetAvatarMarkup(player)}<strong class="player-name-color" ${playerNameColor(player)}>${escapeHtml(player.name)}</strong></div>`
 }
 
+function landscapePyramidSidebarMarkup() {
+  if (phase !== 'pyramid' || pyramidDecision?.step !== 'target') return ''
+  const player = currentPlayer()
+  return `<div class="landscape-pyramid-sidebar">${handMarkup()}<div class="current-player-footer">${playerTargetAvatarMarkup(player)}<strong class="player-name-color" ${playerNameColor(player)}>${escapeHtml(player.name)}</strong></div></div>`
+}
+
 function busUsedCardsMarkup() {
   const grouped = new Map<number, Card[]>()
   for (const card of busfahrerUsedCards) grouped.set(card.value, [...(grouped.get(card.value) ?? []), card])
@@ -541,7 +547,7 @@ function renderGame() {
   gameRoot.innerHTML = `<div class="busfahrer-shell"><header class="busfahrer-header">
     <button class="back-button bus-back blobba-nav-action ipad-pwa-header-button" type="button" data-action="back">Beenden</button><div><p>BLOBBA präsentiert</p><h1 class="busfahrer-game-title"><span>BLOBB-</span><span>FAHRER</span></h1></div>
     <button class="restart-button blobba-nav-action ipad-pwa-header-button" type="button" data-action="restart">Neu starten</button></header>
-    <p class="responsibility-note">Trink verantwortungsvoll. Dieses Spiel ist nur für Erwachsene.</p><div class="game-stage">${content}${phase === 'bus' ? busUsedCardsMarkup() : ''}${currentPlayerFooterMarkup()}</div></div>`
+    <p class="responsibility-note">Trink verantwortungsvoll. Dieses Spiel ist nur für Erwachsene.</p><div class="game-stage">${content}${phase === 'bus' ? busUsedCardsMarkup() : ''}${currentPlayerFooterMarkup()}${landscapePyramidSidebarMarkup()}</div></div>`
   gameRoot.querySelector('.responsibility-note')?.remove()
   alignPyramidOfferChoices()
   applyOnlineControls()
