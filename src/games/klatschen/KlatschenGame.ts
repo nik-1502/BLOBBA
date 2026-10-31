@@ -673,6 +673,16 @@ function updateMiddleLayout() {
       element.style.removeProperty('height')
     })
     fitCurrentPlayerDisplay()
+    const screen = root?.querySelector<HTMLElement>('.klatschen-play-screen, .klatschen-card-screen')
+    const turn = screen?.querySelector<HTMLElement>('.klatschen-turn')
+    const controls = turn?.parentElement
+    const button = screen?.querySelector<HTMLElement>('.klatschen-draw-button, .klatschen-next-button')
+    const effectSlots = screen?.querySelectorAll<HTMLElement>('.klatschen-held-cards .klatschen-effect-slot')
+    if (turn && controls && button && effectSlots?.length) {
+      const slotsBottom = Math.max(...Array.from(effectSlots, (slot) => slot.getBoundingClientRect().bottom))
+      const buttonTop = button.getBoundingClientRect().top
+      turn.style.top = `${(slotsBottom + buttonTop) / 2 - controls.getBoundingClientRect().top}px`
+    }
     return
   }
   fitCurrentPlayerDisplay()
