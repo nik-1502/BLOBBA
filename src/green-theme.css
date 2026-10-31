@@ -298,6 +298,13 @@ html[data-theme-choice='green'] .klatschen-drawn-front h2 {
   color: #082f68;
 }
 
+html[data-theme-choice='green'] .klatschen-card-sprite {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
 html[data-theme-choice='green'] .busfahrer-page :is(.setup-title, .setup-shell .busfahrer-header h1, .busfahrer-game-title > span, .klatschen-shell > .busfahrer-header h1) {
   color: #fff !important;
   -webkit-text-fill-color: #fff;

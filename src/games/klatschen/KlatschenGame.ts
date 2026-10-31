@@ -8,6 +8,7 @@ import noseEffectIconUrl from '../../assets/smileys/processed/nose.png'
 import doubleEffectIconUrl from '../../assets/smileys/processed/double.png'
 import partnerEffectIconUrl from '../../assets/smileys/processed/partner.png'
 import questionMasterEffectIconUrl from '../../assets/smileys/processed/question-master.png'
+import greenCardIconSheetUrl from '../../assets/karten smileys/Glänzende blaue Cartoon-Icon-Sammlung.png'
 
 export type KlatschenPlayerSetup = { id?: string; name: string; avatar: string; avatarColor: string }
 export type KlatschenPlayer = KlatschenPlayerSetup & { id: string; drinks: number; heldCards: string[]; partnerIds: string[] }
@@ -188,6 +189,28 @@ function cardSymbolMarkup(card: KlatschenCard, extraClass = '') {
   return effectIconName(card.id) ? effectIconMarkup(card.id, extraClass) : escapeHtml(card.symbol)
 }
 
+// Die Grenzen liegen zwischen den Motiven, damit auch die kleinen Spritzer
+// zum jeweiligen Bild gehören. Das Originalbild bleibt dabei unverändert.
+const greenCardIconColumns = [0, 285, 535, 755, 1060, 1278, 1536]
+const greenCardIconRows = [0, 285, 532, 768, 1024]
+const greenCardIcons: Record<string, readonly [number, number]> = {
+  '👏': [0, 0], '🎁': [1, 0], '👉': [2, 0], '🙌': [3, 0], '✨': [4, 0], '⬅️': [5, 0],
+  '➡️': [0, 1], '💭': [1, 1], '🎤': [2, 1], '📜': [3, 1], '👥': [4, 1], '👕': [5, 1],
+  '⏰': [0, 2], '🗳️': [1, 2], '✊': [2, 2], '👀': [3, 2], '📖': [4, 2], '🌊': [5, 2],
+  '🥂': [0, 3], '👍': [1, 3], '👃': [2, 3], '✌️': [3, 3], '🤝': [4, 3], '🤐': [5, 3],
+}
+
+function drawnCardSymbolMarkup(card: KlatschenCard) {
+  const cell = document.documentElement.dataset.themeChoice === 'green' ? greenCardIcons[card.symbol] : undefined
+  if (!cell) return cardSymbolMarkup(card)
+  const [column, row] = cell
+  const x = greenCardIconColumns[column]!
+  const y = greenCardIconRows[row]!
+  const width = greenCardIconColumns[column + 1]! - x
+  const height = greenCardIconRows[row + 1]! - y
+  return `<svg class="klatschen-card-sprite" viewBox="${x} ${y} ${width} ${height}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><image href="${greenCardIconSheetUrl}" x="0" y="0" width="1536" height="1024" /></svg>`
+}
+
 function effectCardPriority(cardId: string) {
   if (cardId.startsWith('nose-clapper')) return 0
   if (cardId.startsWith('thumb-clapper')) return 1
@@ -287,7 +310,7 @@ function drawnCardMarkup(card: KlatschenCard) {
   const effectClass = activeEffect ? ` is-effect-card effect-${activeEffect}` : ''
   const ruleClass = card.type === 'temporary-rule' ? ' is-rule-card' : ''
   const backSymbol = document.documentElement.dataset.themeChoice === 'green' ? '<span><i>B</i>B</span>' : ''
-  return `<article class="klatschen-drawn-card${effectClass}${ruleClass}" style="--draw-angle:${angle}deg;--draw-counter-angle:${-angle}deg"><div class="klatschen-drawn-inner${settled ? ' is-settled' : ''}"><div class="klatschen-drawn-back" aria-hidden="true">${backSymbol}</div><div class="klatschen-drawn-front"><h2>${escapeHtml(card.title)}</h2><span class="klatschen-card-symbol" aria-hidden="true">${cardSymbolMarkup(card)}</span><p>${escapeHtml(card.description)}</p>${card.suggestedRule ? `<small>Vorschlag: ${escapeHtml(card.suggestedRule)}</small>` : ''}</div></div></article>`
+  return `<article class="klatschen-drawn-card${effectClass}${ruleClass}" style="--draw-angle:${angle}deg;--draw-counter-angle:${-angle}deg"><div class="klatschen-drawn-inner${settled ? ' is-settled' : ''}"><div class="klatschen-drawn-back" aria-hidden="true">${backSymbol}</div><div class="klatschen-drawn-front"><h2>${escapeHtml(card.title)}</h2><span class="klatschen-card-symbol" aria-hidden="true">${drawnCardSymbolMarkup(card)}</span><p>${escapeHtml(card.description)}</p>${card.suggestedRule ? `<small>Vorschlag: ${escapeHtml(card.suggestedRule)}</small>` : ''}</div></div></article>`
 }
 
 function needsTarget(card: KlatschenCard) {
