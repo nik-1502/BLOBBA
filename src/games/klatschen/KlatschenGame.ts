@@ -9,6 +9,7 @@ import doubleEffectIconUrl from '../../assets/smileys/processed/double.png'
 import partnerEffectIconUrl from '../../assets/smileys/processed/partner.png'
 import questionMasterEffectIconUrl from '../../assets/smileys/processed/question-master.png'
 import greenCardIconSheetUrl from '../../assets/karten smileys/Glänzende blaue Cartoon-Icon-Sammlung.png'
+import greenQuestionMasterIconUrl from '../../assets/karten smileys/1b32411b-e9c9-474c-9b45-3f31f2e4c803.png'
 import { greenCardIconShapes } from './greenCardIconShapes'
 
 export type KlatschenPlayerSetup = { id?: string; name: string; avatar: string; avatarColor: string }
@@ -199,6 +200,9 @@ const greenCardIcons: Record<string, readonly [number, number]> = {
 }
 
 function drawnCardSymbolMarkup(card: KlatschenCard) {
+  if (document.documentElement.dataset.themeChoice === 'green' && card.id.startsWith('question-rule')) {
+    return `<img class="klatschen-effect-icon" src="${greenQuestionMasterIconUrl}" alt="" aria-hidden="true" draggable="false">`
+  }
   const greenSymbol = card.type === 'drink-self' ? '👉'
     : card.type === 'choose-player' || card.type === 'distribute' ? '🎁'
       : card.symbol
