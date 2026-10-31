@@ -666,6 +666,15 @@ function positionNextButton() {
 }
 
 function updateMiddleLayout() {
+  if (document.documentElement.dataset.themeChoice === 'green' && window.matchMedia('(orientation: landscape)').matches) {
+    root?.querySelectorAll<HTMLElement>('.klatschen-card-circle, .klatschen-turn, .klatschen-draw-button, .klatschen-next-button, .klatschen-players-button, .klatschen-drawn-card').forEach((element) => element.style.removeProperty('top'))
+    root?.querySelectorAll<HTMLElement>('.klatschen-turn > .klatschen-avatar').forEach((element) => {
+      element.style.removeProperty('width')
+      element.style.removeProperty('height')
+    })
+    fitCurrentPlayerDisplay()
+    return
+  }
   fitCurrentPlayerDisplay()
   positionMiddleLayout()
   positionNextButton()

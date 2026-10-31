@@ -1,12 +1,24 @@
 /* Green mode only: paint overrides, with layout and interaction unchanged. */
 html[data-theme-choice='green'] {
   --green-page: radial-gradient(ellipse at 50% 35%, #007e80 0%, #007375 58%, #006e70 100%);
+  --app-background: var(--green-page);
+  --pwa-neon-background: var(--green-page);
   --green-panel: linear-gradient(155deg, rgba(0, 79, 82, .96), rgba(0, 50, 55, .97));
   --green-surface: rgba(0, 58, 62, .78);
   --green-button: linear-gradient(180deg, #00565a, #00383e);
   --green-primary: linear-gradient(180deg, #00b8ad, #009b93);
   --green-border: rgba(14, 207, 194, .55);
   --green-shadow: 0 8px 20px rgba(0, 37, 39, .28);
+}
+
+html[data-theme-choice='green'] .app-neon-background,
+html[data-theme-choice='green'].is-standalone .app-neon-background {
+  background: var(--green-page);
+}
+
+html[data-theme-choice='green'] .app-neon-background::before,
+html[data-theme-choice='green'] .app-neon-background::after {
+  content: none;
 }
 
 /* The home filter uses the same petrol surfaces as its controls. */
@@ -371,4 +383,166 @@ html[data-theme-choice='green'] #klatschen-game .klatschen-card-back {
 
 html[data-theme-choice='green'] #klatschen-game .klatschen-drawn-card:not(.is-effect-card):not(.is-rule-card) .klatschen-drawn-front {
   border-color: #eebc38;
+}
+
+/* Querformat ist ein eigenes Layout; Hochformat bleibt unverändert. */
+@media (orientation: landscape) {
+  html[data-theme-choice='green'] #klatschen-game :is(.klatschen-play-screen, .klatschen-card-screen) {
+    --circle-radius: clamp(60px, 19dvh, 190px);
+    --circle-card-width: clamp(19px, 5dvh, 38px);
+    height: 100%;
+    margin: 0;
+  }
+
+  html[data-theme-choice='green'] #klatschen-game .klatschen-card-circle {
+    left: 27%;
+    top: 50%;
+  }
+
+  html[data-theme-choice='green'] #klatschen-game .klatschen-held-cards {
+    top: 4px;
+    right: 2%;
+    left: 53%;
+    height: clamp(42px, 14dvh, 72px);
+  }
+
+  html[data-theme-choice='green'] #klatschen-game .klatschen-effect-slot {
+    min-height: clamp(30px, 10dvh, 48px);
+  }
+
+  html[data-theme-choice='green'] #klatschen-game .klatschen-held-cards .klatschen-effect-icon {
+    width: clamp(24px, 8dvh, 42px);
+    height: clamp(24px, 8dvh, 42px);
+  }
+
+  html[data-theme-choice='green'] #klatschen-game .klatschen-turn {
+    top: 46%;
+    left: 75%;
+    width: 42%;
+    transform: translate(-50%, -50%);
+  }
+
+  html[data-theme-choice='green'] #klatschen-game .klatschen-turn .klatschen-avatar {
+    width: clamp(46px, 21dvh, 150px);
+    height: clamp(46px, 21dvh, 150px);
+  }
+
+  html[data-theme-choice='green'] #klatschen-game .klatschen-turn strong {
+    font-size: clamp(1rem, 5dvh, 2rem);
+  }
+
+  html[data-theme-choice='green'] #klatschen-game :is(.klatschen-draw-button, .klatschen-next-button) {
+    top: auto;
+    right: 3%;
+    bottom: clamp(40px, 13dvh, 65px);
+    left: 53%;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+  }
+
+  html[data-theme-choice='green'] #klatschen-game .klatschen-players-button {
+    top: auto;
+    right: 3%;
+    bottom: 5px;
+    left: 53%;
+  }
+
+  html[data-theme-choice='green'] #klatschen-game .klatschen-drawn-card {
+    left: 27%;
+    top: 50%;
+    width: min(40dvh, 38vw, 260px);
+  }
+
+  html[data-theme-choice='green'] .player-selection-page .setup-stage {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  html[data-theme-choice='green'] .player-selection-page .setup-stack {
+    min-height: 400px;
+  }
+
+  html[data-theme-choice='green'] #busfahrer-game .player-turn-wrap {
+    --turn-avatar-size: clamp(70px, 32dvh, 180px);
+    --turn-avatar-gap: clamp(2px, 1dvh, 8px);
+    --turn-frame-bottom-gap: 4px;
+    align-content: center;
+  }
+
+  html[data-theme-choice='green'] #busfahrer-game .turn-player-name {
+    font-size: clamp(1.4rem, 7dvh, 3rem);
+  }
+
+  html[data-theme-choice='green'] #busfahrer-game .game-stage:has(:is(.question-panel, .pyramid-panel, .bus-panel)) {
+    --question-hand-frame-height: clamp(42px, 15dvh, 80px);
+    --question-frame-gap: clamp(4px, 1.2dvh, 8px);
+    --question-hand-title-height: clamp(12px, 3dvh, 20px);
+  }
+
+  html[data-theme-choice='green'] #busfahrer-game .game-stage:has(.question-panel) .question-panel {
+    --phase-one-control-height: clamp(34px, 10dvh, 52px);
+  }
+
+  html[data-theme-choice='green'] #busfahrer-game :is(.question-panel, .pyramid-panel, .bus-panel) {
+    height: 100%;
+  }
+
+  html[data-theme-choice='green'] .home-page {
+    min-height: 100dvh;
+    padding: 5px max(16px, env(safe-area-inset-right)) 8px max(16px, env(safe-area-inset-left));
+    overflow-y: auto;
+  }
+
+  html[data-theme-choice='green'] .home-page .hero-header {
+    height: clamp(48px, 17dvh, 90px);
+    margin: 0 auto;
+    transform: none;
+  }
+
+  html[data-theme-choice='green'] .home-page .hero-logo-picture-new {
+    width: min(42vw, 260px);
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  html[data-theme-choice='green'] .home-page .home-profile-button {
+    width: clamp(38px, 12dvh, 54px);
+    height: clamp(38px, 12dvh, 54px);
+  }
+
+  html[data-theme-choice='green'] .home-page .home-games-area {
+    display: grid;
+    width: min(820px, 100%);
+    margin: 0 auto;
+    grid-template-columns: minmax(150px, .9fr) minmax(240px, 1.1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    align-items: start;
+    gap: 4px 16px;
+    transform: none;
+  }
+
+  html[data-theme-choice='green'] .home-page .game-filters {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+    gap: 8px;
+  }
+
+  html[data-theme-choice='green'] .home-page .home-section-title {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  html[data-theme-choice='green'] .home-page .game-list {
+    grid-column: 2;
+    grid-row: 2;
+    width: 100%;
+    max-height: calc(100dvh - clamp(85px, 25dvh, 120px));
+    justify-content: center;
+  }
+
+  html[data-theme-choice='green'] .home-page .game-tile-wrap {
+    max-width: min(43%, 30dvh);
+  }
 }
