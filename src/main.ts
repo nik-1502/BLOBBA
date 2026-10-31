@@ -37,7 +37,7 @@ import heroLogo from './assets/überschrift/blobba-logo-clean-outlined.png'
 import heroLogoNeon from './assets/überschrift/blobba-logo-neon-original.png'
 import heroLogoNeonMobile from './assets/überschrift/blobba-logo-neon-mobile.png'
 import heroLogoNeonNew from './assets/überschrift bild/2ebf5e57-5e17-4282-ab95-d4ab0df2624c.png'
-import heroLogoGreen from './assets/überschrift bild/Glänzendes BLOBBA-Logo in Weiß.png'
+import heroLogoGreen from './assets/überschrift bild/Glänzendes BLOBBA-Bubble-Logo.png'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 
