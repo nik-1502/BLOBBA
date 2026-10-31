@@ -276,9 +276,25 @@ html[data-theme-choice='green'] #klatschen-game .busfahrer-header h1 {
 html[data-theme-choice='green'] .player-selection-busfahrer .setup-title,
 html[data-theme-choice='green'] #busfahrer-game .busfahrer-game-title {
   color: transparent !important;
-  -webkit-text-fill-color: transparent;
+  -webkit-text-fill-color: transparent !important;
   background: url('./assets/busfahrer bild/Glänzendes BLOBB-FAHRER Logo.png') center / contain no-repeat;
   text-shadow: none;
+}
+
+html[data-theme-choice='green'] .player-selection-busfahrer .setup-title {
+  background: none;
+}
+
+html[data-theme-choice='green'] .player-selection-busfahrer .setup-title::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: clamp(58px, 17vw, 84px);
+  transform: translate(-50%, -50%);
+  background: url('./assets/busfahrer bild/Glänzendes BLOBB-FAHRER Logo.png') center / contain no-repeat;
+  pointer-events: none;
 }
 
 html[data-theme-choice='green'] #busfahrer-game .busfahrer-header {
@@ -288,6 +304,7 @@ html[data-theme-choice='green'] #busfahrer-game .busfahrer-header {
 html[data-theme-choice='green'] #busfahrer-game .busfahrer-header > div {
   position: relative;
   min-width: 0;
+  align-self: stretch;
 }
 
 html[data-theme-choice='green'] #busfahrer-game .busfahrer-game-title {
@@ -295,7 +312,7 @@ html[data-theme-choice='green'] #busfahrer-game .busfahrer-game-title {
   top: 50%;
   left: 50%;
   width: 100%;
-  height: clamp(28px, 7vw, 48px);
+  height: clamp(42px, 11vw, 64px);
   margin: 0;
   translate: -50% -50%;
 }
