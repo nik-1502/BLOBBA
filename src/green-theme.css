@@ -266,23 +266,10 @@ html[data-theme-choice='green'] :is(.player-selection-blobben .setup-title, #kla
 }
 
 html[data-theme-choice='green'] #klatschen-game .busfahrer-header h1 {
-  overflow: visible;
-  color: #8deaff !important;
-  background: linear-gradient(180deg, #fff 8%, #e7faff 39%, #8eeeff 68%, #19baf1 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
+  color: transparent !important;
+  background: url('./assets/blobben bild/55904053-a820-4d06-a35d-66dce05ebcc3.png') center / contain no-repeat;
   -webkit-text-fill-color: transparent;
-  -webkit-text-stroke: .5px #003a80;
-  paint-order: stroke fill;
   text-shadow: none;
-  filter: drop-shadow(0 1px 0 #00488f)
-    drop-shadow(0 1px 0 #003575)
-    drop-shadow(1px 0 0 #00c9d5)
-    drop-shadow(-1px 0 0 #00c9d5)
-    drop-shadow(0 -1px 0 #00c9d5)
-    drop-shadow(1px 1px 0 #ffab00)
-    drop-shadow(-1px -1px 0 #ffab00)
-    drop-shadow(0 2px 1px rgba(0, 30, 44, .8));
 }
 
 html[data-theme-choice='green'] #klatschen-game :is(.klatschen-play-screen, .klatschen-card-screen, .klatschen-rule-screen, .klatschen-summary, .klatschen-partner-target-screen) {
