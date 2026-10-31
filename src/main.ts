@@ -36,6 +36,7 @@ import heroLogo from './assets/überschrift/blobba-logo-clean-outlined.png'
 import heroLogoNeon from './assets/überschrift/blobba-logo-neon-original.png'
 import heroLogoNeonMobile from './assets/überschrift/blobba-logo-neon-mobile.png'
 import heroLogoNeonNew from './assets/überschrift bild/2ebf5e57-5e17-4282-ab95-d4ab0df2624c.png'
+import heroLogoGreen from './assets/überschrift bild/Glänzendes BLOBBA-3D-Logo.png'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 
@@ -358,6 +359,23 @@ function alignHomeHeaderButtons() {
   const logo = app.querySelector<HTMLImageElement>('.home-page .hero-logo')
   const buttons = app.querySelectorAll<HTMLButtonElement>('.home-page .home-profile-button')
   if (!logo || buttons.length === 0 || logo.getBoundingClientRect().height === 0) return
+  if (appTheme === 'green' && buttons.length === 2) {
+    logo.style.transform = 'none'
+    const logoRect = logo.getBoundingClientRect()
+    const first = buttons[0].getBoundingClientRect()
+    const second = buttons[1].getBoundingClientRect()
+    // Center the visible artwork, whose transparent margins are not quite symmetric.
+    const artworkCenterX = logoRect.left + logoRect.width * (1098 / 2172)
+    const buttonCenterX = (first.left + first.width / 2 + second.left + second.width / 2) / 2
+    const artworkCenterY = logoRect.top + logoRect.height * (370 / 724)
+    logo.style.transform = `translateX(${buttonCenterX - artworkCenterX}px)`
+    buttons.forEach((button) => {
+      const parent = button.offsetParent as HTMLElement | null
+      const parentTop = parent?.getBoundingClientRect().top ?? 0
+      button.style.top = `${artworkCenterY - parentTop - button.offsetHeight / 2}px`
+    })
+    return
+  }
   const logoRect = logo.getBoundingClientRect()
   const visibleLogoCenterRatio = isDarkAppTheme() ? 0.438 : 0.517
   const centerY = logoRect.top + (logoRect.height * visibleLogoCenterRatio)
@@ -1211,7 +1229,7 @@ function renderHome() {
     <header class="hero-header">
       ${usesNewDarkStyle()
         ? `<picture class="hero-logo-picture hero-logo-picture-new">
-            <img class="hero-logo" src="${heroLogoNeonNew}" alt="BLOBBA">
+            <img class="hero-logo" src="${appTheme === 'green' ? heroLogoGreen : heroLogoNeonNew}" alt="BLOBBA">
           </picture>`
         : appTheme === 'neon'
         ? `<picture class="hero-logo-picture">

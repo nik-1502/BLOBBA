@@ -909,6 +909,11 @@ html[data-theme-variant='neon-new'] .home-page .hero-logo-picture-new .hero-logo
   height: 100%;
 }
 
+html[data-theme-choice='green'] .home-page .hero-logo-picture-new .hero-logo {
+  height: auto;
+  animation: none;
+}
+
 .home-page {
   transform: none;
 }
