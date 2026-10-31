@@ -21,6 +21,54 @@ html[data-theme-choice='green'] .app-neon-background::after {
   content: none;
 }
 
+html[data-theme-choice='green'] .game-leave-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: grid;
+  padding: 16px;
+  place-items: center;
+  background: rgba(0, 29, 32, .65);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+
+html[data-theme-choice='green'] .game-leave-dialog {
+  display: grid;
+  width: min(420px, 100%);
+  max-height: 100%;
+  padding: clamp(18px, 4vw, 28px);
+  overflow: auto;
+  border: 2px solid var(--green-border);
+  border-radius: 22px;
+  gap: 16px;
+  color: #fff;
+  background: linear-gradient(155deg, #00575a, #003237);
+  box-shadow: 0 24px 55px rgba(0, 25, 28, .45);
+  text-align: center;
+}
+
+html[data-theme-choice='green'] .game-leave-dialog :is(h2, p) {
+  margin: 0;
+}
+
+html[data-theme-choice='green'] .game-leave-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+html[data-theme-choice='green'] .game-leave-actions .game-button {
+  min-height: 44px;
+  color: #fff;
+  border-color: var(--green-violet-border);
+  background: var(--green-button);
+}
+
+html[data-theme-choice='green'] .game-leave-actions .game-button.primary {
+  background: var(--green-violet);
+}
+
 /* The home filter uses the same petrol surfaces as its controls. */
 html[data-theme-choice='green'] .home-page .category-menu {
   border-color: var(--green-border);

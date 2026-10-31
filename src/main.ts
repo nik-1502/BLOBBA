@@ -58,11 +58,45 @@ document.addEventListener('click', (event) => {
   if (!navButton || !game || isPageTransitionRunning) return
   event.preventDefault()
   event.stopImmediatePropagation()
-  playSound('ui-back')
   const isExit = navButton.dataset.action === 'back' || navButton.dataset.klatschenAction === 'exit'
   const targetHash = isExit ? '' : activeGame === 'busfahrer' ? `${activeGame}-${setupMode}` : `${activeGame}-menu`
+  if (appTheme === 'green') {
+    showGameLeaveConfirmation(navButton, isExit, targetHash)
+    return
+  }
+  playSound('ui-back')
   void navigateWithHorizontalSlide(targetHash, 'back')
 }, true)
+
+function showGameLeaveConfirmation(trigger: HTMLButtonElement, isExit: boolean, targetHash: string) {
+  if (app.querySelector('.game-leave-backdrop')) return
+  playSound('ui-click')
+  const backdrop = document.createElement('div')
+  backdrop.className = 'game-leave-backdrop'
+  backdrop.innerHTML = `<section class="game-leave-dialog" role="dialog" aria-modal="true" aria-labelledby="game-leave-title" aria-describedby="game-leave-description">
+    <h2 id="game-leave-title">${isExit ? 'Spiel beenden?' : 'Spiel neu starten?'}</h2>
+    <p id="game-leave-description">${isExit ? 'Möchtest du das Spiel wirklich beenden?' : 'Möchtest du das Spiel wirklich neu starten?'}</p>
+    <div class="game-leave-actions"><button type="button" class="game-button" data-leave-cancel>Nein</button><button type="button" class="game-button primary" data-leave-confirm>Ja</button></div>
+  </section>`
+  app.append(backdrop)
+  const cancel = backdrop.querySelector<HTMLButtonElement>('[data-leave-cancel]')!
+  const confirm = backdrop.querySelector<HTMLButtonElement>('[data-leave-confirm]')!
+  const close = () => { backdrop.remove(); if (trigger.isConnected) trigger.focus({ preventScroll: true }) }
+  cancel.addEventListener('click', () => { playSound('ui-back'); close() })
+  confirm.addEventListener('click', () => {
+    backdrop.remove()
+    playSound('ui-back')
+    void navigateWithHorizontalSlide(targetHash, 'back')
+  })
+  backdrop.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') { event.preventDefault(); close() }
+    if (event.key === 'Tab') {
+      event.preventDefault()
+      ;(document.activeElement === cancel ? confirm : cancel).focus()
+    }
+  })
+  cancel.focus({ preventScroll: true })
+}
 
 const PROFILE_STORAGE_KEY = 'blobba.profiles.v1'
 const PREVIOUS_PROFILE_STORAGE_KEY = atob('Z2V0ZHJ1bmsucHJvZmlsZXMudjE=')
