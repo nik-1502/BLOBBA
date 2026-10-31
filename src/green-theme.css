@@ -286,6 +286,10 @@ html[data-theme-choice='green'] #klatschen-game :is(.klatschen-card-back, .klats
   background: #087fc2;
 }
 
+html[data-theme-choice='green'] #klatschen-game .klatschen-card-back {
+  background: #00bcae;
+}
+
 html[data-theme-choice='green'] #klatschen-game .klatschen-drawn-card:not(.is-effect-card):not(.is-rule-card) .klatschen-drawn-front {
   border-color: #eebc38;
 }
