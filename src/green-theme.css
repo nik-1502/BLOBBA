@@ -290,8 +290,12 @@ html[data-theme-choice='green'] .klatschen-drawn-card:not(.is-effect-card):not(.
   background: linear-gradient(145deg, #fff, #e3f7f2);
 }
 
-html[data-theme-choice='green'] .klatschen-drawn-front :is(h2, small) {
+html[data-theme-choice='green'] .klatschen-drawn-front small {
   color: #006d68;
+}
+
+html[data-theme-choice='green'] .klatschen-drawn-front h2 {
+  color: #082f68;
 }
 
 html[data-theme-choice='green'] .busfahrer-page :is(.setup-title, .setup-shell .busfahrer-header h1, .busfahrer-game-title > span, .klatschen-shell > .busfahrer-header h1) {
