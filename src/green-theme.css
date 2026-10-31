@@ -443,27 +443,31 @@ html[data-theme-choice='green'] #busfahrer-game .card-back {
 /* Querformat ist ein eigenes Layout; Hochformat bleibt unverändert. */
 @media (orientation: landscape) {
   html[data-theme-choice='green'] .primary-profile-page {
-    --profile-landscape-header-top: clamp(8px, 2vh, 20px);
-  }
-
-  html[data-theme-choice='green'].is-standalone .primary-profile-page {
-    --profile-landscape-header-top: calc(env(safe-area-inset-top, 0px) + clamp(8px, 2vh, 20px));
-  }
-
-  html[data-theme-choice='green'] .primary-profile-page .setup-title {
-    position: fixed;
-    top: calc(var(--profile-landscape-header-top) + 24px);
-    z-index: 2;
-    min-height: 0;
-    transform: translateY(-50%);
-  }
-
-  html[data-theme-choice='green'] .primary-profile-page .setup-stage {
-    overflow-x: hidden;
+    height: 100dvh;
+    overflow-x: hidden !important;
     overflow-y: auto !important;
     overscroll-behavior-y: contain;
     touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
+  }
+
+  html[data-theme-choice='green'] .primary-profile-page .setup-shell {
+    height: auto;
+    min-height: 100%;
+    padding-bottom: calc(20px + var(--keyboard-position-space, 0px));
+    overflow: visible;
+  }
+
+  html[data-theme-choice='green'] .primary-profile-page .setup-title {
+    position: absolute;
+    top: -48px;
+    z-index: 2;
+    min-height: 48px;
+    transform: none;
+  }
+
+  html[data-theme-choice='green'] .primary-profile-page .setup-stage {
+    overflow: visible !important;
   }
 
   html[data-theme-choice='green'] .primary-profile-page .setup-stack {

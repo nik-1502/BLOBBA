@@ -639,6 +639,10 @@ let appTouchLastY = 0
 const pageScrollResizeObserver = new ResizeObserver(() => schedulePageScrollModeUpdate())
 
 function getPageScrollContainer() {
+  if (appTheme === 'green' && window.matchMedia('(orientation: landscape)').matches) {
+    const profilePage = app.querySelector<HTMLElement>('.primary-profile-page')
+    if (profilePage) return profilePage
+  }
   return app.querySelector<HTMLElement>('.player-selection-page')
     ?? app.querySelector<HTMLElement>('.home-page')
     ?? app.querySelector<HTMLElement>('.setup-page .setup-stage')
@@ -2858,7 +2862,9 @@ async function submitAuth(email: string, password: string) {
 }
 
 function bindProfileNameKeyboardPosition(input: HTMLInputElement) {
-  const stage = input.closest<HTMLElement>('.setup-stage')
+  const stage = appTheme === 'green' && window.matchMedia('(orientation: landscape)').matches
+    ? input.closest<HTMLElement>('.primary-profile-page') ?? input.closest<HTMLElement>('.setup-stage')
+    : input.closest<HTMLElement>('.setup-stage')
   const viewport = window.visualViewport
   if (!stage) return
 
