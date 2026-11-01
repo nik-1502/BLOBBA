@@ -645,6 +645,19 @@ html[data-theme-choice='green'] :is(#busfahrer-game, #klatschen-game) .busfahrer
     font-size: clamp(.925rem, 4.5dvh, 1.8rem);
   }
 
+  html[data-theme-choice='green'].is-standalone #klatschen-game .klatschen-turn {
+    gap: calc(clamp(3px, .8vh, 7px) * .9);
+  }
+
+  html[data-theme-choice='green'].is-standalone #klatschen-game .klatschen-turn .klatschen-avatar {
+    width: calc(clamp(42px, 19dvh, 135px) * .9);
+    height: calc(clamp(42px, 19dvh, 135px) * .9);
+  }
+
+  html[data-theme-choice='green'].is-standalone #klatschen-game .klatschen-turn strong {
+    font-size: calc(clamp(.925rem, 4.5dvh, 1.8rem) * .9);
+  }
+
   html[data-theme-choice='green'] #klatschen-game :is(.klatschen-draw-button, .klatschen-next-button) {
     top: auto;
     right: 3%;
