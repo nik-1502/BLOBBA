@@ -664,6 +664,35 @@ html[data-theme-choice='green'] :is(#busfahrer-game, #klatschen-game) .busfahrer
     left: 27%;
     top: 50%;
     width: min(40dvh, 38vw, 260px);
+    height: auto;
+    aspect-ratio: 5 / 7;
+    container-type: inline-size;
+  }
+
+  html[data-theme-choice='green'] #klatschen-game .klatschen-drawn-front {
+    --card-content-gap: 3.5cqw;
+    --card-symbol-size: 34cqw;
+    padding: 7cqw;
+  }
+
+  html[data-theme-choice='green'] #klatschen-game :is(.klatschen-drawn-front, .klatschen-drawn-back) {
+    border-radius: 7.5cqw;
+  }
+
+  html[data-theme-choice='green'] #klatschen-game .klatschen-drawn-front h2 {
+    flex-shrink: 0;
+    font-size: 10cqw;
+  }
+
+  html[data-theme-choice='green'] #klatschen-game .klatschen-drawn-front p {
+    flex-shrink: 0;
+    font-size: 7cqw;
+  }
+
+  html[data-theme-choice='green'] #klatschen-game .klatschen-drawn-front small {
+    flex-shrink: 0;
+    margin-top: 2cqw;
+    font-size: 5.5cqw;
   }
 
   html[data-theme-choice='green'] .player-selection-page .setup-stage {

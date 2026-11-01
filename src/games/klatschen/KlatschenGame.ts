@@ -726,7 +726,27 @@ function positionNextButton() {
   if (drawnCard && sequence) drawnCard.style.top = `${((sequence.circleTop + sequence.circleBottom) / 2) - screenRect.top}px`
 }
 
+function fitLandscapeCardText() {
+  const front = root?.querySelector<HTMLElement>('.klatschen-drawn-front')
+  if (!front) return
+  const text = front.querySelector<HTMLElement>('p')
+  const suggestion = front.querySelector<HTMLElement>('small')
+  if (!text) return
+  text.style.removeProperty('font-size')
+  suggestion?.style.removeProperty('font-size')
+  if (document.documentElement.dataset.themeChoice !== 'green' || !window.matchMedia('(orientation: landscape)').matches) return
+
+  const textSize = Number.parseFloat(getComputedStyle(text).fontSize)
+  const suggestionSize = suggestion ? Number.parseFloat(getComputedStyle(suggestion).fontSize) : 0
+  // Keep the card and icon in place; reduce text only when the full copy does not fit.
+  for (let scale = .98; front.scrollHeight > front.clientHeight && scale >= .4; scale -= .02) {
+    text.style.fontSize = `${textSize * scale}px`
+    if (suggestion) suggestion.style.fontSize = `${suggestionSize * scale}px`
+  }
+}
+
 function updateMiddleLayout() {
+  fitLandscapeCardText()
   if (document.documentElement.dataset.themeChoice === 'green' && window.matchMedia('(orientation: landscape)').matches) {
     root?.querySelectorAll<HTMLElement>('.klatschen-card-circle, .klatschen-turn, .klatschen-draw-button, .klatschen-next-button, .klatschen-players-button, .klatschen-drawn-card').forEach((element) => element.style.removeProperty('top'))
     root?.querySelectorAll<HTMLElement>('.klatschen-turn > .klatschen-avatar').forEach((element) => {
