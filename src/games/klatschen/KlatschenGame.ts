@@ -193,9 +193,9 @@ function effectIconMarkup(cardId: string, extraClass = '', isSlot = false) {
       const source = name === 'nose' ? greenNoseIconUrl : greenDoubleIconUrl
       return `<img class="${className}" src="${source}" alt="" aria-hidden="true" draggable="false">`
     }
-    if (isSlot && (name === 'partner' || name === 'question-master')) {
-      const shape = name === 'partner' ? greenEffectIconShapes.partner : greenEffectIconShapes.questionMaster
-      const source = name === 'partner' ? greenCardIconSheetUrl : greenQuestionMasterIconUrl
+    if (isSlot && name === 'partner') {
+      const shape = greenEffectIconShapes.partner
+      const source = greenCardIconSheetUrl
       const maskId = `green-effect-symbol-${greenSpriteInstanceId++}`
       return `<svg class="${className}" viewBox="${shape.viewBox}" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><defs><clipPath id="${maskId}"><path d="${shape.path}" /></clipPath></defs><image href="${source}" width="${shape.width}" height="${shape.height}" clip-path="url(#${maskId})" /></svg>`
     }
