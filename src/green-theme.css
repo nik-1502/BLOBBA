@@ -635,12 +635,12 @@ html[data-theme-choice='green'] :is(#busfahrer-game, #klatschen-game) .busfahrer
   }
 
   html[data-theme-choice='green'] #klatschen-game .klatschen-turn .klatschen-avatar {
-    width: clamp(46px, 21dvh, 150px);
-    height: clamp(46px, 21dvh, 150px);
+    width: clamp(38px, 17dvh, 120px);
+    height: clamp(38px, 17dvh, 120px);
   }
 
   html[data-theme-choice='green'] #klatschen-game .klatschen-turn strong {
-    font-size: clamp(1rem, 5dvh, 2rem);
+    font-size: clamp(.85rem, 4dvh, 1.6rem);
   }
 
   html[data-theme-choice='green'] #klatschen-game :is(.klatschen-draw-button, .klatschen-next-button) {
