@@ -754,7 +754,9 @@ function updateMiddleLayout() {
       element.style.removeProperty('height')
     })
     root?.querySelector<HTMLElement>('.klatschen-turn')?.style.removeProperty('bottom')
-    fitCurrentPlayerDisplay()
+    const standalone = document.documentElement.classList.contains('is-standalone')
+    if (standalone) root?.querySelector<HTMLElement>('.klatschen-turn > strong')?.style.removeProperty('font-size')
+    else fitCurrentPlayerDisplay()
     const screen = root?.querySelector<HTMLElement>('.klatschen-play-screen, .klatschen-card-screen')
     const turn = screen?.querySelector<HTMLElement>('.klatschen-turn')
     const controls = turn?.parentElement
@@ -768,7 +770,7 @@ function updateMiddleLayout() {
       turn.style.bottom = `${controlsRect.bottom - buttonTop}px`
       const avatar = turn.querySelector<HTMLElement>(':scope > .klatschen-avatar')
       const name = turn.querySelector<HTMLElement>(':scope > strong')
-      if (avatar && name) {
+      if (avatar && name && !standalone) {
         const gap = Number.parseFloat(getComputedStyle(turn).rowGap) || 0
         const availableAvatarHeight = Math.max(0, buttonTop - slotsBottom - name.getBoundingClientRect().height - gap)
         const avatarSize = Math.min(avatar.getBoundingClientRect().width, availableAvatarHeight)
