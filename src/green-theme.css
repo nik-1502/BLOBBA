@@ -438,6 +438,12 @@ html[data-theme-choice='green'] :is(#busfahrer-game .busfahrer-game-title, #klat
   translate: -50% -50%;
 }
 
+html[data-theme-choice='green'] #klatschen-game .busfahrer-header h1 {
+  top: calc(50% + 2px);
+  width: min(110%, calc(100% + 12px));
+  height: clamp(48px, 12.5vw, 72px);
+}
+
 html[data-theme-choice='green'] #busfahrer-game .busfahrer-game-title {
   top: calc(50% + 4px);
 }
