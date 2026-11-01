@@ -59,6 +59,9 @@ html[data-theme-choice='green'] .game-leave-actions {
 }
 
 html[data-theme-choice='green'] .game-leave-actions .game-button {
+  grid-column: auto;
+  width: 100%;
+  min-width: 0;
   min-height: 44px;
   color: #fff;
   border-color: var(--green-violet-border);
@@ -317,6 +320,10 @@ html[data-theme-choice='green'] .klatschen-drawn-card:not(.is-effect-card):not(.
 
 html[data-theme-choice='green'] .klatschen-drawn-front small {
   color: #006d68;
+}
+
+html[data-theme-choice='green'] #klatschen-game .klatschen-drawn-front p {
+  color: #000;
 }
 
 html[data-theme-choice='green'] .klatschen-drawn-front h2 {
