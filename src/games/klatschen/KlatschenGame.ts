@@ -753,6 +753,7 @@ function updateMiddleLayout() {
       element.style.removeProperty('width')
       element.style.removeProperty('height')
     })
+    root?.querySelector<HTMLElement>('.klatschen-turn')?.style.removeProperty('bottom')
     fitCurrentPlayerDisplay()
     const screen = root?.querySelector<HTMLElement>('.klatschen-play-screen, .klatschen-card-screen')
     const turn = screen?.querySelector<HTMLElement>('.klatschen-turn')
