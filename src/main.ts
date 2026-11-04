@@ -35,7 +35,7 @@ import blobbenGameImageNeon from './assets/spielbild icons/blobben-cover-neon-ex
 import blobbenGameImageNeonNew from './assets/blobben bild/Fröhlicher Glibber-Maskottchen-Iconbogen.png'
 import blobbenGameImageGreen from './assets/blobben bild/Fröhlicher Oktopus mit bunten Symbolen.png'
 import busfahrerGameImageNeonNew from './assets/busfahrer bild/Glänzender Blobby-Fahrer-Bus.png'
-import busfahrerGameImageGreen from './assets/busfahrer bild/Gelber Blob-Bus mit Fahrer.png'
+import busfahrerGameImageGreen from './assets/busfahrer bild/Glänzender Blob-Fahrer Partybus.png'
 import heroLogo from './assets/überschrift/blobba-logo-clean-outlined.png'
 import heroLogoNeon from './assets/überschrift/blobba-logo-neon-original.png'
 import heroLogoNeonMobile from './assets/überschrift/blobba-logo-neon-mobile.png'
