@@ -658,6 +658,11 @@ html[data-theme-choice='green'] :is(#busfahrer-game, #klatschen-game) .busfahrer
     font-size: calc(clamp(.925rem, 4.5dvh, 1.8rem) * .81);
   }
 
+  html[data-theme-choice='green'].is-ipad-standalone #klatschen-game .klatschen-turn {
+    transform: translateX(-50%) scale(2.5);
+    transform-origin: center;
+  }
+
   html[data-theme-choice='green'] #klatschen-game :is(.klatschen-draw-button, .klatschen-next-button) {
     top: auto;
     right: 3%;
