@@ -610,6 +610,11 @@ html[data-theme-choice='green'] :is(#busfahrer-game, #klatschen-game) .busfahrer
     top: 50%;
   }
 
+  html[data-theme-choice='green'].is-ipad-standalone #klatschen-game .klatschen-card-circle {
+    transform: scale(1.2);
+    transform-origin: center;
+  }
+
   html[data-theme-choice='green'] #klatschen-game .klatschen-held-cards {
     top: 4px;
     right: 2%;
