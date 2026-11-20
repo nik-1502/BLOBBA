@@ -95,32 +95,29 @@ html[data-theme-choice='green'] .home-page .category-chip.is-selected {
 
 html[data-theme-choice='green'] .home-page .klatschen-home-button {
   --blobben-inner-frame-inset: clamp(9px, 2.6vw, 14px);
-  --blobben-image-inset-total: clamp(24px, calc(5.2vw + 6px), 34px);
+  --blobben-inner-frame-width: 4px;
+  --blobben-image-inset-total: clamp(26px, calc(5.2vw + 8px), 36px);
 }
 
 html[data-theme-choice='green'] .home-page .klatschen-home-button .busfahrer-button-image {
   position: absolute;
-  top: calc(var(--blobben-inner-frame-inset) + 3px);
+  top: calc(var(--blobben-inner-frame-inset) + var(--blobben-inner-frame-width));
   right: auto;
   bottom: auto;
-  left: calc(var(--blobben-inner-frame-inset) + 3px);
+  left: calc(var(--blobben-inner-frame-inset) + var(--blobben-inner-frame-width));
   width: calc(100% - var(--blobben-image-inset-total));
   height: calc(100% - var(--blobben-image-inset-total));
+  box-sizing: border-box;
+  border: var(--blobben-inner-frame-width) solid #ffd05a;
   max-height: none;
-  border-radius: calc(var(--game-tile-radius) - var(--blobben-inner-frame-inset) - 3px);
+  border-radius: calc(var(--game-tile-radius) - var(--blobben-inner-frame-inset));
   clip-path: none;
   object-fit: cover;
   transform: none;
 }
 
 html[data-theme-choice='green'] .home-page .klatschen-home-button::after {
-  content: '';
-  position: absolute;
-  inset: var(--blobben-inner-frame-inset);
-  z-index: 2;
-  border: 3px solid #ffd05a;
-  border-radius: calc(var(--game-tile-radius) - var(--blobben-inner-frame-inset));
-  pointer-events: none;
+  content: none;
 }
 
 html[data-theme-choice='green'] .home-page .klatschen-home-button .busfahrer-button-label {
