@@ -132,7 +132,9 @@ function playPyramidCardReveal() {
 }
 
 function readEnabled() {
-  return localStorage.getItem(ENABLED_KEY) !== 'false'
+  // Sound effects are opt-in. In particular, don't claim the device's audio
+  // session on startup so background music can keep playing.
+  return localStorage.getItem(ENABLED_KEY) === 'true'
 }
 
 function readVolume() {
@@ -158,6 +160,7 @@ export function setSoundEffectsVolume(volume: number) {
 }
 
 export function unlockAudio() {
+  if (!readEnabled()) return Promise.resolve(false)
   if (unlocked && context?.state === 'running') return Promise.resolve(true)
   if (unlockPromise) return unlockPromise
   unlockPromise = (async () => {
@@ -332,14 +335,3 @@ document.addEventListener('click', (event) => {
   soundPlayedForClick = false
 })
 
-const unlock = () => { void unlockAudio() }
-document.addEventListener('pointerdown', unlock, { once: true, passive: true, capture: true })
-document.addEventListener('touchstart', unlock, { once: true, passive: true, capture: true })
-document.addEventListener('click', unlock, { once: true, passive: true, capture: true })
-document.addEventListener('keydown', unlock, { once: true, capture: true })
-
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState !== 'visible' || !context || context.state === 'running') return
-  unlocked = false
-  void unlockAudio()
-})

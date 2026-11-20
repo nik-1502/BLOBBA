@@ -1402,7 +1402,6 @@ function renderSettingsPlaceholder() {
     playSound('ui-confirm')
   }))
   enabled.addEventListener('change', () => {
-    if (!enabled.checked) playSound('ui-click')
     setSoundEffectsEnabled(enabled.checked)
     volume.disabled = !enabled.checked
     if (enabled.checked) playSound('ui-confirm')
