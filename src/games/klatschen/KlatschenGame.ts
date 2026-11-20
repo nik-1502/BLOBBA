@@ -56,7 +56,6 @@ type PartnerGroupIdentity = { id: string; creationIndex: number }
 const partnerGroupIdentityByPlayer = new Map<string, PartnerGroupIdentity>()
 let nextPartnerGroupIndex = 0
 const partnerGroupColorCount = 9
-const VOTE_QUESTION_BAG_KEY = 'blobba.klatschen.vote-question-bag.v1'
 const dealAudio = new Audio(blobbenCardDealUrl)
 dealAudio.preload = 'auto'
 dealAudio.setAttribute('playsinline', '')
@@ -70,33 +69,6 @@ function shuffle<T>(items: T[]) {
     ;[result[index], result[target]] = [result[target]!, result[index]!]
   }
   return result
-}
-
-function drawVoteQuestions(cards: KlatschenCard[], count: number) {
-  if (count <= 0 || cards.length === 0) return [] as string[]
-
-  const cardIds = new Set(cards.map(({ id }) => id))
-  try {
-    const stored = JSON.parse(localStorage.getItem(VOTE_QUESTION_BAG_KEY) ?? 'null')
-    let remaining = Array.isArray(stored)
-      ? stored.filter((id: unknown): id is string => typeof id === 'string' && cardIds.has(id))
-      : []
-    remaining = [...new Set(remaining)]
-    if (remaining.length === 0) remaining = shuffle(cards.map(({ id }) => id))
-
-    const selected = remaining.splice(0, count)
-    if (selected.length < count) {
-      const selectedIds = new Set(selected)
-      const nextCycle = shuffle(cards.filter(({ id }) => !selectedIds.has(id)).map(({ id }) => id))
-      selected.push(...nextCycle.splice(0, count - selected.length))
-      remaining = nextCycle
-    }
-
-    localStorage.setItem(VOTE_QUESTION_BAG_KEY, JSON.stringify(remaining))
-    return selected
-  } catch {
-    return shuffle(cards).slice(0, count).map(({ id }) => id)
-  }
 }
 
 function escapeHtml(value: string) {
@@ -130,7 +102,10 @@ function createState(setups: KlatschenPlayerSetup[]): KlatschenGameState {
   const deck = klatschenCardGroups.flatMap(({ title, cards }) => {
     const defaultCount = title === 'Blobb-Partner' ? partnerCardCount : defaultKlatschenCardCount(title, cards.length)
     const count = Math.max(0, Math.min(12, options.cardCounts?.[title] ?? defaultCount))
-    if (title === 'Abstimmung') return drawVoteQuestions(cards, count)
+    // A fresh game samples its vote cards from all 30 questions. Shuffling
+    // before slicing prevents duplicates in this game's vote slots; the next
+    // game starts from the complete set again.
+    if (title === 'Abstimmung') return shuffle(cards).slice(0, count).map(({ id }) => id)
     const randomizedCards = shuffle(cards)
     return Array.from({ length: count }, (_, index) => randomizedCards[index % randomizedCards.length]!.id)
   })
