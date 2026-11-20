@@ -93,6 +93,10 @@ html[data-theme-choice='green'] .home-page .category-chip.is-selected {
   box-shadow: 0 5px 12px rgba(0, 44, 42, .22);
 }
 
+html[data-theme-choice='green'] .home-page .klatschen-home-button .busfahrer-button-image {
+  transform: scale(1.12);
+}
+
 /* Shared page surfaces cover profile, settings and both games. */
 html[data-theme-choice='green'] .busfahrer-page,
 html[data-theme-choice='green'] .busfahrer-page.profile-page,
