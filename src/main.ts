@@ -1,4 +1,5 @@
 import './style.css'
+import { isStandaloneApp, loadInitialTheme, saveWebAppTheme, type AppTheme } from './themePreference.ts'
 import { appLanguage, setAppLanguage, startLocalization } from './localization.ts'
 import { applyBusfahrerState, getBusfahrerState, mountBusfahrer, type BusfahrerGameState } from './busfahrer.ts'
 import { applyKlatschenState, getKlatschenState, mountKlatschen, type KlatschenGameState } from './games/klatschen/KlatschenGame.ts'
@@ -104,14 +105,12 @@ function showGameLeaveConfirmation(trigger: HTMLButtonElement, isExit: boolean, 
 const PROFILE_STORAGE_KEY = 'blobba.profiles.v1'
 const PREVIOUS_PROFILE_STORAGE_KEY = atob('Z2V0ZHJ1bmsucHJvZmlsZXMudjE=')
 const FAVORITE_GAMES_STORAGE_KEY = 'blobbaFavoriteGames'
-const THEME_STORAGE_KEY = 'blobba.theme.v1'
 const GAME_RULES_STORAGE_KEY = 'blobba.game-rules.v1'
 const CUSTOM_CARD_PRESETS_STORAGE_KEY = 'blobba.customCardPresets'
 const MAX_PLAYERS = 9
 const DEFAULT_AVATAR_ID = 'bier'
 const HOME_GAME_CATEGORIES = ['Kartenspiele', 'Schnell', 'Klassiker', 'Lustig', 'Denkspiele', 'Verteilspiele', 'Teamspiele', 'Wettkampf'] as const
 type HomeGameCategory = 'Alle' | typeof HOME_GAME_CATEGORIES[number]
-type AppTheme = 'light' | 'neon' | 'neon-new' | 'green'
 
 const HOME_GAMES = [
   {
@@ -325,16 +324,7 @@ const playerPinchController = {
   layer: null as HTMLElement | null,
 }
 const playerNameBeforeEditing = new Map<string, string>()
-let appTheme = loadAppTheme()
-
-function loadAppTheme(): AppTheme {
-  try {
-    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY)
-    return storedTheme === 'light' || storedTheme === 'neon' || storedTheme === 'neon-new' || storedTheme === 'green' ? storedTheme : 'neon'
-  } catch {
-    return 'neon'
-  }
-}
+let appTheme = loadInitialTheme(isStandaloneApp())
 
 function isDarkAppTheme(theme: AppTheme = appTheme) {
   return theme === 'neon' || theme === 'neon-new' || theme === 'green'
@@ -351,18 +341,13 @@ function applyAppTheme(theme: AppTheme) {
   document.documentElement.dataset.themeChoice = theme
   const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
   if (themeColor) themeColor.content = isDarkAppTheme(theme) ? '#120012' : '#f75b04'
-  try {
-    localStorage.setItem(THEME_STORAGE_KEY, theme)
-  } catch {
-    // Das Theme bleibt zumindest für die aktuelle Sitzung aktiv.
-  }
+  saveWebAppTheme(theme, isStandaloneApp())
 }
 
 applyAppTheme(appTheme)
 
 function updateIPadStandaloneMode() {
-  const navigatorWithStandalone = navigator as Navigator & { standalone?: boolean }
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigatorWithStandalone.standalone === true
+  const isStandalone = isStandaloneApp()
   const hasIPadDimensions = window.innerWidth >= 768 && window.innerWidth <= 1366
   const isTouchTablet = navigator.maxTouchPoints > 1
   document.documentElement.classList.toggle('is-standalone', isStandalone)

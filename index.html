@@ -8,14 +8,16 @@
     <link rel="manifest" href="%BASE_URL%site.webmanifest" />
     <meta name="theme-color" content="#120012" />
     <script>
+      let theme = 'green'
       try {
-        const storedTheme = localStorage.getItem('blobba.theme.v1')
-        const theme = storedTheme === 'light' || storedTheme === 'neon' ? storedTheme : 'neon'
-        document.documentElement.dataset.theme = theme
-        document.querySelector('meta[name="theme-color"]').content = theme === 'neon' ? '#120012' : '#f75b04'
-      } catch {
-        document.documentElement.dataset.theme = 'neon'
-      }
+        const standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true
+        const saved = standalone ? localStorage.getItem('blobba.theme.webapp.v1') : null
+        if (saved === 'light' || saved === 'neon' || saved === 'neon-new' || saved === 'green') theme = saved
+      } catch { /* Keep the green default when storage is unavailable. */ }
+      document.documentElement.dataset.theme = theme === 'light' ? 'light' : 'neon'
+      document.documentElement.dataset.themeVariant = theme === 'green' ? 'neon-new' : theme
+      document.documentElement.dataset.themeChoice = theme
+      document.querySelector('meta[name="theme-color"]').content = theme === 'light' ? '#f75b04' : '#120012'
     </script>
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
