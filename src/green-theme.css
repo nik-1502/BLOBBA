@@ -94,7 +94,24 @@ html[data-theme-choice='green'] .home-page .category-chip.is-selected {
 }
 
 html[data-theme-choice='green'] .home-page .klatschen-home-button .busfahrer-button-image {
-  transform: scale(1.12);
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  border-radius: 0;
+  clip-path: none;
+  object-fit: cover;
+  transform: none;
+}
+
+html[data-theme-choice='green'] .home-page .klatschen-home-button .busfahrer-button-label {
+  position: absolute;
+  right: 8px;
+  bottom: clamp(8px, 3vw, 14px);
+  left: 8px;
+  z-index: 2;
+  text-align: center;
 }
 
 /* Shared page surfaces cover profile, settings and both games. */
