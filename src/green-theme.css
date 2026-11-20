@@ -95,13 +95,17 @@ html[data-theme-choice='green'] .home-page .category-chip.is-selected {
 
 html[data-theme-choice='green'] .home-page .klatschen-home-button {
   --blobben-inner-frame-inset: clamp(9px, 2.6vw, 14px);
+  --blobben-image-inset-total: clamp(24px, calc(5.2vw + 6px), 34px);
 }
 
 html[data-theme-choice='green'] .home-page .klatschen-home-button .busfahrer-button-image {
   position: absolute;
-  inset: calc(var(--blobben-inner-frame-inset) + 3px);
-  width: auto;
-  height: auto;
+  top: calc(var(--blobben-inner-frame-inset) + 3px);
+  right: auto;
+  bottom: auto;
+  left: calc(var(--blobben-inner-frame-inset) + 3px);
+  width: calc(100% - var(--blobben-image-inset-total));
+  height: calc(100% - var(--blobben-image-inset-total));
   max-height: none;
   border-radius: calc(var(--game-tile-radius) - var(--blobben-inner-frame-inset) - 3px);
   clip-path: none;
