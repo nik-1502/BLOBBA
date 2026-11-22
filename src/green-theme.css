@@ -95,7 +95,7 @@ html[data-theme-choice='green'] .home-page .category-chip.is-selected {
 
 html[data-theme-choice='green'] .home-page .klatschen-home-button {
   --blobben-inner-frame-width: 4px;
-  border: var(--blobben-inner-frame-width) solid #ffd05a;
+  border: var(--blobben-inner-frame-width) solid #ffc000;
 }
 
 html[data-theme-choice='green'] .home-page .klatschen-home-button .busfahrer-button-image {
