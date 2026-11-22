@@ -1311,7 +1311,6 @@ function renderHome() {
             <i class="premium-game-frame-details"></i>
           </span>
           <img class="busfahrer-button-image" src="${appTheme === 'green' ? blobbenGameImageGreen : usesNewDarkStyle() ? blobbenGameImageNeonNew : appTheme === 'neon' ? blobbenGameImageNeon : blobbenGameImage}" alt="">
-          <span class="blobben-yellow-inset-frame" aria-hidden="true"></span>
           <span class="busfahrer-button-label">BLOBBEN</span>
         </button>
         ${favoriteHeartMarkup('blobben')}

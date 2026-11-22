@@ -94,36 +94,25 @@ html[data-theme-choice='green'] .home-page .category-chip.is-selected {
 }
 
 html[data-theme-choice='green'] .home-page .klatschen-home-button {
-  --blobben-inner-frame-inset: -2px;
   --blobben-inner-frame-width: 4px;
-  --blobben-image-inset-total: -4px;
+  border: var(--blobben-inner-frame-width) solid #ffd05a;
 }
 
 html[data-theme-choice='green'] .home-page .klatschen-home-button .busfahrer-button-image {
   position: absolute;
-  top: var(--blobben-inner-frame-inset);
+  top: 0;
   right: auto;
   bottom: auto;
-  left: var(--blobben-inner-frame-inset);
-  width: calc(100% - var(--blobben-image-inset-total));
-  height: calc(100% - var(--blobben-image-inset-total));
+  left: 0;
+  width: 100%;
+  height: 100%;
   box-sizing: border-box;
   z-index: 1;
   max-height: none;
-  border-radius: var(--game-tile-radius);
+  border-radius: calc(var(--game-tile-radius) - var(--blobben-inner-frame-width));
   clip-path: none;
   object-fit: cover;
   transform: none;
-}
-
-html[data-theme-choice='green'] .home-page .klatschen-home-button .blobben-yellow-inset-frame {
-  position: absolute;
-  inset: var(--blobben-inner-frame-inset);
-  z-index: 2;
-  box-sizing: border-box;
-  border: var(--blobben-inner-frame-width) solid #ffd05a;
-  border-radius: var(--game-tile-radius);
-  pointer-events: none;
 }
 
 html[data-theme-choice='green'] .home-page .klatschen-home-button .busfahrer-button-label {
