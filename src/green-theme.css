@@ -110,8 +110,8 @@ html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatsch
   right: var(--game-tile-yellow-width);
   bottom: var(--game-tile-yellow-width);
   left: var(--game-tile-yellow-width);
-  width: auto;
-  height: auto;
+  width: calc(100% - var(--game-tile-yellow-width) - var(--game-tile-yellow-width));
+  height: calc(100% - var(--game-tile-yellow-width) - var(--game-tile-yellow-width));
   box-sizing: border-box;
   z-index: 1;
   max-height: none;
