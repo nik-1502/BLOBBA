@@ -94,9 +94,9 @@ html[data-theme-choice='green'] .home-page .category-chip.is-selected {
 }
 
 html[data-theme-choice='green'] .home-page .klatschen-home-button {
-  --blobben-inner-frame-inset: 0px;
+  --blobben-inner-frame-inset: -1px;
   --blobben-inner-frame-width: 4px;
-  --blobben-image-inset-total: 0px;
+  --blobben-image-inset-total: -2px;
 }
 
 html[data-theme-choice='green'] .home-page .klatschen-home-button .busfahrer-button-image {
@@ -110,7 +110,7 @@ html[data-theme-choice='green'] .home-page .klatschen-home-button .busfahrer-but
   box-sizing: border-box;
   z-index: 1;
   max-height: none;
-  border-radius: calc(var(--game-tile-radius) - 2px);
+  border-radius: calc(var(--game-tile-radius) - 1px);
   clip-path: none;
   object-fit: cover;
   transform: none;
@@ -122,7 +122,7 @@ html[data-theme-choice='green'] .home-page .klatschen-home-button .blobben-yello
   z-index: 2;
   box-sizing: border-box;
   border: var(--blobben-inner-frame-width) solid #ffd05a;
-  border-radius: calc(var(--game-tile-radius) - 2px);
+  border-radius: calc(var(--game-tile-radius) - 1px);
   pointer-events: none;
 }
 
