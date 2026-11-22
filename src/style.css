@@ -2315,7 +2315,7 @@ html[data-theme-variant='neon-new'] .home-page .busfahrer-button-image {
   box-shadow: none !important;
 }
 
-html[data-theme-variant='neon-new'] .home-page .busfahrer-button::before {
+html[data-theme-variant='neon-new']:not([data-theme-choice='green']) .home-page .busfahrer-button::before {
   content: none;
   display: none;
 }

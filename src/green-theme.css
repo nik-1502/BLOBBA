@@ -101,9 +101,23 @@ html[data-theme-choice='green'] .home-page .game-tile-wrap {
 html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) {
   --game-tile-orange-width: 3px;
   --game-tile-yellow-width: 4.8px;
-  --game-tile-image-inset: calc(var(--game-tile-yellow-width) - 2px);
+  --game-tile-turquoise-width: var(--game-tile-yellow-width);
+  --game-tile-image-inset: calc(var(--game-tile-turquoise-width) + var(--game-tile-turquoise-width) - 2px);
   border: var(--game-tile-orange-width) solid #fd5f00;
   border-radius: var(--game-tile-radius);
+}
+
+html[data-theme-choice='green'].is-standalone .home-page :is(.blobfahrer-home-button, .klatschen-home-button),
+html[data-theme-choice='green'].is-ipad-tablet .home-page :is(.blobfahrer-home-button, .klatschen-home-button) {
+  --game-tile-orange-width: 1.5px;
+  --game-tile-yellow-width: 3.36px;
+}
+
+@media (max-width: 620px) {
+  html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) {
+    --game-tile-orange-width: 1.5px;
+    --game-tile-yellow-width: 3.36px;
+  }
 }
 
 html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) .busfahrer-button-image {
@@ -131,6 +145,17 @@ html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatsch
   box-sizing: border-box;
   border: var(--game-tile-yellow-width) solid #ffda04;
   border-radius: calc(var(--game-tile-radius) - var(--game-tile-orange-width));
+  pointer-events: none;
+}
+
+html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button)::before {
+  content: "";
+  position: absolute;
+  inset: var(--game-tile-yellow-width);
+  z-index: 3;
+  box-sizing: border-box;
+  border: var(--game-tile-turquoise-width) solid #00c8df;
+  border-radius: calc(var(--game-tile-radius) - var(--game-tile-orange-width) - var(--game-tile-yellow-width));
   pointer-events: none;
 }
 
