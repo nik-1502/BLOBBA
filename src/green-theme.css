@@ -103,7 +103,7 @@ html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatsch
   --game-tile-yellow-width: 4.8px;
   --game-tile-orange-color: #fc6300;
   --game-tile-yellow-color: #fdd104;
-  --game-tile-turquoise-color: #00ddf0;
+  --game-tile-turquoise-color: #01d2bd;
   --game-tile-turquoise-width: var(--game-tile-yellow-width);
   --game-tile-image-inset: calc(var(--game-tile-turquoise-width) + var(--game-tile-turquoise-width) - 2px);
   border: var(--game-tile-orange-width) solid var(--game-tile-orange-color);
