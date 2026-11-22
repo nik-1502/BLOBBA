@@ -93,6 +93,11 @@ html[data-theme-choice='green'] .home-page .category-chip.is-selected {
   box-shadow: 0 5px 12px rgba(0, 44, 42, .22);
 }
 
+html[data-theme-choice='green'] .home-page .game-tile-wrap {
+  height: auto;
+  aspect-ratio: 3 / 4;
+}
+
 html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) {
   --game-tile-inner-frame-width: 4px;
   border: var(--game-tile-inner-frame-width) solid #ffc000;
