@@ -116,7 +116,7 @@ html[data-theme-choice='green'].is-ipad-tablet .home-page :is(.blobfahrer-home-b
   --game-tile-yellow-width: 3.36px;
 }
 
-@media (max-width: 620px) {
+@media (max-width: 620px) and (hover: none) {
   html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) {
     --game-tile-orange-width: 1.5px;
     --game-tile-yellow-width: 3.36px;
@@ -162,10 +162,12 @@ html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatsch
   pointer-events: none;
 }
 
-@media (min-width: 621px) and (hover: hover) and (pointer: fine) {
+@media (hover: hover) and (pointer: fine) {
   html[data-theme-choice='green']:not(.is-ipad-tablet):not(.is-standalone) .home-page :is(.blobfahrer-home-button, .klatschen-home-button)::after {
     z-index: 2;
+    inset: 0;
     border: var(--game-tile-yellow-width) solid var(--game-tile-yellow-color);
+    border-radius: calc(var(--game-tile-radius) - var(--game-tile-orange-width));
     box-shadow: inset 0 0 0 var(--game-tile-turquoise-width) var(--game-tile-turquoise-color);
   }
 
