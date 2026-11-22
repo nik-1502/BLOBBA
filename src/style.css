@@ -2320,7 +2320,7 @@ html[data-theme-variant='neon-new'] .home-page .busfahrer-button::before {
   display: none;
 }
 
-html[data-theme-variant='neon-new'] .home-page .busfahrer-button::after {
+html[data-theme-variant='neon-new']:not([data-theme-choice='green']) .home-page .busfahrer-button::after {
   content: none;
   display: none;
 }

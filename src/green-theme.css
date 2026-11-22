@@ -99,23 +99,25 @@ html[data-theme-choice='green'] .home-page .game-tile-wrap {
 }
 
 html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) {
-  --game-tile-orange-width: 1.225px;
-  --game-tile-yellow-width: 2.775px;
+  --game-tile-orange-width: 3px;
+  --game-tile-yellow-width: 4.8px;
+  --game-tile-image-inset: calc(var(--game-tile-yellow-width) - 2px);
   border: var(--game-tile-orange-width) solid #fd5f00;
+  border-radius: var(--game-tile-radius);
 }
 
 html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) .busfahrer-button-image {
   position: absolute;
-  top: var(--game-tile-yellow-width);
-  right: var(--game-tile-yellow-width);
-  bottom: var(--game-tile-yellow-width);
-  left: var(--game-tile-yellow-width);
-  width: calc(100% - var(--game-tile-yellow-width) - var(--game-tile-yellow-width));
-  height: calc(100% - var(--game-tile-yellow-width) - var(--game-tile-yellow-width));
+  top: var(--game-tile-image-inset);
+  right: var(--game-tile-image-inset);
+  bottom: var(--game-tile-image-inset);
+  left: var(--game-tile-image-inset);
+  width: calc(100% - var(--game-tile-image-inset) - var(--game-tile-image-inset));
+  height: calc(100% - var(--game-tile-image-inset) - var(--game-tile-image-inset));
   box-sizing: border-box;
   z-index: 1;
   max-height: none;
-  border-radius: calc(var(--game-tile-radius) - var(--game-tile-orange-width) - var(--game-tile-yellow-width));
+  border-radius: calc(var(--game-tile-radius) - var(--game-tile-orange-width) - var(--game-tile-image-inset));
   clip-path: none;
   object-fit: cover;
   transform: none;
@@ -124,7 +126,7 @@ html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatsch
 html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button)::after {
   content: "";
   position: absolute;
-  inset: var(--game-tile-orange-width);
+  inset: 0;
   z-index: 2;
   box-sizing: border-box;
   border: var(--game-tile-yellow-width) solid #ffda04;
