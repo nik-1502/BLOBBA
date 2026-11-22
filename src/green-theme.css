@@ -121,19 +121,20 @@ html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatsch
   transform: none;
 }
 
-html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) .premium-game-frame {
+html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button)::after {
+  content: "";
+  position: absolute;
+  inset: var(--game-tile-orange-width);
   z-index: 2;
   box-sizing: border-box;
   border: var(--game-tile-yellow-width) solid #ffda04;
   border-radius: calc(var(--game-tile-radius) - var(--game-tile-orange-width));
-  background: none;
-  box-shadow: none;
+  pointer-events: none;
 }
 
-html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) .premium-game-frame::before,
-html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) .premium-game-frame::after,
-html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) .premium-game-frame > * {
-  display: none;
+html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) .premium-game-frame {
+  z-index: 0;
+  box-sizing: border-box;
 }
 
 html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) .busfahrer-button-label {
