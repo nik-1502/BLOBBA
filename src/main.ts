@@ -29,11 +29,8 @@ import {
 import type { Session } from '@supabase/supabase-js'
 import './subpage-theme.css'
 import './green-theme.css'
-import busfahrerGameImage from './assets/spielbild icons/blobb-fahrer-cover-clean.png'
-import busfahrerGameImageNeon from './assets/spielbild icons/blobb-fahrer-cover-neon-chroma-v4.png'
+import busfahrerHomeImage from './assets/busfahrer bild/Glänzender Schulbus auf der Bergstraße.png'
 import blobbenHomeImage from './assets/blobben bild/Türkisfarbenes Glas im Spielzimmer.png'
-import busfahrerGameImageNeonNew from './assets/busfahrer bild/Glänzender Blobby-Fahrer-Bus.png'
-import busfahrerGameImageGreen from './assets/busfahrer bild/5d77b8f5-eb38-485a-add6-096cf9431bbe.png'
 import heroLogo from './assets/überschrift/blobba-logo-clean-outlined.png'
 import heroLogoNeon from './assets/überschrift/blobba-logo-neon-original.png'
 import heroLogoNeonMobile from './assets/überschrift/blobba-logo-neon-mobile.png'
@@ -1295,7 +1292,7 @@ function renderHome() {
             <i class="premium-game-frame-channel"></i>
             <i class="premium-game-frame-details"></i>
           </span>
-          <img class="busfahrer-button-image" src="${appTheme === 'green' ? busfahrerGameImageGreen : usesNewDarkStyle() ? busfahrerGameImageNeonNew : appTheme === 'neon' ? busfahrerGameImageNeon : busfahrerGameImage}" alt="">
+          <img class="busfahrer-button-image" src="${busfahrerHomeImage}" alt="">
           <span class="busfahrer-button-label">BLOBB-FAHRER</span>
         </button>
         ${favoriteHeartMarkup('blobfahrer')}
