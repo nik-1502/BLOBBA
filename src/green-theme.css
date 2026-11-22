@@ -116,8 +116,7 @@ html[data-theme-choice='green'] .home-page .klatschen-home-button .busfahrer-but
   transform: none;
 }
 
-html[data-theme-choice='green'] .home-page .klatschen-home-button::after {
-  content: '';
+html[data-theme-choice='green'] .home-page .klatschen-home-button .blobben-yellow-inset-frame {
   position: absolute;
   inset: var(--blobben-inner-frame-inset);
   z-index: 2;
