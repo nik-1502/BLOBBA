@@ -99,25 +99,41 @@ html[data-theme-choice='green'] .home-page .game-tile-wrap {
 }
 
 html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) {
-  --game-tile-inner-frame-width: 4px;
-  border: var(--game-tile-inner-frame-width) solid #ffc000;
+  --game-tile-orange-width: 1.225px;
+  --game-tile-yellow-width: 2.775px;
+  border: var(--game-tile-orange-width) solid #fd5f00;
 }
 
 html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) .busfahrer-button-image {
   position: absolute;
-  top: 0;
-  right: auto;
-  bottom: auto;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: var(--game-tile-yellow-width);
+  right: var(--game-tile-yellow-width);
+  bottom: var(--game-tile-yellow-width);
+  left: var(--game-tile-yellow-width);
+  width: auto;
+  height: auto;
   box-sizing: border-box;
   z-index: 1;
   max-height: none;
-  border-radius: calc(var(--game-tile-radius) - var(--game-tile-inner-frame-width));
+  border-radius: calc(var(--game-tile-radius) - var(--game-tile-orange-width) - var(--game-tile-yellow-width));
   clip-path: none;
   object-fit: cover;
   transform: none;
+}
+
+html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) .premium-game-frame {
+  z-index: 2;
+  box-sizing: border-box;
+  border: var(--game-tile-yellow-width) solid #ffda04;
+  border-radius: calc(var(--game-tile-radius) - var(--game-tile-orange-width));
+  background: none;
+  box-shadow: none;
+}
+
+html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) .premium-game-frame::before,
+html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) .premium-game-frame::after,
+html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) .premium-game-frame > * {
+  display: none;
 }
 
 html[data-theme-choice='green'] .home-page :is(.blobfahrer-home-button, .klatschen-home-button) .busfahrer-button-label {
