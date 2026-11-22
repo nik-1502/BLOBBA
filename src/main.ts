@@ -30,11 +30,8 @@ import type { Session } from '@supabase/supabase-js'
 import './subpage-theme.css'
 import './green-theme.css'
 import busfahrerGameImage from './assets/spielbild icons/blobb-fahrer-cover-clean.png'
-import blobbenGameImage from './assets/spielbild icons/blobben-cover-light-orange-brown-contours-v51.png'
 import busfahrerGameImageNeon from './assets/spielbild icons/blobb-fahrer-cover-neon-chroma-v4.png'
-import blobbenGameImageNeon from './assets/spielbild icons/blobben-cover-neon-exclamation-v42.png'
-import blobbenGameImageNeonNew from './assets/blobben bild/Fröhlicher Glibber-Maskottchen-Iconbogen.png'
-import blobbenGameImageGreen from './assets/blobben bild/12a16b7d-b466-4ecd-99d3-cfe5df841173.png'
+import blobbenHomeImage from './assets/blobben bild/12a16b7d-b466-4ecd-99d3-cfe5df841173.png'
 import busfahrerGameImageNeonNew from './assets/busfahrer bild/Glänzender Blobby-Fahrer-Bus.png'
 import busfahrerGameImageGreen from './assets/busfahrer bild/5d77b8f5-eb38-485a-add6-096cf9431bbe.png'
 import heroLogo from './assets/überschrift/blobba-logo-clean-outlined.png'
@@ -1310,7 +1307,7 @@ function renderHome() {
             <i class="premium-game-frame-channel"></i>
             <i class="premium-game-frame-details"></i>
           </span>
-          <img class="busfahrer-button-image" src="${appTheme === 'green' ? blobbenGameImageGreen : usesNewDarkStyle() ? blobbenGameImageNeonNew : appTheme === 'neon' ? blobbenGameImageNeon : blobbenGameImage}" alt="">
+          <img class="busfahrer-button-image" src="${blobbenHomeImage}" alt="">
           <span class="busfahrer-button-label">BLOBBEN</span>
         </button>
         ${favoriteHeartMarkup('blobben')}
